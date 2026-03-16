@@ -207,12 +207,64 @@ header p { color: var(--text-dim); font-size: 12px; margin-top: 4px; }
 .guide .weight-segment { display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; color: #fff; }
 
 @media (max-width: 768px) {
+  #app { padding: 8px; }
+  header { padding: 12px 0 4px; }
+  header h1 { font-size: 18px; letter-spacing: 1.5px; }
+  header p { font-size: 10px; }
+  .tabs { gap: 3px; margin: 10px 0; }
+  .tab-btn { padding: 7px 12px; font-size: 10px; letter-spacing: .4px; }
+  .bracket-controls { gap: 5px; margin-bottom: 10px; }
+  .btn { padding: 6px 10px; font-size: 10px; }
+  .info-banner { padding: 8px 12px; font-size: 11px; }
+
+  /* Bracket: horizontal scroll on mobile */
   .unified-bracket { flex-direction: column; min-width: unset; }
   .bracket-half, .bracket-half.left, .bracket-half.right { flex-direction: column; }
-  .region-rounds, .bracket-half.right .region-rounds { flex-direction: row !important; }
-  .bracket-center { flex-direction: row; flex-wrap: wrap; }
-  .analyzer-selectors { flex-direction: column; }
-  header h1 { font-size: 18px; }
+  .region-rounds, .bracket-half.right .region-rounds { flex-direction: row !important; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .bracket-center { flex-direction: row; flex-wrap: wrap; justify-content: center; }
+  .round { min-width: 140px; padding: 0 4px; }
+  .matchup { margin: 3px 0; }
+  .team-slot { padding: 5px 6px; }
+  .team-slot .team-name { font-size: 11px; }
+  .team-slot .seed { font-size: 10px; min-width: 14px; }
+  .team-slot .win-pct { font-size: 10px; min-width: 24px; }
+  .matchup-footer { padding: 2px 6px; }
+  .center-matchup { min-width: 150px; }
+  .center-matchup .team-slot { padding: 6px 8px; }
+  .region-label { font-size: 12px; letter-spacing: 4px; margin: 8px 0 4px; }
+
+  /* Analyzer */
+  .analyzer { padding: 0 4px; }
+  .analyzer-selectors { flex-direction: column; gap: 8px; }
+  .team-select { min-width: unset; width: 100%; }
+  .stat-row { padding: 6px 4px; }
+  .stat-val { min-width: 32px; font-size: 11px; }
+
+  /* Upset Alerts */
+  .upset-row { padding: 10px 12px; gap: 10px; flex-wrap: wrap; }
+  .upset-prob-badge { min-width: 44px; font-size: 14px; padding: 5px 6px; }
+  .upset-matchup-info .matchup-name { font-size: 13px; }
+  .upset-matchup-info .matchup-detail { font-size: 10px; }
+  .upset-indicators { gap: 3px; }
+  .upset-indicator { padding: 2px 7px; font-size: 9px; }
+  .round-filter { gap: 5px; flex-wrap: wrap; }
+
+  /* Data Table */
+  .data-controls { gap: 6px; }
+  .data-search { min-width: unset; width: 100%; font-size: 12px; padding: 8px 10px; }
+  .data-table { font-size: 11px; }
+  .data-table th { padding: 8px 5px; font-size: 9px; letter-spacing: .5px; }
+  .data-table td { padding: 6px 5px; }
+  .table-container { max-height: 500px; }
+
+  /* Guide */
+  .guide { padding: 0 4px 30px; }
+  .guide h2 { font-size: 17px; margin: 24px 0 10px; }
+  .guide p, .guide li { font-size: 13px; }
+
+  /* Modal */
+  .modal { padding: 18px; }
+  .modal-field label { min-width: 90px; font-size: 11px; }
 }
 </style>
 </head>
