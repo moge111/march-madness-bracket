@@ -1217,24 +1217,6 @@ function drawConnectorLines() {
       drawH(bracketEl, x2, fY, xMid - x2, ffColor);
     }
   }
-
-  // Semifinal → Championship lines
-  if (ff0 && champ) {
-    const fR = ff0.getBoundingClientRect();
-    const cR = champ.getBoundingClientRect();
-    const fY = fR.top + fR.height / 2 - bRect.top;
-    const cY = cR.top + cR.height * .25 - bRect.top;
-    const xMid = (fR.left + fR.width / 2) - bRect.left;
-    drawV(bracketEl, xMid, fY + fR.height / 2 + 2, cY, ffColor);
-  }
-  if (ff1 && champ) {
-    const fR = ff1.getBoundingClientRect();
-    const cR = champ.getBoundingClientRect();
-    const fY = fR.top + fR.height / 2 - bRect.top;
-    const cY = cR.top + cR.height * .75 - bRect.top;
-    const xMid = (fR.left + fR.width / 2) - bRect.left;
-    drawV(bracketEl, xMid, cY, fY - fR.height / 2 - 2, ffColor);
-  }
 }
 
 function drawH(parent, x, y, w, color) {
