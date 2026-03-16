@@ -184,6 +184,10 @@ header p { color: var(--text-dim); font-size: 12px; margin-top: 4px; }
 .modal-field input { padding: 8px 12px; background: var(--surface2); border: 1px solid var(--border); color: var(--text); border-radius: 6px; font-size: 13px; width: 100%; }
 .modal-field input:focus { border-color: var(--accent); outline: none; }
 .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+.weight-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; padding: 6px 0; }
+.weight-row label { min-width: 130px; font-size: 12px; color: var(--text-dim); font-weight: 600; }
+.weight-row input[type="range"] { flex: 1; accent-color: var(--accent); height: 6px; cursor: pointer; }
+.weight-row .weight-val { min-width: 32px; text-align: right; font-size: 13px; font-weight: 700; color: var(--accent2); font-variant-numeric: tabular-nums; }
 .paste-area { width: 100%; min-height: 200px; background: var(--surface2); border: 1px solid var(--border); color: var(--text); border-radius: 8px; padding: 12px; font-family: monospace; font-size: 12px; resize: vertical; }
 .paste-area:focus { border-color: var(--accent); outline: none; }
 .paste-help { font-size: 12px; color: var(--text-dim); margin: 10px 0; line-height: 1.6; }
@@ -290,6 +294,7 @@ header p { color: var(--text-dim); font-size: 12px; margin-top: 4px; }
     <div class="bracket-controls">
       <button class="btn btn-primary" onclick="autoFill(false)">Auto-Fill Favorites</button>
       <button class="btn" onclick="autoFill(true)">Auto-Fill w/ Upsets</button>
+      <button class="btn" onclick="showWeightsModal()" style="border-color: var(--accent); color: var(--accent);">Customize Model</button>
       <button class="btn btn-danger" onclick="resetBracket()">Reset</button>
     </div>
     <div class="bracket-container">
@@ -435,7 +440,7 @@ header p { color: var(--text-dim); font-size: 12px; margin-top: 4px; }
       <h2>Using the Tabs</h2>
 
       <h3>Bracket</h3>
-      <p>Click on a team to pick them as the winner. They'll advance to the next round automatically. If you change an earlier pick, later rounds that depended on it will clear. Use <strong>Auto-Fill Favorites</strong> to let the model pick every game, or <strong>Auto-Fill w/ Upsets</strong> to simulate a realistic bracket with some upsets sprinkled in (picks underdogs when the matchup is close). Your picks are saved automatically in your browser.</p>
+      <p>Click on a team to pick them as the winner. They'll advance to the next round automatically. If you change an earlier pick, later rounds that depended on it will clear. Use <strong>Auto-Fill Favorites</strong> to let the model pick every game, or <strong>Auto-Fill w/ Upsets</strong> to simulate a realistic bracket with some upsets sprinkled in. Use <strong>Customize Model</strong> to adjust stat weights — crank up 3PT% or defense if you think those matter more, dial down seed history if you want a pure analytics pick. Your picks are saved automatically in your browser.</p>
 
       <h3>Matchup Analyzer</h3>
       <p>Pick any two teams to see a detailed head-to-head comparison. Shows the predicted winner, win probability, side-by-side stat bars, which factors favor which team, and an upset alert if multiple red flags are firing. Click <strong>Analyze</strong> under any bracket matchup to jump straight here with those teams loaded.</p>
@@ -460,6 +465,19 @@ header p { color: var(--text-dim); font-size: 12px; margin-top: 4px; }
     <div class="modal-actions">
       <button class="btn" onclick="closeModal('edit-modal')">Cancel</button>
       <button class="btn btn-primary" onclick="saveTeamEdit()">Save</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay hidden" id="weights-modal">
+  <div class="modal" style="max-width: 520px;">
+    <h3>Customize Prediction Model</h3>
+    <p style="color: var(--text-dim); font-size: 12px; margin-bottom: 16px;">Adjust how much each stat influences predictions and auto-fill. Higher = more impact. Set to 0 to ignore a stat.</p>
+    <div id="weights-sliders"></div>
+    <div class="modal-actions" style="margin-top: 16px;">
+      <button class="btn" onclick="resetWeightsToDefault()">Reset Defaults</button>
+      <button class="btn" onclick="closeModal('weights-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="applyWeights()">Apply & Re-Fill</button>
     </div>
   </div>
 </div>
@@ -601,32 +619,106 @@ function calcUpsetFactors(favorite, underdog) {
   let adjustment = 0;
   const emGap = favorite.adjEM - underdog.adjEM;
   const seedGap = underdog.seed - favorite.seed;
+  const w = customWeights;
+  const wScale = (stat) => stat / 50; // normalize: 50 = 1x, 100 = 2x, 0 = off
 
-  if (emGap < 6 && seedGap >= 4) { factors.push("Small efficiency gap"); adjustment += .06; }
-  else if (emGap < 10 && seedGap >= 6) { factors.push("Modest efficiency gap"); adjustment += .04; }
-  if (underdog.threePtPct - favorite.threePtPct > .015) { factors.push("3PT shooting edge"); adjustment += .03; }
-  if (favorite.adjT < 64) { factors.push("Slow tempo = more variance"); adjustment += .025; }
-  if (favorite.tovRate > 18) { factors.push("Favorite turnover-prone"); adjustment += .03; }
-  if (favorite.ftPct < .70) { factors.push("Favorite weak FT shooting"); adjustment += .025; }
-  if (underdog.experience - favorite.experience > .4) { factors.push("Underdog more experienced"); adjustment += .025; }
-  if (favorite.adjD > 100) { factors.push("Favorite weak defense"); adjustment += .02; }
-  if (underdog.adjD < 96) { factors.push("Underdog strong defense"); adjustment += .02; }
+  if (emGap < 6 && seedGap >= 4) { factors.push("Small efficiency gap"); adjustment += .06 * wScale(w.efficiency); }
+  else if (emGap < 10 && seedGap >= 6) { factors.push("Modest efficiency gap"); adjustment += .04 * wScale(w.efficiency); }
+  if (underdog.threePtPct - favorite.threePtPct > .015) { factors.push("3PT shooting edge"); adjustment += .03 * wScale(w.threePt); }
+  if (favorite.adjT < 64) { factors.push("Slow tempo = more variance"); adjustment += .025 * wScale(w.tempo); }
+  if (favorite.tovRate > 18) { factors.push("Favorite turnover-prone"); adjustment += .03 * wScale(w.tovRate); }
+  if (favorite.ftPct < .70) { factors.push("Favorite weak FT shooting"); adjustment += .025 * wScale(w.ftPct); }
+  if (underdog.experience - favorite.experience > .4) { factors.push("Underdog more experienced"); adjustment += .025 * wScale(w.experience); }
+  if (favorite.adjD > 100) { factors.push("Favorite weak defense"); adjustment += .02 * wScale(w.defense); }
+  if (underdog.adjD < 96) { factors.push("Underdog strong defense"); adjustment += .02 * wScale(w.defense); }
+  if (underdog.orbPct - favorite.orbPct > 3) { factors.push("Underdog rebounds better"); adjustment += .02 * wScale(w.offReb); }
+  if (underdog.sos - favorite.sos > 2) { factors.push("Underdog tougher schedule"); adjustment += .015 * wScale(w.sos); }
 
   return { factors, adjustment };
+}
+
+function statEdgeProb(teamA, teamB) {
+  // Compute a stat-based edge probability from individual stat comparisons
+  const w = customWeights;
+  let edges = 0, totalW = 0;
+
+  // 3PT%
+  if (w.threePt > 0) {
+    const diff = (teamA.threePtPct - teamB.threePtPct) / .06; // normalize ~6% range
+    edges += w.threePt * Math.max(-1, Math.min(1, diff));
+    totalW += w.threePt;
+  }
+  // Defense (lower is better)
+  if (w.defense > 0) {
+    const diff = (teamB.adjD - teamA.adjD) / 12;
+    edges += w.defense * Math.max(-1, Math.min(1, diff));
+    totalW += w.defense;
+  }
+  // FT%
+  if (w.ftPct > 0) {
+    const diff = (teamA.ftPct - teamB.ftPct) / .08;
+    edges += w.ftPct * Math.max(-1, Math.min(1, diff));
+    totalW += w.ftPct;
+  }
+  // Turnover rate (lower is better)
+  if (w.tovRate > 0) {
+    const diff = (teamB.tovRate - teamA.tovRate) / 6;
+    edges += w.tovRate * Math.max(-1, Math.min(1, diff));
+    totalW += w.tovRate;
+  }
+  // Experience
+  if (w.experience > 0) {
+    const diff = (teamA.experience - teamB.experience) / 1.5;
+    edges += w.experience * Math.max(-1, Math.min(1, diff));
+    totalW += w.experience;
+  }
+  // Tempo (slight edge to faster teams in tournament)
+  if (w.tempo > 0) {
+    const diff = (teamA.adjT - teamB.adjT) / 8;
+    edges += w.tempo * Math.max(-1, Math.min(1, diff * .3));
+    totalW += w.tempo;
+  }
+  // Off rebounding
+  if (w.offReb > 0) {
+    const diff = (teamA.orbPct - teamB.orbPct) / 8;
+    edges += w.offReb * Math.max(-1, Math.min(1, diff));
+    totalW += w.offReb;
+  }
+  // SOS
+  if (w.sos > 0) {
+    const diff = (teamA.sos - teamB.sos) / 10;
+    edges += w.sos * Math.max(-1, Math.min(1, diff));
+    totalW += w.sos;
+  }
+
+  if (totalW === 0) return .5;
+  const normalized = edges / totalW; // -1 to 1
+  return .5 + normalized * .15; // maps to .35 - .65 range
 }
 
 function predictMatchup(teamA, teamB) {
   if (!teamA || !teamB) return { prob: .5, factors: [], upsetFactors: [], upsetAdjustment: 0, effProb: .5, seedProb: .5 };
 
+  const w = customWeights;
   const kProb = efficiencyWinProb(teamA.adjEM, teamB.adjEM);
   const seedProb = getSeedHistoryProb(teamA.seed, teamB.seed);
+  const statProb = statEdgeProb(teamA, teamB);
 
   const aIsFav = teamA.seed <= teamB.seed;
   const fav = aIsFav ? teamA : teamB;
   const dog = aIsFav ? teamB : teamA;
   const { factors: upsetFactors, adjustment } = calcUpsetFactors(fav, dog);
 
-  let composite = (0.55 * kProb) + (0.30 * seedProb) + (0.15 * 0.5);
+  // Blend: efficiency + seed history + stat edge (weights determine proportions)
+  const effW = w.efficiency;
+  const seedW = w.seedHistory;
+  const statW = (w.threePt + w.defense + w.ftPct + w.tovRate + w.experience + w.tempo + w.offReb + w.sos) / 8;
+  const totalW = effW + seedW + statW;
+  const wEff = totalW > 0 ? effW / totalW : .55;
+  const wSeed = totalW > 0 ? seedW / totalW : .30;
+  const wStat = totalW > 0 ? statW / totalW : .15;
+
+  let composite = (wEff * kProb) + (wSeed * seedProb) + (wStat * statProb);
   if (aIsFav) composite -= adjustment;
   else composite += adjustment;
 
@@ -665,6 +757,34 @@ let currentUpsetFilter = 'all';
 let editingTeam = null;
 let dataSortCol = 'adjEM';
 let dataSortAsc = false;
+
+// Custom stat weights (0-100 sliders, normalized at prediction time)
+const DEFAULT_WEIGHTS = {
+  efficiency: 60,   // AdjEM (KenPom efficiency margin)
+  seedHistory: 30,  // Historical seed matchup win rates
+  threePt: 40,      // 3PT shooting percentage
+  defense: 50,      // Defensive efficiency (AdjD)
+  ftPct: 35,        // Free throw percentage
+  tovRate: 35,      // Turnover rate
+  experience: 30,   // Roster experience
+  tempo: 25,        // Tempo (AdjT)
+  offReb: 20,       // Offensive rebounding
+  sos: 25           // Strength of schedule
+};
+
+let customWeights = { ...DEFAULT_WEIGHTS };
+
+function saveWeights() {
+  try { localStorage.setItem('mm_weights', JSON.stringify(customWeights)); } catch(e) {}
+}
+
+function loadWeights() {
+  try {
+    const saved = localStorage.getItem('mm_weights');
+    if (saved) { customWeights = { ...DEFAULT_WEIGHTS, ...JSON.parse(saved) }; return true; }
+  } catch(e) {}
+  return false;
+}
 
 function getTeamBySeedRegion(seed, region) {
   for (const [name, data] of Object.entries(TEAMS)) {
@@ -1389,6 +1509,52 @@ document.addEventListener('click', (e) => {
 });
 
 // ============================================================
+// CUSTOM WEIGHTS MODAL
+// ============================================================
+
+const WEIGHT_LABELS = {
+  efficiency: 'Efficiency (AdjEM)',
+  seedHistory: 'Seed History',
+  threePt: '3PT Shooting',
+  defense: 'Defense (AdjD)',
+  ftPct: 'Free Throw %',
+  tovRate: 'Turnover Rate',
+  experience: 'Experience',
+  tempo: 'Tempo',
+  offReb: 'Off. Rebounding',
+  sos: 'Strength of Sched.'
+};
+
+function showWeightsModal() {
+  const container = document.getElementById('weights-sliders');
+  container.innerHTML = '';
+  for (const [key, label] of Object.entries(WEIGHT_LABELS)) {
+    const val = customWeights[key];
+    container.innerHTML += `
+      <div class="weight-row">
+        <label>${label}</label>
+        <input type="range" min="0" max="100" value="${val}" id="w-${key}" oninput="document.getElementById('wv-${key}').textContent=this.value">
+        <span class="weight-val" id="wv-${key}">${val}</span>
+      </div>`;
+  }
+  document.getElementById('weights-modal').classList.remove('hidden');
+}
+
+function applyWeights() {
+  for (const key of Object.keys(WEIGHT_LABELS)) {
+    customWeights[key] = parseInt(document.getElementById('w-' + key).value);
+  }
+  saveWeights();
+  closeModal('weights-modal');
+  autoFill(false);
+}
+
+function resetWeightsToDefault() {
+  customWeights = { ...DEFAULT_WEIGHTS };
+  showWeightsModal(); // re-render sliders with defaults
+}
+
+// ============================================================
 // PASTE / IMPORT
 // ============================================================
 
@@ -1459,6 +1625,7 @@ function exportBracket() {
 // ============================================================
 
 function init() {
+  loadWeights();
   if (!loadBracket()) { initBracket(); saveBracket(); }
   renderAll();
 
