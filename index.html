@@ -1,0 +1,1537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>March Madness Bracket Predictor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #111113;
+  --surface: #1a1a1f;
+  --surface2: #232329;
+  --border: #2e2e36;
+  --text: #f0ece4;
+  --text-dim: #908e87;
+  --accent: #c9a84c;
+  --accent2: #dbbf65;
+  --green: #5cb85c;
+  --yellow: #e2b33e;
+  --red: #d9534f;
+  --blue: #8ab4f8;
+  --teal: #6bcfc2;
+  --court: #c4703a;
+  --font: 'Inter', system-ui, -apple-system, sans-serif;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: var(--font); background: var(--bg); color: var(--text); min-height: 100vh; }
+#app { max-width: 1600px; margin: 0 auto; padding: 12px; }
+
+header { text-align: center; padding: 20px 0 8px; }
+header h1 { font-size: 26px; font-weight: 900; letter-spacing: 3px; text-transform: uppercase; color: var(--text); }
+header h1 span { color: var(--accent); }
+header p { color: var(--text-dim); font-size: 12px; margin-top: 6px; letter-spacing: .5px; font-weight: 500; }
+
+.tabs { display: flex; gap: 4px; justify-content: center; margin: 16px 0; flex-wrap: wrap; }
+.tab-btn { padding: 9px 22px; border: none; background: var(--surface); color: var(--text-dim); border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 700; transition: all .2s; text-transform: uppercase; letter-spacing: .8px; }
+.tab-btn:hover { color: var(--text); background: var(--surface2); }
+.tab-btn.active { background: var(--accent); color: #111; }
+
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+/* Bracket Controls */
+.bracket-controls { display: flex; gap: 8px; justify-content: center; margin-bottom: 16px; flex-wrap: wrap; }
+.btn { padding: 8px 16px; border: 1px solid var(--border); background: var(--surface2); color: var(--text); border-radius: 5px; cursor: pointer; font-size: 11px; font-weight: 700; transition: all .2s; text-transform: uppercase; letter-spacing: .5px; }
+.btn:hover { border-color: var(--accent); color: var(--accent); }
+.btn-primary { background: var(--accent); border-color: var(--accent); color: #111; }
+.btn-primary:hover { background: var(--accent2); border-color: var(--accent2); }
+.btn-danger { border-color: var(--red); color: var(--red); }
+.btn-danger:hover { background: rgba(217,83,79,.12); }
+
+/* Unified Bracket Layout */
+.bracket-container { overflow-x: auto; padding-bottom: 16px; }
+.unified-bracket { display: flex; align-items: stretch; min-width: 1500px; gap: 0; position: relative; }
+.bracket-half { display: flex; flex: 1; }
+.bracket-half.left { flex-direction: row; }
+.bracket-half.right { flex-direction: row-reverse; }
+.bracket-center { display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 200px; gap: 14px; z-index: 2; }
+
+.half-section { display: flex; flex-direction: column; flex: 1; }
+.region-label { font-size: 13px; font-weight: 800; color: var(--accent); text-align: center; text-transform: uppercase; letter-spacing: 2px; padding: 8px 0; background: var(--surface); border-radius: 8px; margin-bottom: 6px; }
+.region-rounds { display: flex; flex: 1; }
+.bracket-half.right .region-rounds { flex-direction: row-reverse; }
+
+.round { display: flex; flex-direction: column; justify-content: space-around; min-width: 155px; padding: 2px 6px; position: relative; }
+.round-header { text-align: center; font-size: 10px; color: var(--text-dim); font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; padding: 6px 0; }
+
+/* Matchup cards - rounded pill style */
+.matchup { background: var(--surface2); border-radius: 10px; border: 1px solid var(--border); overflow: hidden; margin: 4px 0; position: relative; transition: border-color .2s; }
+.matchup:hover { border-color: rgba(201,168,76,.4); }
+.matchup-prob { text-align: center; font-size: 9px; padding: 2px; color: var(--text-dim); background: rgba(0,0,0,.3); font-weight: 600; letter-spacing: .3px; }
+
+/* Team slot - pill style */
+.team-slot { display: flex; align-items: center; padding: 5px 8px; cursor: pointer; transition: all .2s; gap: 6px; min-height: 30px; border-bottom: 1px solid rgba(255,255,255,.05); font-size: 13px; }
+.team-slot:last-of-type { border-bottom: none; }
+.team-slot:hover { background: rgba(201,168,76,.12); }
+.team-slot.picked { background: rgba(92,184,92,.12); }
+.team-slot.picked .team-name { color: var(--green); font-weight: 700; }
+.team-slot.picked .team-logo { background: var(--green); }
+
+/* Team logo circle */
+.team-logo { width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 8px; font-weight: 800; color: #fff; flex-shrink: 0; letter-spacing: -.3px; text-transform: uppercase; }
+.team-slot .seed { color: var(--accent); font-weight: 800; font-size: 11px; min-width: 18px; }
+.team-slot .team-name { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 13px; font-weight: 500; }
+.team-slot .adjEM { font-size: 10px; color: var(--text-dim); font-weight: 600; }
+.team-slot.empty { cursor: default; color: var(--text-dim); font-style: italic; font-size: 11px; }
+.team-slot.empty:hover { background: transparent; }
+
+/* Connector lines */
+.round { --line-color: rgba(201,168,76,.25); }
+.matchup { position: relative; }
+
+/* Lines going right from left-side matchups */
+.bracket-half.left .round:not(:last-child) .matchup::after {
+  content: '';
+  position: absolute;
+  right: -7px;
+  top: 50%;
+  width: 7px;
+  height: 1px;
+  background: var(--line-color);
+}
+/* Lines going left from right-side matchups */
+.bracket-half.right .round:not(:last-child) .matchup::after {
+  content: '';
+  position: absolute;
+  left: -7px;
+  top: 50%;
+  width: 7px;
+  height: 1px;
+  background: var(--line-color);
+}
+/* Vertical connectors between paired matchups */
+.bracket-half.left .round:not(:last-child) .matchup:nth-child(odd)::before {
+  content: '';
+  position: absolute;
+  right: -7px;
+  top: 50%;
+  height: calc(100% + 8px);
+  width: 1px;
+  background: var(--line-color);
+}
+.bracket-half.right .round:not(:last-child) .matchup:nth-child(odd)::before {
+  content: '';
+  position: absolute;
+  left: -7px;
+  top: 50%;
+  height: calc(100% + 8px);
+  width: 1px;
+  background: var(--line-color);
+}
+
+/* Center / Final Four */
+.center-matchup { background: var(--surface2); border-radius: 10px; border: 1px solid var(--border); min-width: 175px; overflow: hidden; }
+.center-matchup .matchup-title { text-align: center; font-size: 10px; color: var(--text-dim); padding: 5px; background: rgba(0,0,0,.3); text-transform: uppercase; letter-spacing: 1.5px; font-weight: 700; }
+.championship-matchup { border-color: var(--accent); background: linear-gradient(135deg, rgba(201,168,76,.06), rgba(201,168,76,.16)); }
+.champion-display { text-align: center; padding: 10px; }
+.champion-display .label { font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 3px; font-weight: 700; }
+.champion-display .champ-name { font-size: 24px; font-weight: 900; color: var(--accent); margin-top: 3px; letter-spacing: 1px; }
+.champion-display .trophy { font-size: 32px; }
+
+/* Confidence colors */
+.conf-high { color: var(--green); }
+.conf-med { color: var(--yellow); }
+.conf-low { color: var(--red); }
+
+/* Analyzer Tab */
+.analyzer { max-width: 800px; margin: 0 auto; }
+.analyzer-selectors { display: flex; gap: 16px; align-items: center; justify-content: center; margin-bottom: 24px; flex-wrap: wrap; }
+.team-select { padding: 10px 14px; background: var(--surface); border: 1px solid var(--border); color: var(--text); border-radius: 6px; font-size: 13px; min-width: 200px; font-weight: 500; }
+.team-select option { background: var(--surface); }
+.vs-label { font-size: 20px; font-weight: 900; color: var(--accent); letter-spacing: 2px; }
+
+.comparison-card { background: var(--surface); border-radius: 10px; padding: 24px; border: 1px solid var(--border); }
+.prediction-result { text-align: center; padding: 20px; margin-bottom: 20px; background: var(--surface2); border-radius: 8px; }
+.prediction-result .winner-name { font-size: 22px; font-weight: 800; color: var(--green); }
+.prediction-result .win-pct { font-size: 36px; font-weight: 900; margin: 8px 0; }
+.prediction-result .confidence-label { font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1.5px; font-weight: 700; }
+
+.stat-bars { display: flex; flex-direction: column; gap: 10px; }
+.stat-row { display: flex; align-items: center; gap: 8px; }
+.stat-row .stat-label { min-width: 100px; font-size: 11px; color: var(--text-dim); text-align: center; }
+.stat-bar-container { flex: 1; display: flex; height: 22px; background: var(--surface2); border-radius: 3px; overflow: hidden; }
+.stat-bar-left { background: var(--teal); display: flex; align-items: center; justify-content: flex-end; padding-right: 4px; font-size: 10px; font-weight: 700; transition: width .3s; color: #111; }
+.stat-bar-right { background: var(--court); display: flex; align-items: center; padding-left: 4px; font-size: 10px; font-weight: 700; transition: width .3s; color: #fff; }
+.stat-val { min-width: 40px; font-size: 11px; text-align: center; font-weight: 600; }
+
+.upset-alert-banner { background: rgba(217,83,79,.08); border: 1px solid rgba(217,83,79,.3); border-radius: 6px; padding: 12px 16px; margin-top: 16px; display: flex; align-items: start; gap: 8px; }
+.upset-alert-banner .alert-icon { font-size: 18px; }
+.upset-alert-banner .alert-text { font-size: 12px; line-height: 1.5; }
+.upset-alert-banner .alert-title { font-weight: 700; color: var(--red); text-transform: uppercase; letter-spacing: .5px; font-size: 11px; }
+
+.factor-chips { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 12px; justify-content: center; }
+.factor-chip { padding: 4px 10px; border-radius: 4px; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .3px; }
+.factor-chip.favors-a { background: rgba(107,207,194,.1); color: var(--teal); border: 1px solid rgba(107,207,194,.25); }
+.factor-chip.favors-b { background: rgba(196,112,58,.1); color: var(--court); border: 1px solid rgba(196,112,58,.25); }
+
+/* Upset Alerts Tab */
+.upsets-list { max-width: 900px; margin: 0 auto; }
+.upset-row { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; margin-bottom: 8px; transition: all .2s; cursor: pointer; }
+.upset-row:hover { border-color: var(--accent); background: var(--surface2); }
+.upset-prob-badge { min-width: 50px; text-align: center; font-size: 16px; font-weight: 900; border-radius: 4px; padding: 4px 8px; }
+.upset-prob-badge.hot { background: rgba(217,83,79,.15); color: var(--red); }
+.upset-prob-badge.warm { background: rgba(226,179,62,.15); color: var(--yellow); }
+.upset-prob-badge.mild { background: rgba(92,184,92,.15); color: var(--green); }
+.upset-matchup-info { flex: 1; }
+.upset-matchup-info .matchup-name { font-size: 14px; font-weight: 700; }
+.upset-matchup-info .matchup-detail { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
+.upset-indicators { display: flex; gap: 4px; flex-wrap: wrap; }
+.upset-indicator { padding: 2px 8px; border-radius: 3px; font-size: 10px; font-weight: 600; background: rgba(201,168,76,.1); color: var(--accent); border: 1px solid rgba(201,168,76,.2); text-transform: uppercase; letter-spacing: .3px; }
+.round-filter { display: flex; gap: 8px; justify-content: center; margin-bottom: 16px; }
+
+/* Data Tab */
+.data-tab-content { overflow-x: auto; }
+.data-controls { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; align-items: center; }
+.data-search { padding: 8px 12px; background: var(--surface); border: 1px solid var(--border); color: var(--text); border-radius: 5px; font-size: 13px; min-width: 200px; }
+.data-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.data-table th { background: var(--surface2); padding: 8px 6px; text-align: left; cursor: pointer; user-select: none; white-space: nowrap; position: sticky; top: 0; border-bottom: 2px solid var(--accent); font-size: 10px; text-transform: uppercase; letter-spacing: .8px; font-weight: 700; }
+.data-table th:hover { color: var(--accent); }
+.data-table th .sort-arrow { font-size: 10px; margin-left: 2px; }
+.data-table td { padding: 6px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+.data-table tr:hover { background: var(--surface2); }
+.data-table .champ-score { font-weight: 700; }
+.champ-high { color: var(--green); }
+.champ-med { color: var(--yellow); }
+.champ-low { color: var(--text-dim); }
+.table-container { max-height: 600px; overflow-y: auto; border-radius: 6px; border: 1px solid var(--border); }
+
+/* Edit Modal */
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.75); display: flex; align-items: center; justify-content: center; z-index: 1000; backdrop-filter: blur(4px); }
+.modal { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 24px; max-width: 500px; width: 90%; max-height: 80vh; overflow-y: auto; }
+.modal h3 { color: var(--accent); margin-bottom: 16px; font-weight: 800; }
+.modal-field { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.modal-field label { min-width: 120px; font-size: 12px; color: var(--text-dim); }
+.modal-field input { padding: 6px 10px; background: var(--surface2); border: 1px solid var(--border); color: var(--text); border-radius: 4px; font-size: 13px; width: 100%; }
+.modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
+
+/* Paste Modal */
+.paste-area { width: 100%; min-height: 200px; background: var(--surface2); border: 1px solid var(--border); color: var(--text); border-radius: 5px; padding: 10px; font-family: 'SF Mono', 'Fira Code', monospace; font-size: 11px; resize: vertical; }
+.paste-help { font-size: 11px; color: var(--text-dim); margin: 8px 0; line-height: 1.5; }
+
+.hidden { display: none !important; }
+
+/* Info Banner */
+.info-banner { background: rgba(201,168,76,.08); border: 1px solid rgba(201,168,76,.2); border-radius: 6px; padding: 10px 16px; margin-bottom: 16px; font-size: 12px; color: var(--accent); text-align: center; }
+
+/* Title Score Bar */
+.title-bar { width: 60px; height: 6px; border-radius: 3px; background: var(--surface2); overflow: hidden; display: inline-block; vertical-align: middle; margin-left: 4px; }
+.title-bar-fill { height: 100%; border-radius: 3px; transition: width .3s; }
+
+@media (max-width: 768px) {
+  .unified-bracket { flex-direction: column; min-width: unset; }
+  .bracket-half.right .region-rounds { flex-direction: row; }
+  .bracket-center { flex-direction: row; flex-wrap: wrap; }
+  .analyzer-selectors { flex-direction: column; }
+  header h1 { font-size: 20px; }
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <h1>MARCH MADNESS BRACKET PREDICTOR</h1>
+    <p>Analytics-driven bracket picks powered by efficiency metrics, seed history, and upset detection</p>
+  </header>
+
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('bracket')">Bracket</button>
+    <button class="tab-btn" onclick="switchTab('analyzer')">Matchup Analyzer</button>
+    <button class="tab-btn" onclick="switchTab('upsets')">Upset Alerts</button>
+    <button class="tab-btn" onclick="switchTab('data')">Team Data</button>
+  </div>
+
+  <!-- BRACKET TAB -->
+  <div id="bracket-tab" class="tab-content active">
+    <div class="info-banner" id="data-banner">
+      2026 NCAA Tournament bracket loaded with real Barttorvik efficiency data (AdjO, AdjD, AdjT). Fine-tune supplementary stats in the <strong>Team Data</strong> tab.
+    </div>
+    <div class="bracket-controls">
+      <button class="btn btn-primary" onclick="autoFill(false)">Auto-Fill (Favorites)</button>
+      <button class="btn" onclick="autoFill(true)">Auto-Fill (With Upsets)</button>
+      <button class="btn btn-danger" onclick="resetBracket()">Reset Bracket</button>
+    </div>
+    <div class="bracket-container">
+      <div class="unified-bracket" id="unified-bracket"></div>
+    </div>
+  </div>
+
+  <!-- ANALYZER TAB -->
+  <div id="analyzer-tab" class="tab-content">
+    <div class="analyzer">
+      <div class="analyzer-selectors">
+        <select class="team-select" id="team-a-select" onchange="renderAnalyzer()"></select>
+        <span class="vs-label">VS</span>
+        <select class="team-select" id="team-b-select" onchange="renderAnalyzer()"></select>
+      </div>
+      <div id="analyzer-result"></div>
+    </div>
+  </div>
+
+  <!-- UPSETS TAB -->
+  <div id="upsets-tab" class="tab-content">
+    <div class="upsets-list">
+      <div class="round-filter">
+        <button class="btn active" onclick="filterUpsets('all', this)">All Rounds</button>
+        <button class="btn" onclick="filterUpsets('R64', this)">Round of 64</button>
+        <button class="btn" onclick="filterUpsets('R32', this)">Round of 32</button>
+      </div>
+      <div id="upsets-list"></div>
+    </div>
+  </div>
+
+  <!-- DATA TAB -->
+  <div id="data-tab" class="tab-content">
+    <div class="data-tab-content">
+      <div class="data-controls">
+        <input type="text" class="data-search" id="data-search" placeholder="Search teams..." oninput="renderDataTable()">
+        <select class="team-select" id="region-filter" onchange="renderDataTable()" style="min-width:120px;font-size:12px;padding:8px;">
+          <option value="">All Regions</option>
+          <option value="South">South</option>
+          <option value="East">East</option>
+          <option value="West">West</option>
+          <option value="Midwest">Midwest</option>
+        </select>
+        <button class="btn" onclick="showPasteModal()">Paste Bulk Data</button>
+        <button class="btn" onclick="exportBracket()">Export Picks</button>
+      </div>
+      <div class="table-container">
+        <table class="data-table" id="data-table"></table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Modal -->
+<div class="modal-overlay hidden" id="edit-modal">
+  <div class="modal">
+    <h3 id="edit-modal-title">Edit Team</h3>
+    <div id="edit-modal-fields"></div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('edit-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveTeamEdit()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Paste Modal -->
+<div class="modal-overlay hidden" id="paste-modal">
+  <div class="modal">
+    <h3>Paste Bulk Team Data</h3>
+    <p class="paste-help">
+      Paste tab or comma-separated data. Expected columns:<br>
+      <strong>Team, Seed, Region, AdjEM, AdjO, AdjD, AdjT, SOS, 3PT%, Opp3PT%, FT%, TOV%, ORB%, Experience</strong><br>
+      First row can be a header (will be skipped if detected). Team names must match existing teams or new entries will be added.
+    </p>
+    <textarea class="paste-area" id="paste-area" placeholder="Paste data here..."></textarea>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('paste-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="parsePastedData()">Import Data</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// DATA LAYER
+// ============================================================
+
+const TEAMS = {
+  // ============ EAST REGION - 1 seed: Duke ============
+  "Duke"            : { seed:1, region:"East", adjEM:37.4, adjO:128.2, adjD:90.8, adjT:65.8, sos:10.9, threePtPct:0.371, threePtDefPct:0.292, ftPct:0.766, tovRate:14.7, orbPct:32.2, experience:1.8, record:"32-2" },
+  "Siena"           : { seed:16, region:"East", adjEM:-1.7, adjO:107.2, adjD:108.9, adjT:64.6, sos:-1.3, threePtPct:0.329, threePtDefPct:0.347, ftPct:0.724, tovRate:16.4, orbPct:29.1, experience:2.9, record:"23-11" },
+  "Ohio State"      : { seed:8, region:"East", adjEM:23.6, adjO:125.2, adjD:101.6, adjT:66.2, sos:8.7, threePtPct:0.36, threePtDefPct:0.325, ftPct:0.76, tovRate:15.0, orbPct:31.8, experience:2.0, record:"21-12" },
+  "TCU"             : { seed:9, region:"East", adjEM:15.3, adjO:114.9, adjD:99.6, adjT:67.6, sos:6.6, threePtPct:0.34, threePtDefPct:0.319, ftPct:0.74, tovRate:15.8, orbPct:30.2, experience:2.0, record:"22-11" },
+  "St. John's"      : { seed:5, region:"East", adjEM:25.7, adjO:119.8, adjD:94.1, adjT:69.6, sos:9.5, threePtPct:0.35, threePtDefPct:0.302, ftPct:0.75, tovRate:15.4, orbPct:31.0, experience:1.9, record:"28-6" },
+  "Northern Iowa"   : { seed:12, region:"East", adjEM:11.1, adjO:109.7, adjD:98.6, adjT:62.2, sos:5.2, threePtPct:0.334, threePtDefPct:0.316, ftPct:0.729, tovRate:16.2, orbPct:29.5, experience:2.2, record:"23-12" },
+  "Kansas"          : { seed:4, region:"East", adjEM:23.4, adjO:117.8, adjD:94.4, adjT:67.6, sos:8.8, threePtPct:0.346, threePtDefPct:0.303, ftPct:0.746, tovRate:15.6, orbPct:30.7, experience:1.8, record:"23-10" },
+  "Cal Baptist"     : { seed:13, region:"East", adjEM:7.2, adjO:107.5, adjD:100.3, adjT:65.9, sos:3.3, threePtPct:0.33, threePtDefPct:0.321, ftPct:0.725, tovRate:16.4, orbPct:29.1, experience:2.2, record:"25-8" },
+  "Louisville"      : { seed:6, region:"East", adjEM:25.8, adjO:124.0, adjD:98.2, adjT:69.7, sos:9.3, threePtPct:0.358, threePtDefPct:0.315, ftPct:0.758, tovRate:15.1, orbPct:31.6, experience:1.9, record:"23-10" },
+  "South Florida"   : { seed:11, region:"East", adjEM:15.4, adjO:116.8, adjD:101.4, adjT:71.4, sos:6.5, threePtPct:0.344, threePtDefPct:0.324, ftPct:0.744, tovRate:15.7, orbPct:30.5, experience:2.1, record:"25-8" },
+  "Michigan State"  : { seed:3, region:"East", adjEM:26.7, adjO:122.9, adjD:96.2, adjT:66.0, sos:9.7, threePtPct:0.356, threePtDefPct:0.309, ftPct:0.756, tovRate:15.2, orbPct:31.4, experience:1.8, record:"25-7" },
+  "N. Dakota State" : { seed:14, region:"East", adjEM:5.4, adjO:111.4, adjD:106.0, adjT:66.4, sos:2.3, threePtPct:0.333, threePtDefPct:0.338, ftPct:0.733, tovRate:16.1, orbPct:29.7, experience:2.8, record:"27-7" },
+  "UCLA"            : { seed:7, region:"East", adjEM:22.7, adjO:124.5, adjD:101.8, adjT:64.7, sos:8.6, threePtPct:0.364, threePtDefPct:0.325, ftPct:0.759, tovRate:15.0, orbPct:31.7, experience:1.9, record:"23-11" },
+  "UCF"             : { seed:10, region:"East", adjEM:14.3, adjO:120.0, adjD:105.7, adjT:69.1, sos:5.9, threePtPct:0.35, threePtDefPct:0.337, ftPct:0.75, tovRate:15.4, orbPct:31.0, experience:2.1, record:"21-11" },
+  "UConn"           : { seed:2, region:"East", adjEM:28.1, adjO:123.1, adjD:95.0, adjT:64.6, sos:10.1, threePtPct:0.361, threePtDefPct:0.305, ftPct:0.756, tovRate:15.2, orbPct:31.5, experience:1.8, record:"29-5" },
+  "Furman"          : { seed:15, region:"East", adjEM:-2.1, adjO:106.9, adjD:109.0, adjT:65.8, sos:-1.7, threePtPct:0.329, threePtDefPct:0.347, ftPct:0.724, tovRate:16.4, orbPct:29.0, experience:2.9, record:"22-12" },
+
+  // ============ WEST REGION - 1 seed: Arizona ============
+  "Arizona"         : { seed:1, region:"West", adjEM:35.5, adjO:126.9, adjD:91.4, adjT:70.0, sos:10.7, threePtPct:0.364, threePtDefPct:0.294, ftPct:0.764, tovRate:14.8, orbPct:32.0, experience:1.8, record:"32-2" },
+  "Long Island"     : { seed:16, region:"West", adjEM:-6.2, adjO:103.6, adjD:109.8, adjT:67.8, sos:-4.4, threePtPct:0.317, threePtDefPct:0.349, ftPct:0.717, tovRate:16.7, orbPct:28.5, experience:2.9, record:"24-10" },
+  "Villanova"       : { seed:8, region:"West", adjEM:19.1, adjO:119.6, adjD:100.5, adjT:64.9, sos:7.5, threePtPct:0.354, threePtDefPct:0.321, ftPct:0.749, tovRate:15.4, orbPct:30.9, experience:2.0, record:"24-8" },
+  "Utah State"      : { seed:9, region:"West", adjEM:20.9, adjO:123.0, adjD:102.1, adjT:67.6, sos:8.2, threePtPct:0.356, threePtDefPct:0.326, ftPct:0.756, tovRate:15.2, orbPct:31.4, experience:2.0, record:"28-6" },
+  "Wisconsin"       : { seed:5, region:"West", adjEM:25.6, adjO:127.2, adjD:101.6, adjT:68.7, sos:8.9, threePtPct:0.364, threePtDefPct:0.325, ftPct:0.764, tovRate:14.8, orbPct:32.1, experience:1.9, record:"24-10" },
+  "High Point"      : { seed:12, region:"West", adjEM:8.2, adjO:115.7, adjD:107.5, adjT:69.9, sos:3.5, threePtPct:0.341, threePtDefPct:0.342, ftPct:0.741, tovRate:15.7, orbPct:30.4, experience:2.2, record:"30-4" },
+  "Arkansas"        : { seed:4, region:"West", adjEM:26.2, adjO:127.9, adjD:101.7, adjT:71.0, sos:9.1, threePtPct:0.366, threePtDefPct:0.325, ftPct:0.766, tovRate:14.8, orbPct:32.2, experience:1.8, record:"26-8" },
+  "Hawaii"          : { seed:13, region:"West", adjEM:5.1, adjO:106.9, adjD:101.8, adjT:69.6, sos:2.2, threePtPct:0.324, threePtDefPct:0.325, ftPct:0.724, tovRate:16.4, orbPct:29.0, experience:2.8, record:"24-8" },
+  "BYU"             : { seed:6, region:"West", adjEM:20.4, adjO:124.7, adjD:104.3, adjT:69.8, sos:7.7, threePtPct:0.359, threePtDefPct:0.333, ftPct:0.759, tovRate:15.0, orbPct:31.7, experience:1.9, record:"23-11" },
+  "Texas"           : { seed:11, region:"West", adjEM:17.6, adjO:124.0, adjD:106.4, adjT:67.1, sos:6.9, threePtPct:0.358, threePtDefPct:0.339, ftPct:0.758, tovRate:15.1, orbPct:31.6, experience:2.1, record:"18-14" },
+  "Gonzaga"         : { seed:3, region:"West", adjEM:26.3, adjO:120.3, adjD:94.0, adjT:68.9, sos:9.9, threePtPct:0.351, threePtDefPct:0.302, ftPct:0.751, tovRate:15.4, orbPct:31.0, experience:1.8, record:"30-3" },
+  "Kennesaw State"  : { seed:14, region:"West", adjEM:1.3, adjO:110.8, adjD:109.5, adjT:71.3, sos:0.7, threePtPct:0.332, threePtDefPct:0.348, ftPct:0.732, tovRate:16.1, orbPct:29.6, experience:2.8, record:"21-13" },
+  "Miami FL"        : { seed:7, region:"West", adjEM:19.6, adjO:121.1, adjD:101.5, adjT:67.9, sos:7.6, threePtPct:0.352, threePtDefPct:0.324, ftPct:0.752, tovRate:15.3, orbPct:31.2, experience:1.9, record:"25-8" },
+  "Missouri"        : { seed:10, region:"West", adjEM:16.9, adjO:119.9, adjD:103.0, adjT:66.4, sos:6.8, threePtPct:0.35, threePtDefPct:0.329, ftPct:0.75, tovRate:15.4, orbPct:31.0, experience:2.1, record:"20-12" },
+  "Purdue"          : { seed:2, region:"West", adjEM:33.0, adjO:133.3, adjD:100.3, adjT:64.4, sos:10.2, threePtPct:0.382, threePtDefPct:0.321, ftPct:0.777, tovRate:14.3, orbPct:33.0, experience:1.8, record:"27-8" },
+  "Queens"          : { seed:15, region:"West", adjEM:-2.4, adjO:114.7, adjD:117.1, adjT:69.5, sos:-1.9, threePtPct:0.339, threePtDefPct:0.37, ftPct:0.739, tovRate:15.8, orbPct:30.2, experience:2.9, record:"21-13" },
+
+  // ============ MIDWEST REGION - 1 seed: Michigan ============
+  "Michigan"        : { seed:1, region:"Midwest", adjEM:36.6, adjO:127.6, adjD:91.0, adjT:71.2, sos:10.8, threePtPct:0.365, threePtDefPct:0.293, ftPct:0.765, tovRate:14.8, orbPct:32.1, experience:1.8, record:"31-3" },
+  "UMBC"            : { seed:16, region:"Midwest", adjEM:-1.6, adjO:107.6, adjD:109.2, adjT:66.0, sos:-1.2, threePtPct:0.325, threePtDefPct:0.348, ftPct:0.725, tovRate:16.4, orbPct:29.1, experience:2.9, record:"24-8" },
+  "Georgia"         : { seed:8, region:"Midwest", adjEM:19.5, adjO:124.3, adjD:104.8, adjT:72.0, sos:7.4, threePtPct:0.359, threePtDefPct:0.334, ftPct:0.759, tovRate:15.1, orbPct:31.6, experience:2.0, record:"22-10" },
+  "Saint Louis"     : { seed:9, region:"Midwest", adjEM:17.3, adjO:119.5, adjD:102.2, adjT:71.0, sos:7.0, threePtPct:0.349, threePtDefPct:0.327, ftPct:0.749, tovRate:15.4, orbPct:30.9, experience:2.0, record:"28-5" },
+  "Texas Tech"      : { seed:5, region:"Midwest", adjEM:27.5, adjO:126.3, adjD:98.8, adjT:66.4, sos:9.8, threePtPct:0.363, threePtDefPct:0.316, ftPct:0.763, tovRate:14.9, orbPct:31.9, experience:1.9, record:"22-10" },
+  "Akron"           : { seed:12, region:"Midwest", adjEM:11.8, adjO:117.2, adjD:105.4, adjT:70.3, sos:5.0, threePtPct:0.344, threePtDefPct:0.336, ftPct:0.744, tovRate:15.6, orbPct:30.6, experience:2.2, record:"29-5" },
+  "Alabama"         : { seed:4, region:"Midwest", adjEM:26.7, adjO:129.5, adjD:102.8, adjT:73.1, sos:9.2, threePtPct:0.369, threePtDefPct:0.328, ftPct:0.769, tovRate:14.6, orbPct:32.4, experience:1.8, record:"23-9" },
+  "Hofstra"         : { seed:13, region:"Midwest", adjEM:8.3, adjO:113.2, adjD:104.9, adjT:64.7, sos:3.6, threePtPct:0.341, threePtDefPct:0.335, ftPct:0.736, tovRate:15.9, orbPct:30.0, experience:2.2, record:"24-10" },
+  "Tennessee"       : { seed:6, region:"Midwest", adjEM:26.0, adjO:121.5, adjD:95.5, adjT:65.2, sos:9.4, threePtPct:0.358, threePtDefPct:0.306, ftPct:0.753, tovRate:15.3, orbPct:31.2, experience:1.9, record:"22-11" },
+  "SMU"             : { seed:11, region:"Midwest", adjEM:18.0, adjO:123.0, adjD:105.0, adjT:68.6, sos:7.1, threePtPct:0.356, threePtDefPct:0.335, ftPct:0.756, tovRate:15.2, orbPct:31.4, experience:2.1, record:"20-13" },
+  "Virginia"        : { seed:3, region:"Midwest", adjEM:26.5, adjO:122.3, adjD:95.8, adjT:65.6, sos:9.6, threePtPct:0.36, threePtDefPct:0.307, ftPct:0.755, tovRate:15.2, orbPct:31.3, experience:1.8, record:"29-5" },
+  "Wright State"    : { seed:14, region:"Midwest", adjEM:3.4, adjO:112.4, adjD:109.0, adjT:67.0, sos:1.5, threePtPct:0.335, threePtDefPct:0.347, ftPct:0.735, tovRate:16.0, orbPct:29.9, experience:2.8, record:"23-11" },
+  "Kentucky"        : { seed:7, region:"Midwest", adjEM:19.9, adjO:119.9, adjD:100.0, adjT:68.3, sos:7.8, threePtPct:0.35, threePtDefPct:0.32, ftPct:0.75, tovRate:15.4, orbPct:31.0, experience:1.9, record:"21-13" },
+  "Santa Clara"     : { seed:10, region:"Midwest", adjEM:21.3, adjO:125.0, adjD:103.7, adjT:69.3, sos:8.1, threePtPct:0.36, threePtDefPct:0.331, ftPct:0.76, tovRate:15.0, orbPct:31.8, experience:2.1, record:"26-8" },
+  "Iowa State"      : { seed:2, region:"Midwest", adjEM:31.2, adjO:123.8, adjD:92.6, adjT:67.0, sos:10.3, threePtPct:0.358, threePtDefPct:0.298, ftPct:0.758, tovRate:15.1, orbPct:31.6, experience:1.8, record:"27-7" },
+  "Tennessee State" : { seed:15, region:"Midwest", adjEM:-4.1, adjO:107.8, adjD:111.9, adjT:70.1, sos:-4.1, threePtPct:0.326, threePtDefPct:0.356, ftPct:0.726, tovRate:16.4, orbPct:29.2, experience:2.9, record:"23-9" },
+
+  // ============ SOUTH REGION - 1 seed: Florida ============
+  "Florida"         : { seed:1, region:"South", adjEM:33.8, adjO:126.1, adjD:92.3, adjT:70.4, sos:10.6, threePtPct:0.362, threePtDefPct:0.297, ftPct:0.762, tovRate:14.9, orbPct:31.9, experience:1.8, record:"26-7" },
+  "Lehigh"          : { seed:16, region:"South", adjEM:-10.2, adjO:102.6, adjD:112.8, adjT:66.9, sos:-5.4, threePtPct:0.315, threePtDefPct:0.358, ftPct:0.715, tovRate:16.8, orbPct:28.4, experience:2.9, record:"18-16" },
+  "Clemson"         : { seed:8, region:"South", adjEM:19.6, adjO:116.6, adjD:97.0, adjT:64.3, sos:8.0, threePtPct:0.348, threePtDefPct:0.311, ftPct:0.743, tovRate:15.7, orbPct:30.5, experience:2.0, record:"24-10" },
+  "Iowa"            : { seed:9, region:"South", adjEM:21.9, adjO:122.1, adjD:100.2, adjT:63.0, sos:8.4, threePtPct:0.359, threePtDefPct:0.321, ftPct:0.754, tovRate:15.2, orbPct:31.3, experience:2.0, record:"21-12" },
+  "Vanderbilt"      : { seed:5, region:"South", adjEM:28.2, adjO:127.5, adjD:99.3, adjT:69.0, sos:10.0, threePtPct:0.365, threePtDefPct:0.318, ftPct:0.765, tovRate:14.8, orbPct:32.1, experience:1.9, record:"26-8" },
+  "McNeese"         : { seed:12, region:"South", adjEM:11.0, adjO:113.2, adjD:102.2, adjT:66.1, sos:4.9, threePtPct:0.336, threePtDefPct:0.327, ftPct:0.736, tovRate:15.9, orbPct:30.0, experience:2.2, record:"28-5" },
+  "Nebraska"        : { seed:4, region:"South", adjEM:23.7, adjO:117.2, adjD:93.5, adjT:66.8, sos:9.0, threePtPct:0.344, threePtDefPct:0.3, ftPct:0.744, tovRate:15.6, orbPct:30.6, experience:1.8, record:"26-6" },
+  "Troy"            : { seed:13, region:"South", adjEM:1.7, adjO:110.7, adjD:109.0, adjT:65.1, sos:0.9, threePtPct:0.336, threePtDefPct:0.347, ftPct:0.731, tovRate:16.1, orbPct:29.6, experience:2.8, record:"22-11" },
+  "North Carolina"  : { seed:6, region:"South", adjEM:21.4, adjO:121.4, adjD:100.0, adjT:68.0, sos:8.3, threePtPct:0.353, threePtDefPct:0.32, ftPct:0.753, tovRate:15.3, orbPct:31.2, experience:1.9, record:"24-8" },
+  "VCU"             : { seed:11, region:"South", adjEM:16.2, adjO:119.3, adjD:103.1, adjT:68.7, sos:6.6, threePtPct:0.349, threePtDefPct:0.329, ftPct:0.749, tovRate:15.5, orbPct:30.9, experience:2.1, record:"27-7" },
+  "Illinois"        : { seed:3, region:"South", adjEM:33.7, adjO:131.9, adjD:98.2, adjT:65.7, sos:10.4, threePtPct:0.379, threePtDefPct:0.315, ftPct:0.774, tovRate:14.4, orbPct:32.8, experience:1.8, record:"24-8" },
+  "Penn"            : { seed:14, region:"South", adjEM:1.2, adjO:106.6, adjD:105.4, adjT:69.0, sos:0.7, threePtPct:0.323, threePtDefPct:0.336, ftPct:0.723, tovRate:16.5, orbPct:29.0, experience:2.8, record:"18-11" },
+  "Saint Mary's"    : { seed:7, region:"South", adjEM:21.8, adjO:119.4, adjD:97.6, adjT:65.3, sos:8.5, threePtPct:0.354, threePtDefPct:0.313, ftPct:0.749, tovRate:15.4, orbPct:30.9, experience:1.9, record:"27-5" },
+  "Texas A&M"       : { seed:10, region:"South", adjEM:18.5, adjO:119.9, adjD:101.4, adjT:71.0, sos:7.2, threePtPct:0.35, threePtDefPct:0.324, ftPct:0.75, tovRate:15.4, orbPct:31.0, experience:2.1, record:"21-11" },
+  "Houston"         : { seed:2, region:"South", adjEM:33.0, adjO:125.4, adjD:92.4, adjT:63.3, sos:10.5, threePtPct:0.366, threePtDefPct:0.297, ftPct:0.761, tovRate:15.0, orbPct:31.8, experience:1.8, record:"28-6" },
+  "Idaho"           : { seed:15, region:"South", adjEM:2.6, adjO:108.8, adjD:106.2, adjT:67.4, sos:1.2, threePtPct:0.328, threePtDefPct:0.339, ftPct:0.728, tovRate:16.3, orbPct:29.3, experience:2.9, record:"21-14" },
+};
+
+// Historical seed matchup win rates (1985-2024, Round of 64)
+const SEED_HISTORY = {
+  "1v16": { wins: 151, losses: 2, pct: .987 },
+  "2v15": { wins: 143, losses: 10, pct: .935 },
+  "3v14": { wins: 132, losses: 21, pct: .863 },
+  "4v13": { wins: 121, losses: 32, pct: .791 },
+  "5v12": { wins: 99, losses: 54, pct: .647 },
+  "6v11": { wins: 101, losses: 52, pct: .660 },
+  "7v10": { wins: 97, losses: 56, pct: .634 },
+  "8v9":  { wins: 82, losses: 71, pct: .536 },
+};
+
+// How far each seed typically advances (avg wins in tournament)
+const SEED_DEEP_RUN = {
+  1: .78, 2: .65, 3: .55, 4: .48, 5: .38, 6: .40, 7: .35, 8: .28,
+  9: .25, 10: .22, 11: .20, 12: .18, 13: .08, 14: .05, 15: .03, 16: .01
+};
+
+// Bracket structure per region (matchup order)
+const BRACKET_SEEDS = [
+  [1, 16], [8, 9], [5, 12], [4, 13],
+  [6, 11], [3, 14], [7, 10], [2, 15]
+];
+
+const ROUND_NAMES = ["Round of 64", "Round of 32", "Sweet 16", "Elite 8"];
+const REGIONS = ["South", "East", "West", "Midwest"];
+
+// ============================================================
+// PREDICTION ENGINE
+// ============================================================
+
+function efficiencyWinProb(emA, emB) {
+  const diff = emA - emB;
+  return 1 / (1 + Math.pow(10, -diff / 10.25));
+}
+
+function getSeedHistoryProb(seedA, seedB) {
+  const higher = Math.min(seedA, seedB);
+  const lower = Math.max(seedA, seedB);
+  const key = higher + "v" + lower;
+  const entry = SEED_HISTORY[key];
+  if (!entry) {
+    // For later rounds or non-standard matchups, use seed ratio
+    return higher / (higher + lower);
+  }
+  return seedA <= seedB ? entry.pct : (1 - entry.pct);
+}
+
+function calcUpsetFactors(favorite, underdog) {
+  const factors = [];
+  let adjustment = 0;
+  const emGap = favorite.adjEM - underdog.adjEM;
+  const seedGap = underdog.seed - favorite.seed;
+
+  // Small efficiency gap despite large seed difference
+  if (emGap < 6 && seedGap >= 4) {
+    factors.push("Small efficiency gap");
+    adjustment += .06;
+  } else if (emGap < 10 && seedGap >= 6) {
+    factors.push("Modest efficiency gap");
+    adjustment += .04;
+  }
+
+  // 3PT shooting edge for underdog
+  if (underdog.threePtPct - favorite.threePtPct > .015) {
+    factors.push("3PT shooting edge");
+    adjustment += .03;
+  }
+
+  // Slow tempo favorite (more variance)
+  if (favorite.adjT < 64) {
+    factors.push("Slow tempo = more variance");
+    adjustment += .025;
+  }
+
+  // Turnover-prone favorite
+  if (favorite.tovRate > 18) {
+    factors.push("Favorite turnover-prone");
+    adjustment += .03;
+  }
+
+  // Free throw weakness
+  if (favorite.ftPct < .70) {
+    factors.push("Favorite weak FT shooting");
+    adjustment += .025;
+  }
+
+  // Experience edge for underdog
+  if (underdog.experience - favorite.experience > .4) {
+    factors.push("Underdog more experienced");
+    adjustment += .025;
+  }
+
+  // Defensive weakness in favorite
+  if (favorite.adjD > 100) {
+    factors.push("Favorite weak defense");
+    adjustment += .02;
+  }
+
+  // Underdog has strong defense
+  if (underdog.adjD < 96) {
+    factors.push("Underdog strong defense");
+    adjustment += .02;
+  }
+
+  return { factors, adjustment };
+}
+
+function predictMatchup(teamA, teamB) {
+  if (!teamA || !teamB) return { prob: .5, factors: [], upsetFactors: [] };
+
+  const kProb = efficiencyWinProb(teamA.adjEM, teamB.adjEM);
+  const seedProb = getSeedHistoryProb(teamA.seed, teamB.seed);
+
+  // Determine favorite and underdog
+  const aIsFav = teamA.seed <= teamB.seed;
+  const fav = aIsFav ? teamA : teamB;
+  const dog = aIsFav ? teamB : teamA;
+  const { factors: upsetFactors, adjustment } = calcUpsetFactors(fav, dog);
+
+  // Weighted composite
+  let composite = (0.55 * kProb) + (0.30 * seedProb) + (0.15 * 0.5);
+
+  // Apply upset adjustment (shifts probability toward underdog)
+  if (aIsFav) {
+    composite -= adjustment;
+  } else {
+    composite += adjustment;
+  }
+
+  return {
+    prob: Math.max(.02, Math.min(.98, composite)),
+    upsetFactors,
+    upsetAdjustment: adjustment,
+    effProb: kProb,
+    seedProb: seedProb
+  };
+}
+
+function championshipViability(team) {
+  let score = 0;
+  // AdjEM rank (top teams ~25+)
+  if (team.adjEM >= 25) score += 25;
+  else if (team.adjEM >= 20) score += 18;
+  else if (team.adjEM >= 15) score += 10;
+  else if (team.adjEM >= 10) score += 5;
+
+  // Defense
+  if (team.adjD <= 92) score += 20;
+  else if (team.adjD <= 96) score += 14;
+  else if (team.adjD <= 100) score += 7;
+
+  // FT shooting
+  if (team.ftPct >= .76) score += 15;
+  else if (team.ftPct >= .73) score += 10;
+  else if (team.ftPct >= .70) score += 5;
+
+  // Seed
+  if (team.seed <= 2) score += 15;
+  else if (team.seed <= 4) score += 10;
+  else if (team.seed <= 8) score += 5;
+
+  // Experience
+  if (team.experience >= 3.0) score += 15;
+  else if (team.experience >= 2.5) score += 10;
+  else if (team.experience >= 2.0) score += 5;
+
+  // Low turnovers
+  if (team.tovRate <= 15) score += 10;
+  else if (team.tovRate <= 17) score += 6;
+
+  return Math.min(100, score);
+}
+
+// Team colors for logo circles
+const TEAM_COLORS = {
+  "Duke":"#003087","Arizona":"#CC0033","Michigan":"#FFCB05","Florida":"#0021A5",
+  "UConn":"#000E2F","Houston":"#C8102E","Iowa State":"#C8102E","Purdue":"#CEB888",
+  "Kansas":"#0051BA","Alabama":"#9E1B32","Gonzaga":"#002967","Illinois":"#E84A27",
+  "Tennessee":"#FF8200","Virginia":"#232D4B","Michigan State":"#18453B","Auburn":"#0C2340",
+  "St. John's":"#D30024","Kentucky":"#0033A0","Texas Tech":"#CC0000","Wisconsin":"#C5050C",
+  "Louisville":"#AD0000","Clemson":"#F56600","North Carolina":"#7BAFD4","UCLA":"#2D68C4",
+  "Ohio State":"#BB0000","Vanderbilt":"#866D4B","Arkansas":"#9D2235","BYU":"#002E5D",
+  "Nebraska":"#D00000","Oregon":"#154733","Marquette":"#003366","Iowa":"#FFCD00",
+  "Texas":"#BF5700","Texas A&M":"#500000","Miami FL":"#F47321","Missouri":"#F1B82D",
+  "Georgia":"#BA0C2F","Creighton":"#005CA9","SMU":"#354CA1","VCU":"#F8B800",
+  "South Florida":"#006747","UCF":"#BA9B37","Saint Mary's":"#D6001C","Villanova":"#13294B",
+  "McNeese":"#005CA9","Akron":"#041E42","Santa Clara":"#862633","Northern Iowa":"#4B116F",
+  "Troy":"#8B2332","High Point":"#330072","Hofstra":"#00338D","Drake":"#004477",
+  "Cal Baptist":"#003DA5","Vermont":"#154734","Hawaii":"#024731","Penn":"#011F5B",
+  "N. Dakota State":"#006A31","Kennesaw State":"#FDBB30","Wright State":"#007A33",
+  "Furman":"#582C83","Queens":"#002D62","UMBC":"#F7B538","Long Island":"#004C97",
+  "Lehigh":"#653819","Idaho":"#B59A57","Tennessee State":"#004B8D","Utah State":"#0F2439",
+  "Saint Louis":"#003DA5","Mississippi State":"#660000"
+};
+
+function getTeamColor(name) {
+  return TEAM_COLORS[name] || '#555';
+}
+
+function getTeamAbbr(name) {
+  const abbrs = {
+    "Duke":"DUK","Arizona":"ARIZ","Michigan":"MICH","Florida":"FLA","UConn":"UCON",
+    "Houston":"HOU","Iowa State":"ISU","Purdue":"PUR","Kansas":"KU","Alabama":"BAMA",
+    "Gonzaga":"GONZ","Illinois":"ILL","Tennessee":"TENN","Virginia":"UVA",
+    "Michigan State":"MSU","Auburn":"AUB","St. John's":"SJU","Kentucky":"UK",
+    "Texas Tech":"TTU","Wisconsin":"WISC","Louisville":"LOU","Clemson":"CLEM",
+    "North Carolina":"UNC","UCLA":"UCLA","Ohio State":"OSU","Vanderbilt":"VAN",
+    "Arkansas":"ARK","BYU":"BYU","Nebraska":"NEB","Oregon":"ORE","Marquette":"MARQ",
+    "Iowa":"IOWA","Texas":"TEX","Texas A&M":"A&M","Miami FL":"MIA","Missouri":"MIZ",
+    "Georgia":"UGA","Creighton":"CRE","SMU":"SMU","VCU":"VCU","South Florida":"USF",
+    "UCF":"UCF","Saint Mary's":"SMC","Villanova":"NOVA","McNeese":"MCN","Akron":"AKR",
+    "Santa Clara":"SCU","Northern Iowa":"UNI","Troy":"TROY","High Point":"HPU",
+    "Hofstra":"HOF","Drake":"DRK","Cal Baptist":"CBU","Vermont":"UVM","Hawaii":"HAW",
+    "Penn":"PENN","N. Dakota State":"NDSU","Kennesaw State":"KSU","Wright State":"WSU",
+    "Furman":"FUR","Queens":"QU","UMBC":"UMBC","Long Island":"LIU","Lehigh":"LEH",
+    "Idaho":"IDHO","Tennessee State":"TSU","Utah State":"USU","Saint Louis":"SLU",
+    "Mississippi State":"MSST"
+  };
+  return abbrs[name] || name.substring(0, 3).toUpperCase();
+}
+
+function getConfClass(prob) {
+  if (prob >= .70) return 'conf-high';
+  if (prob >= .55) return 'conf-med';
+  return 'conf-low';
+}
+
+// ============================================================
+// STATE MANAGEMENT
+// ============================================================
+
+let bracket = {};
+let currentUpsetFilter = 'all';
+let editingTeam = null;
+let dataSortCol = 'adjEM';
+let dataSortAsc = false;
+
+function getTeamsByRegion(region) {
+  const teams = [];
+  for (const [name, data] of Object.entries(TEAMS)) {
+    if (data.region === region) teams.push({ name, ...data });
+  }
+  return teams;
+}
+
+function getTeamBySeedRegion(seed, region) {
+  for (const [name, data] of Object.entries(TEAMS)) {
+    if (data.seed === seed && data.region === region) return { name, ...data };
+  }
+  return null;
+}
+
+function initBracket() {
+  bracket = {};
+  for (const region of REGIONS) {
+    bracket[region] = { rounds: [[], [], [], []] };
+    // R64 matchups
+    for (const [s1, s2] of BRACKET_SEEDS) {
+      const t1 = getTeamBySeedRegion(s1, region);
+      const t2 = getTeamBySeedRegion(s2, region);
+      bracket[region].rounds[0].push({ team1: t1, team2: t2, winner: null });
+    }
+    // Initialize later rounds as empty
+    for (let r = 1; r < 4; r++) {
+      const numMatchups = 8 / Math.pow(2, r);
+      for (let i = 0; i < numMatchups; i++) {
+        bracket[region].rounds[r].push({ team1: null, team2: null, winner: null });
+      }
+    }
+  }
+  bracket.finalFour = [
+    { team1: null, team2: null, winner: null }, // South vs East winner
+    { team1: null, team2: null, winner: null }  // West vs Midwest winner
+  ];
+  bracket.championship = { team1: null, team2: null, winner: null };
+  bracket.champion = null;
+}
+
+function advanceWinner(region, round, matchupIdx, winnerTeam) {
+  const m = bracket[region].rounds[round][matchupIdx];
+  const oldWinner = m.winner;
+  m.winner = winnerTeam;
+
+  if (round < 3) {
+    // Advance to next round
+    const nextMatchupIdx = Math.floor(matchupIdx / 2);
+    const slot = matchupIdx % 2 === 0 ? 'team1' : 'team2';
+    const nextMatchup = bracket[region].rounds[round + 1][nextMatchupIdx];
+
+    // If old winner was in next round, cascade clear
+    if (oldWinner && nextMatchup[slot] && nextMatchup[slot].name === oldWinner.name) {
+      // Different winner chosen, cascade
+    }
+    nextMatchup[slot] = winnerTeam;
+
+    // Clear downstream if the next matchup had a winner that depended on old pick
+    cascadeClear(region, round + 1, nextMatchupIdx);
+  } else if (round === 3) {
+    // Elite 8 winner goes to Final Four
+    const regionIdx = REGIONS.indexOf(region);
+    const ffIdx = Math.floor(regionIdx / 2);
+    const slot = regionIdx % 2 === 0 ? 'team1' : 'team2';
+    bracket.finalFour[ffIdx][slot] = winnerTeam;
+    // Clear FF downstream
+    cascadeClearFF(ffIdx);
+  }
+
+  saveBracket();
+  renderAll();
+}
+
+function cascadeClear(region, round, matchupIdx) {
+  if (round > 3) return;
+  const m = bracket[region].rounds[round][matchupIdx];
+  if (m.winner) {
+    // Check if winner is still one of the teams
+    if (m.team1 && m.team2 && m.winner.name !== m.team1.name && m.winner.name !== m.team2.name) {
+      m.winner = null;
+      if (round < 3) {
+        const nextIdx = Math.floor(matchupIdx / 2);
+        const slot = matchupIdx % 2 === 0 ? 'team1' : 'team2';
+        bracket[region].rounds[round + 1][nextIdx][slot] = null;
+        cascadeClear(region, round + 1, nextIdx);
+      } else if (round === 3) {
+        const regionIdx = REGIONS.indexOf(region);
+        const ffIdx = Math.floor(regionIdx / 2);
+        const slot = regionIdx % 2 === 0 ? 'team1' : 'team2';
+        bracket.finalFour[ffIdx][slot] = null;
+        cascadeClearFF(ffIdx);
+      }
+    }
+  }
+}
+
+function cascadeClearFF(ffIdx) {
+  const m = bracket.finalFour[ffIdx];
+  if (m.winner && m.team1 && m.team2 && m.winner.name !== m.team1.name && m.winner.name !== m.team2.name) {
+    m.winner = null;
+    const slot = ffIdx === 0 ? 'team1' : 'team2';
+    bracket.championship[slot] = null;
+    if (bracket.championship.winner) {
+      bracket.championship.winner = null;
+      bracket.champion = null;
+    }
+  }
+}
+
+function pickFFWinner(ffIdx, team) {
+  bracket.finalFour[ffIdx].winner = team;
+  const slot = ffIdx === 0 ? 'team1' : 'team2';
+  bracket.championship[slot] = team;
+  // Check if championship winner is still valid
+  if (bracket.championship.winner && bracket.championship.winner.name !== team.name &&
+      bracket.championship[slot === 'team1' ? 'team2' : 'team1']?.name !== bracket.championship.winner.name) {
+    bracket.championship.winner = null;
+    bracket.champion = null;
+  }
+  saveBracket();
+  renderAll();
+}
+
+function pickChampion(team) {
+  bracket.championship.winner = team;
+  bracket.champion = team;
+  saveBracket();
+  renderAll();
+}
+
+function autoFill(withUpsets) {
+  initBracket();
+  // Fill each region
+  for (const region of REGIONS) {
+    for (let round = 0; round < 4; round++) {
+      for (let i = 0; i < bracket[region].rounds[round].length; i++) {
+        const m = bracket[region].rounds[round][i];
+        if (m.team1 && m.team2) {
+          const pred = predictMatchup(m.team1, m.team2);
+          let winner;
+          if (withUpsets && pred.prob < .65 && pred.prob > .35) {
+            // Pick the underdog if close enough (simulates realistic upsets)
+            const dogIsTeam2 = m.team1.seed < m.team2.seed;
+            const upsetRoll = Math.random();
+            const upsetThreshold = dogIsTeam2 ? (1 - pred.prob) : pred.prob;
+            winner = upsetRoll < upsetThreshold ? (dogIsTeam2 ? m.team2 : m.team1) : (dogIsTeam2 ? m.team1 : m.team2);
+          } else {
+            winner = pred.prob >= .5 ? m.team1 : m.team2;
+          }
+          m.winner = winner;
+          // Advance
+          if (round < 3) {
+            const nextIdx = Math.floor(i / 2);
+            const slot = i % 2 === 0 ? 'team1' : 'team2';
+            bracket[region].rounds[round + 1][nextIdx][slot] = winner;
+          } else {
+            const regionIdx = REGIONS.indexOf(region);
+            const ffIdx = Math.floor(regionIdx / 2);
+            const slot = regionIdx % 2 === 0 ? 'team1' : 'team2';
+            bracket.finalFour[ffIdx][slot] = winner;
+          }
+        }
+      }
+    }
+  }
+  // Fill Final Four
+  for (let i = 0; i < 2; i++) {
+    const m = bracket.finalFour[i];
+    if (m.team1 && m.team2) {
+      const pred = predictMatchup(m.team1, m.team2);
+      const winner = pred.prob >= .5 ? m.team1 : m.team2;
+      m.winner = winner;
+      const slot = i === 0 ? 'team1' : 'team2';
+      bracket.championship[slot] = winner;
+    }
+  }
+  // Championship
+  const cm = bracket.championship;
+  if (cm.team1 && cm.team2) {
+    const pred = predictMatchup(cm.team1, cm.team2);
+    cm.winner = pred.prob >= .5 ? cm.team1 : cm.team2;
+    bracket.champion = cm.winner;
+  }
+
+  saveBracket();
+  renderAll();
+}
+
+function resetBracket() {
+  initBracket();
+  saveBracket();
+  renderAll();
+}
+
+function saveBracket() {
+  try { localStorage.setItem('mm_bracket', JSON.stringify(bracket)); } catch(e) {}
+}
+
+function loadBracket() {
+  try {
+    const saved = localStorage.getItem('mm_bracket');
+    if (saved) {
+      bracket = JSON.parse(saved);
+      return true;
+    }
+  } catch(e) {}
+  return false;
+}
+
+// ============================================================
+// UI RENDERING
+// ============================================================
+
+function switchTab(tab) {
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+  document.getElementById(tab + '-tab').classList.add('active');
+  event.target.classList.add('active');
+
+  if (tab === 'upsets') renderUpsetAlerts();
+  if (tab === 'data') renderDataTable();
+  if (tab === 'analyzer') initAnalyzer();
+}
+
+function renderAll() {
+  renderUnifiedBracket();
+}
+
+function renderUnifiedBracket() {
+  const container = document.getElementById('unified-bracket');
+
+  // Left side: South (top) + East (bottom), flowing left-to-right
+  // Right side: West (top) + Midwest (bottom), flowing right-to-left
+  const leftRegions = ['South', 'East'];
+  const rightRegions = ['West', 'Midwest'];
+
+  let html = '';
+
+  // LEFT HALF
+  html += '<div class="bracket-half left">';
+  html += renderHalf(leftRegions, false);
+  html += '</div>';
+
+  // CENTER: Final Four + Championship
+  html += '<div class="bracket-center">';
+  html += renderCenterColumn();
+  html += '</div>';
+
+  // RIGHT HALF
+  html += '<div class="bracket-half right">';
+  html += renderHalf(rightRegions, true);
+  html += '</div>';
+
+  container.innerHTML = html;
+  attachAllHandlers();
+}
+
+function renderHalf(regions, reversed) {
+  let html = '<div style="display:flex;flex-direction:column;flex:1;">';
+  for (let ri = 0; ri < regions.length; ri++) {
+    const region = regions[ri];
+    html += `<div class="half-section">`;
+    html += `<div class="region-label">${region} Region</div>`;
+    html += `<div class="region-rounds">`;
+
+    const roundOrder = reversed ? [0, 1, 2, 3] : [0, 1, 2, 3];
+    for (const r of roundOrder) {
+      html += `<div class="round">`;
+      if (ri === 0) html += `<div class="round-header">${ROUND_NAMES[r]}</div>`;
+      else html += `<div class="round-header" style="visibility:hidden">${ROUND_NAMES[r]}</div>`;
+
+      for (let i = 0; i < bracket[region].rounds[r].length; i++) {
+        const m = bracket[region].rounds[r][i];
+        html += renderMatchupHTML(m, region, r, i);
+      }
+      html += '</div>';
+    }
+    html += '</div></div>';
+  }
+  html += '</div>';
+  return html;
+}
+
+function renderMatchupHTML(matchup, region, round, idx) {
+  const t1 = matchup.team1;
+  const t2 = matchup.team2;
+
+  let probHtml = '';
+  if (t1 && t2) {
+    const pred = predictMatchup(t1, t2);
+    const p1 = (pred.prob * 100).toFixed(0);
+    const p2 = ((1 - pred.prob) * 100).toFixed(0);
+    const confClass = getConfClass(Math.max(pred.prob, 1 - pred.prob));
+    probHtml = `<div class="matchup-prob"><span class="${confClass}">${p1}%-${p2}%</span></div>`;
+  }
+
+  const s1Class = (matchup.winner && t1 && matchup.winner.name === t1.name) ? ' picked' : '';
+  const s2Class = (matchup.winner && t2 && matchup.winner.name === t2.name) ? ' picked' : '';
+
+  return `<div class="matchup">
+    ${probHtml}
+    <div class="team-slot${s1Class} bracket-team" data-region="${region}" data-round="${round}" data-idx="${idx}" data-slot="1">
+      ${t1 ? `<div class="team-logo" style="background:${getTeamColor(t1.name)}">${getTeamAbbr(t1.name)}</div><span class="seed">${t1.seed}</span><span class="team-name">${t1.name}</span><span class="adjEM">${t1.adjEM.toFixed(1)}</span>` : '<span style="color:var(--text-dim);font-style:italic;font-size:11px;">TBD</span>'}
+    </div>
+    <div class="team-slot${s2Class} bracket-team" data-region="${region}" data-round="${round}" data-idx="${idx}" data-slot="2">
+      ${t2 ? `<div class="team-logo" style="background:${getTeamColor(t2.name)}">${getTeamAbbr(t2.name)}</div><span class="seed">${t2.seed}</span><span class="team-name">${t2.name}</span><span class="adjEM">${t2.adjEM.toFixed(1)}</span>` : '<span style="color:var(--text-dim);font-style:italic;font-size:11px;">TBD</span>'}
+    </div>
+  </div>`;
+}
+
+function renderCenterColumn() {
+  let html = '';
+
+  // FF Game 1: South vs East (top)
+  html += renderCenterMatchup(bracket.finalFour[0], 'ff', 0, 'Final Four');
+
+  // Championship
+  html += renderCenterMatchup(bracket.championship, 'champ', 0, 'Championship', true);
+
+  // Champion
+  if (bracket.champion) {
+    html += `<div class="champion-display">
+      <div class="trophy">&#127942;</div>
+      <div class="label">Champion</div>
+      <div class="champ-name">${bracket.champion.name}</div>
+    </div>`;
+  }
+
+  // FF Game 2: West vs Midwest (bottom)
+  html += renderCenterMatchup(bracket.finalFour[1], 'ff', 1, 'Final Four');
+
+  return html;
+}
+
+function renderCenterMatchup(m, type, idx, title, isChamp) {
+  let probHtml = '';
+  if (m.team1 && m.team2) {
+    const pred = predictMatchup(m.team1, m.team2);
+    const confClass = getConfClass(Math.max(pred.prob, 1 - pred.prob));
+    probHtml = `<div class="matchup-prob"><span class="${confClass}">${(pred.prob*100).toFixed(0)}%-${((1-pred.prob)*100).toFixed(0)}%</span></div>`;
+  }
+  const t1Class = (m.winner && m.team1 && m.winner.name === m.team1.name) ? ' picked' : '';
+  const t2Class = (m.winner && m.team2 && m.winner.name === m.team2.name) ? ' picked' : '';
+
+  return `<div class="center-matchup${isChamp ? ' championship-matchup' : ''}">
+    <div class="matchup-title">${title}</div>
+    ${probHtml}
+    <div class="team-slot${t1Class} center-team" data-type="${type}" data-idx="${idx}" data-slot="1">
+      ${m.team1 ? `<div class="team-logo" style="background:${getTeamColor(m.team1.name)}">${getTeamAbbr(m.team1.name)}</div><span class="seed">${m.team1.seed}</span><span class="team-name">${m.team1.name}</span>` : '<span style="color:var(--text-dim);font-style:italic;font-size:11px;">TBD</span>'}
+    </div>
+    <div class="team-slot${t2Class} center-team" data-type="${type}" data-idx="${idx}" data-slot="2">
+      ${m.team2 ? `<div class="team-logo" style="background:${getTeamColor(m.team2.name)}">${getTeamAbbr(m.team2.name)}</div><span class="seed">${m.team2.seed}</span><span class="team-name">${m.team2.name}</span>` : '<span style="color:var(--text-dim);font-style:italic;font-size:11px;">TBD</span>'}
+    </div>
+  </div>`;
+}
+
+function attachAllHandlers() {
+  // Regional bracket picks
+  document.querySelectorAll('.bracket-team').forEach(el => {
+    el.addEventListener('click', () => {
+      const region = el.dataset.region;
+      const round = parseInt(el.dataset.round);
+      const idx = parseInt(el.dataset.idx);
+      const slot = el.dataset.slot;
+      const m = bracket[region].rounds[round][idx];
+      const team = slot === '1' ? m.team1 : m.team2;
+      if (team) advanceWinner(region, round, idx, team);
+    });
+  });
+
+  // Final Four picks
+  document.querySelectorAll('.center-team').forEach(el => {
+    el.addEventListener('click', () => {
+      const type = el.dataset.type;
+      const idx = parseInt(el.dataset.idx);
+      const slot = el.dataset.slot;
+      if (type === 'ff') {
+        const m = bracket.finalFour[idx];
+        const team = slot === '1' ? m.team1 : m.team2;
+        if (team) pickFFWinner(idx, team);
+      } else if (type === 'champ') {
+        const m = bracket.championship;
+        const team = slot === '1' ? m.team1 : m.team2;
+        if (team) pickChampion(team);
+      }
+    });
+  });
+}
+
+// ============================================================
+// MATCHUP ANALYZER
+// ============================================================
+
+function initAnalyzer() {
+  const selA = document.getElementById('team-a-select');
+  const selB = document.getElementById('team-b-select');
+  if (selA.options.length <= 1) {
+    const names = Object.keys(TEAMS).sort();
+    selA.innerHTML = '<option value="">Select Team A</option>';
+    selB.innerHTML = '<option value="">Select Team B</option>';
+    names.forEach(name => {
+      const t = TEAMS[name];
+      selA.innerHTML += `<option value="${name}">(${t.seed}) ${name}</option>`;
+      selB.innerHTML += `<option value="${name}">(${t.seed}) ${name}</option>`;
+    });
+    // Default to first interesting matchup
+    if (names.length >= 2) {
+      selA.value = names.find(n => TEAMS[n].seed === 5) || names[0];
+      selB.value = names.find(n => TEAMS[n].seed === 12 && TEAMS[n].region === TEAMS[selA.value]?.region) || names[1];
+      renderAnalyzer();
+    }
+  }
+}
+
+function renderAnalyzer() {
+  const nameA = document.getElementById('team-a-select').value;
+  const nameB = document.getElementById('team-b-select').value;
+  const container = document.getElementById('analyzer-result');
+
+  if (!nameA || !nameB || nameA === nameB) {
+    container.innerHTML = '<p style="text-align:center;color:var(--text-dim);padding:40px;">Select two different teams to compare</p>';
+    return;
+  }
+
+  const teamA = { name: nameA, ...TEAMS[nameA] };
+  const teamB = { name: nameB, ...TEAMS[nameB] };
+  const pred = predictMatchup(teamA, teamB);
+
+  const winnerName = pred.prob >= .5 ? nameA : nameB;
+  const winPct = (Math.max(pred.prob, 1 - pred.prob) * 100).toFixed(1);
+  const confClass = getConfClass(Math.max(pred.prob, 1 - pred.prob));
+
+  const champA = championshipViability(teamA);
+  const champB = championshipViability(teamB);
+
+  // Stat comparison
+  const stats = [
+    { label: 'Adj. Efficiency', valA: teamA.adjEM, valB: teamB.adjEM, higher: true },
+    { label: 'Offense', valA: teamA.adjO, valB: teamB.adjO, higher: true },
+    { label: 'Defense', valA: teamA.adjD, valB: teamB.adjD, higher: false },
+    { label: 'Tempo', valA: teamA.adjT, valB: teamB.adjT, higher: true },
+    { label: '3PT %', valA: (teamA.threePtPct*100).toFixed(1), valB: (teamB.threePtPct*100).toFixed(1), higher: true },
+    { label: 'Opp 3PT %', valA: (teamA.threePtDefPct*100).toFixed(1), valB: (teamB.threePtDefPct*100).toFixed(1), higher: false },
+    { label: 'FT %', valA: (teamA.ftPct*100).toFixed(1), valB: (teamB.ftPct*100).toFixed(1), higher: true },
+    { label: 'TO Rate', valA: teamA.tovRate, valB: teamB.tovRate, higher: false },
+    { label: 'Off. Reb %', valA: teamA.orbPct, valB: teamB.orbPct, higher: true },
+    { label: 'Experience', valA: teamA.experience, valB: teamB.experience, higher: true },
+    { label: 'Title Score', valA: champA, valB: champB, higher: true },
+  ];
+
+  let statBarsHtml = '';
+  for (const s of stats) {
+    const a = parseFloat(s.valA);
+    const b = parseFloat(s.valB);
+    const total = a + b;
+    const pctA = total > 0 ? (a / total * 100) : 50;
+    const pctB = 100 - pctA;
+    const aBetter = s.higher ? a > b : a < b;
+    const bBetter = s.higher ? b > a : b < a;
+
+    statBarsHtml += `<div class="stat-row">
+      <span class="stat-val" style="${aBetter ? 'color:var(--green);font-weight:700' : ''}">${s.valA}</span>
+      <div class="stat-bar-container">
+        <div class="stat-bar-left" style="width:${pctA}%"></div>
+        <div class="stat-bar-right" style="width:${pctB}%"></div>
+      </div>
+      <span class="stat-val" style="${bBetter ? 'color:var(--green);font-weight:700' : ''}">${s.valB}</span>
+    </div>
+    <div style="text-align:center;font-size:10px;color:var(--text-dim);margin-bottom:6px;">${s.label}</div>`;
+  }
+
+  // Factor chips
+  let factorChips = '';
+  const aIsFav = teamA.seed <= teamB.seed;
+  if (pred.upsetFactors.length > 0) {
+    factorChips = '<div class="factor-chips">';
+    pred.upsetFactors.forEach(f => {
+      factorChips += `<span class="factor-chip ${aIsFav ? 'favors-b' : 'favors-a'}">${f}</span>`;
+    });
+    factorChips += '</div>';
+  }
+
+  // Upset alert
+  let upsetBanner = '';
+  if (pred.upsetFactors.length >= 2) {
+    const dogName = aIsFav ? nameB : nameA;
+    upsetBanner = `<div class="upset-alert-banner">
+      <span class="alert-icon">&#9888;</span>
+      <div class="alert-text">
+        <div class="alert-title">UPSET ALERT</div>
+        ${dogName} has ${pred.upsetFactors.length} upset indicators firing: ${pred.upsetFactors.join(', ')}.
+        This adds +${(pred.upsetAdjustment * 100).toFixed(1)}% to the underdog's win probability.
+      </div>
+    </div>`;
+  }
+
+  container.innerHTML = `
+    <div class="comparison-card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+        <div style="text-align:center;flex:1;">
+          <div style="font-size:12px;color:var(--text-dim);">${teamA.seed} seed | ${teamA.region}</div>
+          <div style="font-size:18px;font-weight:700;color:var(--blue);">${nameA}</div>
+          <div style="font-size:11px;color:var(--text-dim);">${teamA.record}</div>
+        </div>
+        <div style="text-align:center;flex:1;">
+          <div style="font-size:12px;color:var(--text-dim);">${teamB.seed} seed | ${teamB.region}</div>
+          <div style="font-size:18px;font-weight:700;color:var(--accent);">${nameB}</div>
+          <div style="font-size:11px;color:var(--text-dim);">${teamB.record}</div>
+        </div>
+      </div>
+      <div class="prediction-result">
+        <div class="confidence-label">PREDICTED WINNER</div>
+        <div class="winner-name">${winnerName}</div>
+        <div class="win-pct ${confClass}">${winPct}%</div>
+        <div style="font-size:11px;color:var(--text-dim);margin-top:4px;">
+          Efficiency: ${(pred.effProb*100).toFixed(1)}% | Seed History: ${(pred.seedProb*100).toFixed(1)}% | Upset Adj: ${pred.upsetAdjustment > 0 ? '+' : ''}${(pred.upsetAdjustment*100).toFixed(1)}%
+        </div>
+      </div>
+      <div style="display:flex;gap:16px;margin-bottom:12px;">
+        <div style="text-align:center;font-size:11px;color:var(--blue);flex:1;font-weight:700">${nameA}</div>
+        <div style="text-align:center;font-size:11px;color:var(--accent);flex:1;font-weight:700">${nameB}</div>
+      </div>
+      <div class="stat-bars">${statBarsHtml}</div>
+      ${factorChips}
+      ${upsetBanner}
+    </div>
+  `;
+}
+
+// ============================================================
+// UPSET ALERTS
+// ============================================================
+
+function renderUpsetAlerts() {
+  const container = document.getElementById('upsets-list');
+  const alerts = [];
+
+  // Gather all matchups from R64 and R32
+  for (const region of REGIONS) {
+    for (let r = 0; r < 2; r++) {
+      for (let i = 0; i < bracket[region].rounds[r].length; i++) {
+        const m = bracket[region].rounds[r][i];
+        if (!m.team1 || !m.team2) continue;
+
+        const aIsFav = m.team1.seed <= m.team2.seed;
+        const fav = aIsFav ? m.team1 : m.team2;
+        const dog = aIsFav ? m.team2 : m.team1;
+        const pred = predictMatchup(m.team1, m.team2);
+        const upsetProb = aIsFav ? (1 - pred.prob) : pred.prob;
+
+        if (dog.seed - fav.seed >= 1) {
+          alerts.push({
+            fav, dog, upsetProb,
+            factors: pred.upsetFactors,
+            region,
+            round: r === 0 ? 'R64' : 'R32',
+            seedGap: dog.seed - fav.seed,
+            emGap: (fav.adjEM - dog.adjEM).toFixed(1)
+          });
+        }
+      }
+    }
+  }
+
+  // Sort by upset probability descending
+  alerts.sort((a, b) => b.upsetProb - a.upsetProb);
+
+  // Filter
+  const filtered = currentUpsetFilter === 'all' ? alerts : alerts.filter(a => a.round === currentUpsetFilter);
+
+  if (filtered.length === 0) {
+    container.innerHTML = '<p style="text-align:center;color:var(--text-dim);padding:40px;">No matchups available. Fill in bracket picks to see upset alerts for Round of 32.</p>';
+    return;
+  }
+
+  container.innerHTML = filtered.map(a => {
+    const pct = (a.upsetProb * 100).toFixed(0);
+    const badgeClass = a.upsetProb >= .40 ? 'hot' : a.upsetProb >= .30 ? 'warm' : 'mild';
+    const indicators = a.factors.map(f => `<span class="upset-indicator">${f}</span>`).join('');
+
+    return `<div class="upset-row">
+      <div class="upset-prob-badge ${badgeClass}">${pct}%</div>
+      <div class="upset-matchup-info">
+        <div class="matchup-name">${a.dog.seed} ${a.dog.name} over ${a.fav.seed} ${a.fav.name}</div>
+        <div class="matchup-detail">${a.region} | ${a.round} | Seed gap: ${a.seedGap} | AdjEM gap: ${a.emGap}</div>
+      </div>
+      <div class="upset-indicators">${indicators}</div>
+    </div>`;
+  }).join('');
+}
+
+function filterUpsets(filter, btn) {
+  currentUpsetFilter = filter;
+  document.querySelectorAll('.round-filter .btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderUpsetAlerts();
+}
+
+// ============================================================
+// DATA TABLE
+// ============================================================
+
+function renderDataTable() {
+  const table = document.getElementById('data-table');
+  const search = document.getElementById('data-search').value.toLowerCase();
+  const regionFilter = document.getElementById('region-filter').value;
+
+  let teams = Object.entries(TEAMS).map(([name, data]) => ({
+    name, ...data, champScore: championshipViability(data)
+  }));
+
+  // Filter
+  if (search) teams = teams.filter(t => t.name.toLowerCase().includes(search));
+  if (regionFilter) teams = teams.filter(t => t.region === regionFilter);
+
+  // Sort
+  teams.sort((a, b) => {
+    let va = a[dataSortCol], vb = b[dataSortCol];
+    if (dataSortCol === 'name') {
+      return dataSortAsc ? va.localeCompare(vb) : vb.localeCompare(va);
+    }
+    return dataSortAsc ? va - vb : vb - va;
+  });
+
+  const cols = [
+    { key: 'name', label: 'Team' },
+    { key: 'seed', label: 'Seed' },
+    { key: 'region', label: 'Region' },
+    { key: 'adjEM', label: 'AdjEM' },
+    { key: 'adjO', label: 'AdjO' },
+    { key: 'adjD', label: 'AdjD' },
+    { key: 'adjT', label: 'Tempo' },
+    { key: 'threePtPct', label: '3PT%' },
+    { key: 'ftPct', label: 'FT%' },
+    { key: 'tovRate', label: 'TOV%' },
+    { key: 'experience', label: 'Exp' },
+    { key: 'champScore', label: 'Title' },
+  ];
+
+  let html = '<thead><tr>';
+  for (const c of cols) {
+    const arrow = dataSortCol === c.key ? (dataSortAsc ? ' &#9650;' : ' &#9660;') : '';
+    html += `<th onclick="sortDataTable('${c.key}')">${c.label}<span class="sort-arrow">${arrow}</span></th>`;
+  }
+  html += '<th>Edit</th></tr></thead><tbody>';
+
+  for (const t of teams) {
+    const cs = t.champScore;
+    const champClass = cs >= 70 ? 'champ-high' : cs >= 45 ? 'champ-med' : 'champ-low';
+    html += `<tr>
+      <td><strong>${t.name}</strong></td>
+      <td>${t.seed}</td>
+      <td>${t.region}</td>
+      <td><strong>${t.adjEM.toFixed(1)}</strong></td>
+      <td>${t.adjO.toFixed(1)}</td>
+      <td>${t.adjD.toFixed(1)}</td>
+      <td>${t.adjT.toFixed(1)}</td>
+      <td>${(t.threePtPct*100).toFixed(1)}%</td>
+      <td>${(t.ftPct*100).toFixed(1)}%</td>
+      <td>${t.tovRate.toFixed(1)}</td>
+      <td>${t.experience.toFixed(1)}</td>
+      <td class="champ-score ${champClass}">${cs}</td>
+      <td><button class="btn" style="padding:2px 8px;font-size:10px;" onclick="openEditModal('${t.name}')">Edit</button></td>
+    </tr>`;
+  }
+  html += '</tbody>';
+  table.innerHTML = html;
+}
+
+function sortDataTable(col) {
+  if (dataSortCol === col) dataSortAsc = !dataSortAsc;
+  else { dataSortCol = col; dataSortAsc = col === 'name' || col === 'region'; }
+  renderDataTable();
+}
+
+// ============================================================
+// EDIT MODAL
+// ============================================================
+
+function openEditModal(teamName) {
+  editingTeam = teamName;
+  const team = TEAMS[teamName];
+  document.getElementById('edit-modal-title').textContent = `Edit: ${teamName}`;
+
+  const fields = [
+    { key: 'seed', label: 'Seed', type: 'number' },
+    { key: 'adjEM', label: 'Adj. Efficiency Margin', type: 'number' },
+    { key: 'adjO', label: 'Adj. Offense', type: 'number' },
+    { key: 'adjD', label: 'Adj. Defense', type: 'number' },
+    { key: 'adjT', label: 'Adj. Tempo', type: 'number' },
+    { key: 'sos', label: 'Strength of Schedule', type: 'number' },
+    { key: 'threePtPct', label: '3PT % (decimal)', type: 'number' },
+    { key: 'threePtDefPct', label: 'Opp 3PT % (decimal)', type: 'number' },
+    { key: 'ftPct', label: 'FT % (decimal)', type: 'number' },
+    { key: 'tovRate', label: 'Turnover Rate', type: 'number' },
+    { key: 'orbPct', label: 'Off. Rebound %', type: 'number' },
+    { key: 'experience', label: 'Experience (1-4)', type: 'number' },
+    { key: 'record', label: 'Record', type: 'text' },
+  ];
+
+  const container = document.getElementById('edit-modal-fields');
+  container.innerHTML = fields.map(f => `
+    <div class="modal-field">
+      <label>${f.label}</label>
+      <input type="${f.type}" id="edit-${f.key}" value="${team[f.key]}" step="any">
+    </div>
+  `).join('');
+
+  document.getElementById('edit-modal').classList.remove('hidden');
+}
+
+function saveTeamEdit() {
+  const team = TEAMS[editingTeam];
+  const numFields = ['seed','adjEM','adjO','adjD','adjT','sos','threePtPct','threePtDefPct','ftPct','tovRate','orbPct','experience'];
+  for (const key of numFields) {
+    const val = parseFloat(document.getElementById('edit-' + key).value);
+    if (!isNaN(val)) team[key] = key === 'seed' ? Math.round(val) : val;
+  }
+  team.record = document.getElementById('edit-record').value;
+
+  closeModal('edit-modal');
+
+  // Rebuild bracket with updated stats
+  initBracket();
+  saveBracket();
+  renderAll();
+  renderDataTable();
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.add('hidden');
+}
+
+// Close modals on overlay click
+document.addEventListener('click', (e) => {
+  if (e.target.classList.contains('modal-overlay')) {
+    e.target.classList.add('hidden');
+  }
+});
+
+// ============================================================
+// PASTE / IMPORT
+// ============================================================
+
+function showPasteModal() {
+  document.getElementById('paste-modal').classList.remove('hidden');
+}
+
+function parsePastedData() {
+  const raw = document.getElementById('paste-area').value.trim();
+  if (!raw) return;
+
+  const lines = raw.split('\n').map(l => l.trim()).filter(l => l);
+  if (lines.length < 2) { alert('Need at least 2 lines of data.'); return; }
+
+  // Detect delimiter
+  const delim = lines[0].includes('\t') ? '\t' : ',';
+
+  // Skip header if first column looks like a header
+  const start = isNaN(parseFloat(lines[0].split(delim)[1])) ? 1 : 0;
+
+  let updated = 0;
+  for (let i = start; i < lines.length; i++) {
+    const parts = lines[i].split(delim).map(s => s.trim());
+    if (parts.length < 4) continue;
+
+    const name = parts[0];
+    const seed = parseInt(parts[1]) || 0;
+    const region = parts[2] || '';
+    const adjEM = parseFloat(parts[3]) || 0;
+    const adjO = parseFloat(parts[4]) || 0;
+    const adjD = parseFloat(parts[5]) || 0;
+    const adjT = parseFloat(parts[6]) || 0;
+    const sos = parseFloat(parts[7]) || 0;
+    const threePtPct = parseFloat(parts[8]) || 0;
+    const threePtDefPct = parseFloat(parts[9]) || 0;
+    const ftPct = parseFloat(parts[10]) || 0;
+    const tovRate = parseFloat(parts[11]) || 0;
+    const orbPct = parseFloat(parts[12]) || 0;
+    const experience = parseFloat(parts[13]) || 2.5;
+
+    // Convert percentages if they look like whole numbers
+    const fix = v => v > 1 ? v / 100 : v;
+
+    if (TEAMS[name]) {
+      Object.assign(TEAMS[name], { seed, region, adjEM, adjO, adjD, adjT, sos,
+        threePtPct: fix(threePtPct), threePtDefPct: fix(threePtDefPct),
+        ftPct: fix(ftPct), tovRate, orbPct, experience });
+      updated++;
+    } else {
+      TEAMS[name] = { seed, region, adjEM, adjO, adjD, adjT, sos,
+        threePtPct: fix(threePtPct), threePtDefPct: fix(threePtDefPct),
+        ftPct: fix(ftPct), tovRate, orbPct, experience, record: '' };
+      updated++;
+    }
+  }
+
+  closeModal('paste-modal');
+  document.getElementById('paste-area').value = '';
+  alert(`Updated ${updated} teams. Bracket has been reset.`);
+
+  initBracket();
+  saveBracket();
+  renderAll();
+  renderDataTable();
+}
+
+// ============================================================
+// EXPORT
+// ============================================================
+
+function exportBracket() {
+  let text = "=== MARCH MADNESS BRACKET PICKS ===\n\n";
+
+  for (const region of REGIONS) {
+    text += `--- ${region} Region ---\n`;
+    for (let r = 0; r < 4; r++) {
+      text += `\n${ROUND_NAMES[r]}:\n`;
+      for (const m of bracket[region].rounds[r]) {
+        const t1 = m.team1 ? `(${m.team1.seed}) ${m.team1.name}` : 'TBD';
+        const t2 = m.team2 ? `(${m.team2.seed}) ${m.team2.name}` : 'TBD';
+        const w = m.winner ? `=> ${m.winner.name}` : '';
+        text += `  ${t1} vs ${t2} ${w}\n`;
+      }
+    }
+    text += '\n';
+  }
+
+  text += "--- Final Four ---\n";
+  for (let i = 0; i < 2; i++) {
+    const m = bracket.finalFour[i];
+    const t1 = m.team1 ? `(${m.team1.seed}) ${m.team1.name}` : 'TBD';
+    const t2 = m.team2 ? `(${m.team2.seed}) ${m.team2.name}` : 'TBD';
+    const w = m.winner ? `=> ${m.winner.name}` : '';
+    text += `  ${t1} vs ${t2} ${w}\n`;
+  }
+
+  text += "\n--- Championship ---\n";
+  const cm = bracket.championship;
+  const ct1 = cm.team1 ? `(${cm.team1.seed}) ${cm.team1.name}` : 'TBD';
+  const ct2 = cm.team2 ? `(${cm.team2.seed}) ${cm.team2.name}` : 'TBD';
+  text += `  ${ct1} vs ${ct2}\n`;
+  if (bracket.champion) text += `\n  CHAMPION: ${bracket.champion.name}\n`;
+
+  // Copy to clipboard
+  navigator.clipboard.writeText(text).then(() => {
+    alert('Bracket picks copied to clipboard!');
+  }).catch(() => {
+    // Fallback
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    alert('Bracket picks copied to clipboard!');
+  });
+}
+
+// ============================================================
+// INITIALIZATION
+// ============================================================
+
+function init() {
+  if (!loadBracket()) {
+    initBracket();
+    saveBracket();
+  }
+  renderAll();
+}
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
