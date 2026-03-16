@@ -190,6 +190,22 @@ header p { color: var(--text-dim); font-size: 12px; margin-top: 4px; }
 .hidden { display: none !important; }
 .info-banner { background: rgba(63,185,80,.06); border: 1px solid rgba(63,185,80,.15); border-radius: 8px; padding: 10px 18px; margin-bottom: 14px; font-size: 12px; color: var(--accent2); text-align: center; }
 
+/* Guide / How It Works Tab */
+.guide { max-width: 800px; margin: 0 auto; padding-bottom: 40px; }
+.guide h2 { font-size: 20px; font-weight: 800; color: var(--green); margin: 32px 0 12px; letter-spacing: .5px; }
+.guide h2:first-child { margin-top: 0; }
+.guide h3 { font-size: 14px; font-weight: 700; color: var(--text); margin: 20px 0 8px; }
+.guide p { font-size: 13px; color: var(--text-dim); line-height: 1.8; margin-bottom: 10px; }
+.guide ul { padding-left: 20px; margin-bottom: 12px; }
+.guide li { font-size: 13px; color: var(--text-dim); line-height: 1.8; margin-bottom: 4px; }
+.guide li strong { color: var(--text); }
+.guide code { background: var(--surface2); padding: 2px 6px; border-radius: 4px; font-size: 12px; color: var(--accent2); font-family: monospace; }
+.guide .card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 18px; margin-bottom: 14px; }
+.guide .card-title { font-size: 13px; font-weight: 700; color: var(--green); margin-bottom: 6px; text-transform: uppercase; letter-spacing: .5px; }
+.guide .formula { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 14px 18px; font-family: monospace; font-size: 13px; color: var(--accent2); margin: 10px 0; line-height: 1.8; }
+.guide .weight-bar { display: flex; border-radius: 6px; overflow: hidden; height: 24px; margin: 10px 0; }
+.guide .weight-segment { display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; color: #fff; }
+
 @media (max-width: 768px) {
   .unified-bracket { flex-direction: column; min-width: unset; }
   .bracket-half, .bracket-half.left, .bracket-half.right { flex-direction: column; }
@@ -212,6 +228,7 @@ header p { color: var(--text-dim); font-size: 12px; margin-top: 4px; }
     <button class="tab-btn" onclick="switchTab('analyzer')">Matchup Analyzer</button>
     <button class="tab-btn" onclick="switchTab('upsets')">Upset Alerts</button>
     <button class="tab-btn" onclick="switchTab('data')">Team Data</button>
+    <button class="tab-btn" onclick="switchTab('guide')">How It Works</button>
   </div>
 
   <div id="bracket-tab" class="tab-content active">
@@ -267,6 +284,119 @@ header p { color: var(--text-dim); font-size: 12px; margin-top: 4px; }
       <div class="table-container">
         <table class="data-table" id="data-table"></table>
       </div>
+    </div>
+  </div>
+
+  <!-- HOW IT WORKS TAB -->
+  <div id="guide-tab" class="tab-content">
+    <div class="guide">
+
+      <h2>Overview</h2>
+      <p>This tool helps you fill out your March Madness bracket using a data-driven prediction model. Every matchup probability is calculated by blending three factors: team efficiency metrics, historical seed performance, and upset indicators. All data is sourced from <strong>Barttorvik</strong> (barttorvik.com), one of the most respected advanced stats sites in college basketball.</p>
+
+      <h2>The Prediction Model</h2>
+      <p>Each matchup win probability is a weighted blend of three components:</p>
+
+      <div class="weight-bar">
+        <div class="weight-segment" style="flex:55;background:#3fb950;">Efficiency 55%</div>
+        <div class="weight-segment" style="flex:30;background:#d29922;">Seed History 30%</div>
+        <div class="weight-segment" style="flex:15;background:#f97316;">Upset Adj. 15%</div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">1. Efficiency Win Probability (55% weight)</div>
+        <p>Uses a logistic function on the difference between two teams' Adjusted Efficiency Margin (AdjEM). This is the single best predictor of game outcomes in college basketball.</p>
+        <div class="formula">P(win) = 1 / (1 + 10<sup>(-AdjEM_diff / 10.25)</sup>)</div>
+        <p>A team with a 10-point AdjEM advantage wins roughly 71% of the time. A 20-point gap pushes it to ~90%.</p>
+      </div>
+
+      <div class="card">
+        <div class="card-title">2. Historical Seed Performance (30% weight)</div>
+        <p>Uses actual win rates from every NCAA tournament game since 1985 for each seed matchup:</p>
+        <ul>
+          <li><strong>1 vs 16:</strong> 98.7% (151-2 all time)</li>
+          <li><strong>2 vs 15:</strong> 93.5% (143-10)</li>
+          <li><strong>3 vs 14:</strong> 86.3% (132-21)</li>
+          <li><strong>4 vs 13:</strong> 79.1% (121-32)</li>
+          <li><strong>5 vs 12:</strong> 64.7% (99-54) &mdash; the classic upset spot</li>
+          <li><strong>6 vs 11:</strong> 66.0% (101-52)</li>
+          <li><strong>7 vs 10:</strong> 63.4% (97-56)</li>
+          <li><strong>8 vs 9:</strong> 53.6% (82-71) &mdash; essentially a coin flip</li>
+        </ul>
+        <p>For later-round matchups without historical data, a seed ratio formula is used as a fallback.</p>
+      </div>
+
+      <div class="card">
+        <div class="card-title">3. Upset Adjustment (15% weight)</div>
+        <p>Scans for specific red flags that historically correlate with tournament upsets. Each factor that fires adds a small probability boost to the underdog:</p>
+        <ul>
+          <li><strong>Small efficiency gap</strong> (+6%) &mdash; When the AdjEM gap is under 6 points despite a 4+ seed gap, the lower seed is better than their seeding suggests</li>
+          <li><strong>3PT shooting edge</strong> (+3%) &mdash; Underdog shoots 3s better than the favorite; high-variance shot can swing games</li>
+          <li><strong>Slow tempo</strong> (+2.5%) &mdash; Fewer possessions = fewer chances for the better team to assert dominance</li>
+          <li><strong>Turnover-prone favorite</strong> (+3%) &mdash; Favorites with high turnover rates give underdogs extra possessions</li>
+          <li><strong>Weak FT shooting</strong> (+2.5%) &mdash; Close tournament games are won at the line; favorites below 70% FT are vulnerable</li>
+          <li><strong>Underdog more experienced</strong> (+2.5%) &mdash; Older rosters with upperclassmen handle tournament pressure better</li>
+          <li><strong>Favorite weak defense</strong> (+2%) &mdash; AdjD above 100 means the favorite can't stop opponents efficiently</li>
+          <li><strong>Underdog strong defense</strong> (+2%) &mdash; AdjD below 96 means the underdog can lock down and make it ugly</li>
+        </ul>
+      </div>
+
+      <h2>Key Stats Explained</h2>
+
+      <div class="card">
+        <div class="card-title">AdjEM &mdash; Adjusted Efficiency Margin</div>
+        <p>The difference between a team's offensive and defensive efficiency, adjusted for opponent strength. <strong>This is the single most important number.</strong> It tells you how many points per 100 possessions a team outscores its opponents by. Elite teams are 25+, average tournament teams are 12-18, and top contenders are 30+.</p>
+      </div>
+
+      <div class="card">
+        <div class="card-title">AdjO &mdash; Adjusted Offensive Efficiency</div>
+        <p>Points scored per 100 possessions, adjusted for opponent defense quality. Higher is better. Elite offenses score 120+.</p>
+      </div>
+
+      <div class="card">
+        <div class="card-title">AdjD &mdash; Adjusted Defensive Efficiency</div>
+        <p>Points allowed per 100 possessions, adjusted for opponent offense quality. <strong>Lower is better.</strong> Champions almost always have a top-25 defense (under 96). This is the most important stat after AdjEM for predicting deep runs.</p>
+      </div>
+
+      <div class="card">
+        <div class="card-title">AdjT &mdash; Adjusted Tempo</div>
+        <p>Possessions per 40 minutes, adjusted for opponent pace. Affects game variance &mdash; slower games have fewer possessions, giving underdogs a better chance since there are fewer opportunities for the better team to pull away.</p>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Win %</div>
+        <p>The number shown next to each team name in the bracket. This is that team's calculated probability of winning that specific matchup, based on the blended model described above.</p>
+      </div>
+
+      <h2>Championship Title Score</h2>
+      <p>A 0-100 score measuring how well a team matches the profile of past champions. It's calculated from:</p>
+      <ul>
+        <li><strong>AdjEM</strong> (up to 25 pts) &mdash; Champions typically have 25+ AdjEM</li>
+        <li><strong>Defense</strong> (up to 20 pts) &mdash; Elite defense under 92 AdjD</li>
+        <li><strong>Free throw %</strong> (up to 15 pts) &mdash; 76%+ FT shooting for close games</li>
+        <li><strong>Seed</strong> (up to 15 pts) &mdash; Seeds 1-2 have the best paths</li>
+        <li><strong>Experience</strong> (up to 15 pts) &mdash; Veteran rosters with tournament experience</li>
+        <li><strong>Turnover rate</strong> (up to 10 pts) &mdash; Low-turnover teams are more consistent</li>
+      </ul>
+      <p>A score of 70+ indicates a legitimate title contender. 45-69 is a potential Final Four team. Below 45 means a deep run is unlikely but not impossible.</p>
+
+      <h2>Using the Tabs</h2>
+
+      <h3>Bracket</h3>
+      <p>Click on a team to pick them as the winner. They'll advance to the next round automatically. If you change an earlier pick, later rounds that depended on it will clear. Use <strong>Auto-Fill Favorites</strong> to let the model pick every game, or <strong>Auto-Fill w/ Upsets</strong> to simulate a realistic bracket with some upsets sprinkled in (picks underdogs when the matchup is close). Your picks are saved automatically in your browser.</p>
+
+      <h3>Matchup Analyzer</h3>
+      <p>Pick any two teams to see a detailed head-to-head comparison. Shows the predicted winner, win probability, side-by-side stat bars, which factors favor which team, and an upset alert if multiple red flags are firing. Click <strong>Analyze</strong> under any bracket matchup to jump straight here with those teams loaded.</p>
+
+      <h3>Upset Alerts</h3>
+      <p>A ranked list of every matchup sorted by upset likelihood. Shows the upset probability, seed gap, efficiency gap, and which specific indicators are triggering. Filter by round. Great for identifying the 5-vs-12 and 7-vs-10 games where upsets are most likely.</p>
+
+      <h3>Team Data</h3>
+      <p>A sortable, searchable table of all 64 tournament teams with every stat. Click column headers to sort. Use the search bar to filter by name, or the dropdown to filter by region. You can edit any team's stats individually, or paste in bulk data (CSV/tab-separated) to update everything at once. Hit <strong>Export Picks</strong> to copy your full bracket to clipboard.</p>
+
+      <h2>Data Source</h2>
+      <p>All efficiency data (AdjO, AdjD, AdjT) is sourced from <strong>Barttorvik</strong> (barttorvik.com), which provides tempo-free adjusted statistics for every Division I team. Supplementary stats (3PT%, FT%, turnover rate, experience) are estimated defaults that can be fine-tuned in the Team Data tab. Seed matchup history covers every NCAA tournament game from 1985-2024.</p>
+
     </div>
   </div>
 </div>
