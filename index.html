@@ -140,6 +140,10 @@ header p { color: var(--text-dim); font-size: 12px; margin-top: 6px; letter-spac
 .champion-display .champ-name { font-size: 24px; font-weight: 900; color: var(--accent); margin-top: 3px; letter-spacing: 1px; }
 .champion-display .trophy { font-size: 32px; }
 
+/* Analyze button in matchup prob bar */
+.analyze-btn { background: none; border: 1px solid rgba(201,168,76,.3); color: var(--accent); font-size: 8px; font-weight: 700; padding: 1px 5px; border-radius: 3px; cursor: pointer; margin-left: 4px; text-transform: uppercase; letter-spacing: .5px; transition: all .2s; }
+.analyze-btn:hover { background: var(--accent); color: #111; }
+
 /* Confidence colors */
 .conf-high { color: var(--green); }
 .conf-med { color: var(--yellow); }
@@ -948,12 +952,13 @@ function renderMatchupHTML(matchup, region, round, idx) {
   const t2 = matchup.team2;
 
   let probHtml = '';
+  let analyzeBtn = '';
   if (t1 && t2) {
     const pred = predictMatchup(t1, t2);
     const p1 = (pred.prob * 100).toFixed(0);
     const p2 = ((1 - pred.prob) * 100).toFixed(0);
     const confClass = getConfClass(Math.max(pred.prob, 1 - pred.prob));
-    probHtml = `<div class="matchup-prob"><span class="${confClass}">${p1}%-${p2}%</span></div>`;
+    probHtml = `<div class="matchup-prob"><span class="${confClass}">${p1}%-${p2}%</span><button class="analyze-btn" data-team-a="${t1.name}" data-team-b="${t2.name}">Analyze</button></div>`;
   }
 
   const s1Class = (matchup.winner && t1 && matchup.winner.name === t1.name) ? ' picked' : '';
@@ -999,7 +1004,7 @@ function renderCenterMatchup(m, type, idx, title, isChamp) {
   if (m.team1 && m.team2) {
     const pred = predictMatchup(m.team1, m.team2);
     const confClass = getConfClass(Math.max(pred.prob, 1 - pred.prob));
-    probHtml = `<div class="matchup-prob"><span class="${confClass}">${(pred.prob*100).toFixed(0)}%-${((1-pred.prob)*100).toFixed(0)}%</span></div>`;
+    probHtml = `<div class="matchup-prob"><span class="${confClass}">${(pred.prob*100).toFixed(0)}%-${((1-pred.prob)*100).toFixed(0)}%</span><button class="analyze-btn" data-team-a="${m.team1.name}" data-team-b="${m.team2.name}">Analyze</button></div>`;
   }
   const t1Class = (m.winner && m.team1 && m.winner.name === m.team1.name) ? ' picked' : '';
   const t2Class = (m.winner && m.team2 && m.winner.name === m.team2.name) ? ' picked' : '';
@@ -1047,6 +1052,33 @@ function attachAllHandlers() {
       }
     });
   });
+
+  // Analyze buttons
+  document.querySelectorAll('.analyze-btn').forEach(el => {
+    el.addEventListener('click', (e) => {
+      e.stopPropagation();
+      openAnalyzer(el.dataset.teamA, el.dataset.teamB);
+    });
+  });
+}
+
+function openAnalyzer(teamA, teamB) {
+  // Switch to analyzer tab
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+  document.getElementById('analyzer-tab').classList.add('active');
+  document.querySelectorAll('.tab-btn')[1].classList.add('active');
+
+  // Initialize selects if needed
+  initAnalyzer();
+
+  // Set the teams
+  document.getElementById('team-a-select').value = teamA;
+  document.getElementById('team-b-select').value = teamB;
+  renderAnalyzer();
+
+  // Scroll to top
+  window.scrollTo(0, 0);
 }
 
 // ============================================================
