@@ -8,141 +8,104 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
 :root {
-  --bg: #0a0e1a;
-  --surface: #111827;
-  --surface2: #1a2236;
-  --surface3: #212d45;
-  --border: #2a3550;
-  --border-light: #3b4a6b;
-  --text: #e8edf5;
-  --text-dim: #7b8ba8;
-  --text-muted: #4d5f80;
+  --bg: #0d1117;
+  --surface: #161b22;
+  --surface2: #1c2333;
+  --border: #2a3140;
+  --text: #e6edf3;
+  --text-dim: #7d8590;
+  --text-muted: #484f58;
   --accent: #3b82f6;
   --accent2: #60a5fa;
-  --accent-glow: rgba(59,130,246,.15);
-  --green: #22c55e;
-  --green-dim: rgba(34,197,94,.12);
-  --yellow: #eab308;
-  --red: #ef4444;
-  --blue: #3b82f6;
-  --teal: #06b6d4;
+  --green: #3fb950;
+  --green-dim: rgba(63,185,80,.1);
+  --yellow: #d29922;
+  --red: #f85149;
   --orange: #f97316;
   --font: 'Inter', system-ui, -apple-system, sans-serif;
 }
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body { font-family: var(--font); background: var(--bg); color: var(--text); min-height: 100vh; }
-#app { max-width: 1600px; margin: 0 auto; padding: 16px; }
+#app { max-width: 1800px; margin: 0 auto; padding: 12px; }
 
-header { text-align: center; padding: 28px 0 12px; }
-header h1 { font-size: 28px; font-weight: 900; letter-spacing: 4px; text-transform: uppercase; background: linear-gradient(135deg, #e8edf5, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
-header p { color: var(--text-dim); font-size: 13px; margin-top: 8px; letter-spacing: .3px; font-weight: 400; }
+header { text-align: center; padding: 20px 0 8px; }
+header h1 { font-size: 24px; font-weight: 900; letter-spacing: 3px; text-transform: uppercase; background: linear-gradient(135deg, #e6edf3, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+header p { color: var(--text-dim); font-size: 12px; margin-top: 4px; }
 
-.tabs { display: flex; gap: 6px; justify-content: center; margin: 20px 0; flex-wrap: wrap; }
-.tab-btn { padding: 10px 24px; border: 1px solid var(--border); background: var(--surface); color: var(--text-dim); border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 600; transition: all .25s; text-transform: uppercase; letter-spacing: .8px; }
-.tab-btn:hover { color: var(--text); background: var(--surface2); border-color: var(--border-light); }
-.tab-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; box-shadow: 0 0 20px rgba(59,130,246,.25); }
+.tabs { display: flex; gap: 4px; justify-content: center; margin: 14px 0; flex-wrap: wrap; }
+.tab-btn { padding: 8px 20px; border: 1px solid var(--border); background: var(--surface); color: var(--text-dim); border-radius: 6px; cursor: pointer; font-size: 11px; font-weight: 600; transition: all .2s; text-transform: uppercase; letter-spacing: .8px; }
+.tab-btn:hover { color: var(--text); background: var(--surface2); }
+.tab-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
 
 .tab-content { display: none; }
 .tab-content.active { display: block; }
 
-/* Bracket Controls */
-.bracket-controls { display: flex; gap: 10px; justify-content: center; margin-bottom: 20px; flex-wrap: wrap; }
-.btn { padding: 9px 18px; border: 1px solid var(--border); background: var(--surface2); color: var(--text); border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 600; transition: all .25s; text-transform: uppercase; letter-spacing: .5px; }
-.btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-glow); }
+.bracket-controls { display: flex; gap: 8px; justify-content: center; margin-bottom: 14px; flex-wrap: wrap; }
+.btn { padding: 7px 14px; border: 1px solid var(--border); background: var(--surface); color: var(--text); border-radius: 6px; cursor: pointer; font-size: 11px; font-weight: 600; transition: all .2s; text-transform: uppercase; letter-spacing: .5px; }
+.btn:hover { border-color: var(--accent); color: var(--accent); }
 .btn-primary { background: var(--accent); border-color: var(--accent); color: #fff; }
-.btn-primary:hover { background: var(--accent2); border-color: var(--accent2); box-shadow: 0 0 16px rgba(59,130,246,.3); }
+.btn-primary:hover { background: #2563eb; }
 .btn-danger { border-color: var(--red); color: var(--red); }
-.btn-danger:hover { background: rgba(239,68,68,.1); }
+.btn-danger:hover { background: rgba(248,81,73,.1); }
 
-/* Unified Bracket Layout */
-.bracket-container { overflow-x: auto; padding-bottom: 16px; }
-.unified-bracket { display: flex; align-items: stretch; min-width: 1500px; gap: 0; position: relative; }
+/* ===== KALSHI-STYLE BRACKET ===== */
+.bracket-container { overflow-x: auto; padding: 0 0 16px; }
+.unified-bracket { display: flex; align-items: stretch; min-width: 1700px; position: relative; padding: 10px 0; }
 .bracket-half { display: flex; flex: 1; }
 .bracket-half.left { flex-direction: row; }
 .bracket-half.right { flex-direction: row-reverse; }
-.bracket-center { display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 200px; gap: 14px; z-index: 2; }
+.bracket-center { display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 210px; gap: 16px; z-index: 2; padding: 0 6px; }
 
 .half-section { display: flex; flex-direction: column; flex: 1; }
-.region-label { font-size: 12px; font-weight: 700; color: var(--accent2); text-align: center; text-transform: uppercase; letter-spacing: 3px; padding: 10px 0; background: linear-gradient(135deg, var(--surface), var(--surface2)); border-radius: 8px; margin-bottom: 6px; border: 1px solid var(--border); }
-.region-rounds { display: flex; flex: 1; }
+.region-label { font-size: 20px; font-weight: 600; color: rgba(255,255,255,.06); text-align: center; letter-spacing: 8px; text-transform: uppercase; padding: 2px 0; }
+.region-rounds { display: flex; flex: 1; align-items: stretch; }
 .bracket-half.right .region-rounds { flex-direction: row-reverse; }
 
-.round { display: flex; flex-direction: column; justify-content: space-around; min-width: 160px; padding: 2px 6px; position: relative; }
-.round-header { text-align: center; font-size: 10px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 1.5px; padding: 6px 0; }
+.round { display: flex; flex-direction: column; justify-content: space-around; min-width: 155px; padding: 0 8px; position: relative; flex: 1; }
 
-/* Matchup cards */
-.matchup { background: var(--surface2); border-radius: 10px; border: 1px solid var(--border); overflow: hidden; margin: 4px 0; position: relative; transition: all .25s; }
-.matchup:hover { border-color: var(--accent); box-shadow: 0 0 12px rgba(59,130,246,.1); }
-.matchup-prob { text-align: center; font-size: 10px; padding: 3px 6px; color: var(--text-dim); background: rgba(0,0,0,.25); font-weight: 600; letter-spacing: .3px; display: flex; align-items: center; justify-content: center; gap: 6px; }
+/* Matchup card - Kalshi style: dark, minimal */
+.matchup { background: var(--surface); border-radius: 8px; border: 1px solid var(--border); margin: 4px 0; position: relative; transition: border-color .15s; }
+.matchup:hover { border-color: rgba(255,255,255,.12); }
 
-/* Team slot */
-.team-slot { display: flex; align-items: center; padding: 6px 10px; cursor: pointer; transition: all .2s; gap: 7px; min-height: 32px; border-bottom: 1px solid rgba(255,255,255,.04); font-size: 13px; }
-.team-slot:last-of-type { border-bottom: none; }
-.team-slot:hover { background: var(--accent-glow); }
+/* Team row */
+.team-slot { display: flex; align-items: center; padding: 6px 8px; cursor: pointer; transition: background .1s; gap: 6px; min-height: 30px; font-size: 12px; }
+.team-slot:first-of-type { border-bottom: 1px solid rgba(255,255,255,.05); border-radius: 8px 8px 0 0; }
+.team-slot:last-of-type { border-radius: 0 0 8px 8px; }
+.team-slot:hover { background: rgba(255,255,255,.03); }
 .team-slot.picked { background: var(--green-dim); }
-.team-slot.picked .team-name { color: var(--green); font-weight: 700; }
-.team-slot.picked .team-logo { box-shadow: 0 0 6px rgba(34,197,94,.4); }
-
-/* Team logo circle */
-.team-logo { width: 24px; height: 24px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 7px; font-weight: 800; color: #fff; flex-shrink: 0; letter-spacing: -.3px; text-transform: uppercase; }
-.team-slot .seed { color: var(--accent2); font-weight: 800; font-size: 12px; min-width: 18px; }
-.team-slot .team-name { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 13px; font-weight: 500; }
-.team-slot .adjEM { font-size: 10px; color: var(--text-muted); font-weight: 600; font-variant-numeric: tabular-nums; }
-.team-slot.empty { cursor: default; color: var(--text-muted); font-style: italic; font-size: 11px; }
+.team-slot.picked .team-name { color: var(--green); font-weight: 600; }
+.team-slot .seed { color: var(--text-dim); font-weight: 700; font-size: 11px; min-width: 14px; }
+.team-slot .team-name { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 12px; font-weight: 500; }
+.team-slot .win-pct { font-size: 11px; color: var(--text-dim); font-weight: 600; min-width: 28px; text-align: right; }
+.team-slot .pick-check { width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 9px; flex-shrink: 0; transition: all .15s; color: transparent; }
+.team-slot.picked .pick-check { background: var(--green); border-color: var(--green); color: #fff; }
+.team-slot.empty { cursor: default; }
 .team-slot.empty:hover { background: transparent; }
 
-/* Connector lines */
-.round { --line-color: rgba(59,130,246,.2); }
+/* Round label under matchup */
+.matchup-round-label { text-align: center; font-size: 8px; color: var(--text-muted); margin-top: 1px; letter-spacing: .3px; font-weight: 500; }
 
-.bracket-half.left .round:not(:last-child) .matchup::after {
-  content: '';
-  position: absolute;
-  right: -7px;
-  top: 50%;
-  width: 7px;
-  height: 1px;
-  background: var(--line-color);
-}
-.bracket-half.right .round:not(:last-child) .matchup::after {
-  content: '';
-  position: absolute;
-  left: -7px;
-  top: 50%;
-  width: 7px;
-  height: 1px;
-  background: var(--line-color);
-}
-.bracket-half.left .round:not(:last-child) .matchup:nth-child(odd)::before {
-  content: '';
-  position: absolute;
-  right: -7px;
-  top: 50%;
-  height: calc(100% + 8px);
-  width: 1px;
-  background: var(--line-color);
-}
-.bracket-half.right .round:not(:last-child) .matchup:nth-child(odd)::before {
-  content: '';
-  position: absolute;
-  left: -7px;
-  top: 50%;
-  height: calc(100% + 8px);
-  width: 1px;
-  background: var(--line-color);
-}
+/* Bracket connector lines (CSS) */
+.bracket-line { position: absolute; pointer-events: none; z-index: 0; }
+.bracket-line-h { height: 1px; background: rgba(255,255,255,.1); }
+.bracket-line-v { width: 1px; background: rgba(255,255,255,.1); }
 
 /* Center / Final Four */
-.center-matchup { background: var(--surface2); border-radius: 10px; border: 1px solid var(--border); min-width: 180px; overflow: hidden; }
-.center-matchup .matchup-title { text-align: center; font-size: 10px; color: var(--text-muted); padding: 6px; background: rgba(0,0,0,.25); text-transform: uppercase; letter-spacing: 2px; font-weight: 700; }
-.championship-matchup { border-color: var(--accent); background: linear-gradient(135deg, rgba(59,130,246,.06), rgba(59,130,246,.14)); box-shadow: 0 0 24px rgba(59,130,246,.1); }
+.center-matchup { background: var(--surface); border-radius: 8px; border: 1px solid var(--border); min-width: 180px; }
+.center-matchup .matchup-label { text-align: center; font-size: 8px; color: var(--text-muted); padding: 1px; letter-spacing: .5px; font-weight: 500; }
+.championship-matchup { border-color: var(--accent); background: linear-gradient(135deg, rgba(59,130,246,.03), rgba(59,130,246,.08)); }
 .champion-display { text-align: center; padding: 12px; }
-.champion-display .label { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 4px; font-weight: 600; }
-.champion-display .champ-name { font-size: 24px; font-weight: 900; color: var(--accent2); margin-top: 4px; letter-spacing: 1px; }
-.champion-display .trophy { font-size: 36px; }
+.champion-display .label { font-size: 8px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 3px; font-weight: 600; }
+.champion-display .champ-name { font-size: 18px; font-weight: 800; color: var(--green); margin-top: 2px; }
+.champion-display .trophy { font-size: 28px; }
+.center-title { text-align: center; padding: 14px; background: var(--surface); border-radius: 10px; border: 1px solid var(--border); }
+.center-title h2 { font-size: 12px; font-weight: 800; color: var(--accent2); text-transform: uppercase; letter-spacing: 2px; }
+.center-title p { font-size: 9px; color: var(--text-muted); margin-top: 2px; text-transform: uppercase; letter-spacing: 1px; }
 
 /* Analyze button */
-.analyze-btn { background: transparent; border: 1px solid rgba(59,130,246,.3); color: var(--accent2); font-size: 8px; font-weight: 700; padding: 2px 6px; border-radius: 4px; cursor: pointer; text-transform: uppercase; letter-spacing: .5px; transition: all .2s; }
-.analyze-btn:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
+.analyze-btn { background: transparent; border: none; color: var(--accent2); font-size: 7px; font-weight: 700; padding: 1px 3px; cursor: pointer; text-transform: uppercase; letter-spacing: .5px; opacity: 0; position: absolute; top: 1px; right: 3px; z-index: 2; transition: opacity .15s; }
+.matchup:hover .analyze-btn { opacity: .7; }
+.analyze-btn:hover { opacity: 1 !important; }
 
 /* Confidence colors */
 .conf-high { color: var(--green); }
@@ -153,7 +116,7 @@ header p { color: var(--text-dim); font-size: 13px; margin-top: 8px; letter-spac
 .analyzer { max-width: 800px; margin: 0 auto; }
 .analyzer-selectors { display: flex; gap: 16px; align-items: center; justify-content: center; margin-bottom: 24px; flex-wrap: wrap; }
 .team-select { padding: 10px 14px; background: var(--surface); border: 1px solid var(--border); color: var(--text); border-radius: 8px; font-size: 13px; min-width: 200px; font-weight: 500; }
-.team-select:focus { border-color: var(--accent); outline: none; box-shadow: 0 0 0 3px rgba(59,130,246,.15); }
+.team-select:focus { border-color: var(--accent); outline: none; }
 .team-select option { background: var(--surface); }
 .vs-label { font-size: 20px; font-weight: 900; color: var(--accent); letter-spacing: 2px; }
 
@@ -165,13 +128,12 @@ header p { color: var(--text-dim); font-size: 13px; margin-top: 8px; letter-spac
 
 .stat-bars { display: flex; flex-direction: column; gap: 10px; }
 .stat-row { display: flex; align-items: center; gap: 8px; }
-.stat-row .stat-label { min-width: 100px; font-size: 11px; color: var(--text-dim); text-align: center; }
 .stat-bar-container { flex: 1; display: flex; height: 24px; background: var(--surface2); border-radius: 4px; overflow: hidden; }
 .stat-bar-left { background: var(--accent); display: flex; align-items: center; justify-content: flex-end; padding-right: 6px; font-size: 10px; font-weight: 700; transition: width .3s; color: #fff; }
 .stat-bar-right { background: var(--orange); display: flex; align-items: center; padding-left: 6px; font-size: 10px; font-weight: 700; transition: width .3s; color: #fff; }
 .stat-val { min-width: 40px; font-size: 12px; text-align: center; font-weight: 600; }
 
-.upset-alert-banner { background: rgba(239,68,68,.06); border: 1px solid rgba(239,68,68,.2); border-radius: 8px; padding: 14px 18px; margin-top: 16px; display: flex; align-items: start; gap: 10px; }
+.upset-alert-banner { background: rgba(248,81,73,.06); border: 1px solid rgba(248,81,73,.2); border-radius: 8px; padding: 14px 18px; margin-top: 16px; display: flex; align-items: start; gap: 10px; }
 .upset-alert-banner .alert-icon { font-size: 18px; }
 .upset-alert-banner .alert-text { font-size: 13px; line-height: 1.6; }
 .upset-alert-banner .alert-title { font-weight: 700; color: var(--red); text-transform: uppercase; letter-spacing: .5px; font-size: 11px; }
@@ -183,12 +145,12 @@ header p { color: var(--text-dim); font-size: 13px; margin-top: 8px; letter-spac
 
 /* Upset Alerts Tab */
 .upsets-list { max-width: 900px; margin: 0 auto; }
-.upset-row { display: flex; align-items: center; gap: 14px; padding: 14px 18px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; margin-bottom: 8px; transition: all .25s; cursor: pointer; }
-.upset-row:hover { border-color: var(--accent); background: var(--surface2); box-shadow: 0 0 12px rgba(59,130,246,.08); }
+.upset-row { display: flex; align-items: center; gap: 14px; padding: 14px 18px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; margin-bottom: 8px; transition: all .2s; cursor: pointer; }
+.upset-row:hover { border-color: rgba(255,255,255,.1); background: var(--surface2); }
 .upset-prob-badge { min-width: 52px; text-align: center; font-size: 16px; font-weight: 900; border-radius: 6px; padding: 6px 8px; }
-.upset-prob-badge.hot { background: rgba(239,68,68,.12); color: var(--red); }
-.upset-prob-badge.warm { background: rgba(234,179,8,.12); color: var(--yellow); }
-.upset-prob-badge.mild { background: rgba(34,197,94,.12); color: var(--green); }
+.upset-prob-badge.hot { background: rgba(248,81,73,.12); color: var(--red); }
+.upset-prob-badge.warm { background: rgba(210,153,34,.12); color: var(--yellow); }
+.upset-prob-badge.mild { background: rgba(63,185,80,.12); color: var(--green); }
 .upset-matchup-info { flex: 1; }
 .upset-matchup-info .matchup-name { font-size: 14px; font-weight: 700; }
 .upset-matchup-info .matchup-detail { font-size: 11px; color: var(--text-dim); margin-top: 3px; }
@@ -200,57 +162,48 @@ header p { color: var(--text-dim); font-size: 13px; margin-top: 8px; letter-spac
 .data-tab-content { overflow-x: auto; }
 .data-controls { display: flex; gap: 10px; margin-bottom: 18px; flex-wrap: wrap; align-items: center; }
 .data-search { padding: 9px 14px; background: var(--surface); border: 1px solid var(--border); color: var(--text); border-radius: 8px; font-size: 13px; min-width: 200px; }
-.data-search:focus { border-color: var(--accent); outline: none; box-shadow: 0 0 0 3px rgba(59,130,246,.15); }
+.data-search:focus { border-color: var(--accent); outline: none; }
 .data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
 .data-table th { background: var(--surface2); padding: 10px 8px; text-align: left; cursor: pointer; user-select: none; white-space: nowrap; position: sticky; top: 0; border-bottom: 2px solid var(--accent); font-size: 10px; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; color: var(--text-dim); }
 .data-table th:hover { color: var(--accent2); }
 .data-table th .sort-arrow { font-size: 10px; margin-left: 2px; }
 .data-table td { padding: 8px; border-bottom: 1px solid var(--border); white-space: nowrap; }
 .data-table tr:hover { background: var(--surface2); }
-.data-table .champ-score { font-weight: 700; }
 .champ-high { color: var(--green); }
 .champ-med { color: var(--yellow); }
 .champ-low { color: var(--text-dim); }
 .table-container { max-height: 600px; overflow-y: auto; border-radius: 10px; border: 1px solid var(--border); }
 
-/* Edit Modal */
+/* Modals */
 .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.8); display: flex; align-items: center; justify-content: center; z-index: 1000; backdrop-filter: blur(8px); }
-.modal { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 28px; max-width: 500px; width: 90%; max-height: 80vh; overflow-y: auto; box-shadow: 0 24px 48px rgba(0,0,0,.4); }
+.modal { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 28px; max-width: 500px; width: 90%; max-height: 80vh; overflow-y: auto; }
 .modal h3 { color: var(--accent2); margin-bottom: 18px; font-weight: 800; font-size: 18px; }
 .modal-field { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
 .modal-field label { min-width: 120px; font-size: 12px; color: var(--text-dim); font-weight: 500; }
-.modal-field input { padding: 8px 12px; background: var(--surface2); border: 1px solid var(--border); color: var(--text); border-radius: 6px; font-size: 13px; width: 100%; transition: border-color .2s; }
+.modal-field input { padding: 8px 12px; background: var(--surface2); border: 1px solid var(--border); color: var(--text); border-radius: 6px; font-size: 13px; width: 100%; }
 .modal-field input:focus { border-color: var(--accent); outline: none; }
 .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
-
-/* Paste Modal */
-.paste-area { width: 100%; min-height: 200px; background: var(--surface2); border: 1px solid var(--border); color: var(--text); border-radius: 8px; padding: 12px; font-family: 'SF Mono', 'Fira Code', monospace; font-size: 12px; resize: vertical; }
+.paste-area { width: 100%; min-height: 200px; background: var(--surface2); border: 1px solid var(--border); color: var(--text); border-radius: 8px; padding: 12px; font-family: monospace; font-size: 12px; resize: vertical; }
 .paste-area:focus { border-color: var(--accent); outline: none; }
 .paste-help { font-size: 12px; color: var(--text-dim); margin: 10px 0; line-height: 1.6; }
-
 .hidden { display: none !important; }
-
-/* Info Banner */
-.info-banner { background: rgba(59,130,246,.06); border: 1px solid rgba(59,130,246,.15); border-radius: 8px; padding: 12px 18px; margin-bottom: 18px; font-size: 13px; color: var(--accent2); text-align: center; }
-
-/* Title Score Bar */
-.title-bar { width: 60px; height: 6px; border-radius: 3px; background: var(--surface2); overflow: hidden; display: inline-block; vertical-align: middle; margin-left: 4px; }
-.title-bar-fill { height: 100%; border-radius: 3px; transition: width .3s; }
+.info-banner { background: rgba(59,130,246,.06); border: 1px solid rgba(59,130,246,.15); border-radius: 8px; padding: 10px 18px; margin-bottom: 14px; font-size: 12px; color: var(--accent2); text-align: center; }
 
 @media (max-width: 768px) {
   .unified-bracket { flex-direction: column; min-width: unset; }
-  .bracket-half.right .region-rounds { flex-direction: row; }
+  .bracket-half, .bracket-half.left, .bracket-half.right { flex-direction: column; }
+  .region-rounds, .bracket-half.right .region-rounds { flex-direction: row !important; }
   .bracket-center { flex-direction: row; flex-wrap: wrap; }
   .analyzer-selectors { flex-direction: column; }
-  header h1 { font-size: 20px; }
+  header h1 { font-size: 18px; }
 }
 </style>
 </head>
 <body>
 <div id="app">
   <header>
-    <h1>MARCH MADNESS BRACKET PREDICTOR</h1>
-    <p>Analytics-driven bracket picks powered by efficiency metrics, seed history, and upset detection</p>
+    <h1>March Madness Bracket Predictor</h1>
+    <p>Analytics-driven bracket picks &bull; Efficiency metrics &bull; Seed history &bull; Upset detection</p>
   </header>
 
   <div class="tabs">
@@ -260,22 +213,20 @@ header p { color: var(--text-dim); font-size: 13px; margin-top: 8px; letter-spac
     <button class="tab-btn" onclick="switchTab('data')">Team Data</button>
   </div>
 
-  <!-- BRACKET TAB -->
   <div id="bracket-tab" class="tab-content active">
     <div class="info-banner" id="data-banner">
-      2026 NCAA Tournament bracket loaded with real Barttorvik efficiency data (AdjO, AdjD, AdjT). Fine-tune supplementary stats in the <strong>Team Data</strong> tab.
+      2026 NCAA Tournament bracket loaded with real Barttorvik efficiency data. Fine-tune stats in the <strong>Team Data</strong> tab.
     </div>
     <div class="bracket-controls">
-      <button class="btn btn-primary" onclick="autoFill(false)">Auto-Fill (Favorites)</button>
-      <button class="btn" onclick="autoFill(true)">Auto-Fill (With Upsets)</button>
-      <button class="btn btn-danger" onclick="resetBracket()">Reset Bracket</button>
+      <button class="btn btn-primary" onclick="autoFill(false)">Auto-Fill Favorites</button>
+      <button class="btn" onclick="autoFill(true)">Auto-Fill w/ Upsets</button>
+      <button class="btn btn-danger" onclick="resetBracket()">Reset</button>
     </div>
     <div class="bracket-container">
       <div class="unified-bracket" id="unified-bracket"></div>
     </div>
   </div>
 
-  <!-- ANALYZER TAB -->
   <div id="analyzer-tab" class="tab-content">
     <div class="analyzer">
       <div class="analyzer-selectors">
@@ -287,7 +238,6 @@ header p { color: var(--text-dim); font-size: 13px; margin-top: 8px; letter-spac
     </div>
   </div>
 
-  <!-- UPSETS TAB -->
   <div id="upsets-tab" class="tab-content">
     <div class="upsets-list">
       <div class="round-filter">
@@ -299,7 +249,6 @@ header p { color: var(--text-dim); font-size: 13px; margin-top: 8px; letter-spac
     </div>
   </div>
 
-  <!-- DATA TAB -->
   <div id="data-tab" class="tab-content">
     <div class="data-tab-content">
       <div class="data-controls">
@@ -321,7 +270,6 @@ header p { color: var(--text-dim); font-size: 13px; margin-top: 8px; letter-spac
   </div>
 </div>
 
-<!-- Edit Modal -->
 <div class="modal-overlay hidden" id="edit-modal">
   <div class="modal">
     <h3 id="edit-modal-title">Edit Team</h3>
@@ -333,14 +281,12 @@ header p { color: var(--text-dim); font-size: 13px; margin-top: 8px; letter-spac
   </div>
 </div>
 
-<!-- Paste Modal -->
 <div class="modal-overlay hidden" id="paste-modal">
   <div class="modal">
     <h3>Paste Bulk Team Data</h3>
     <p class="paste-help">
       Paste tab or comma-separated data. Expected columns:<br>
-      <strong>Team, Seed, Region, AdjEM, AdjO, AdjD, AdjT, SOS, 3PT%, Opp3PT%, FT%, TOV%, ORB%, Experience</strong><br>
-      First row can be a header (will be skipped if detected). Team names must match existing teams or new entries will be added.
+      <strong>Team, Seed, Region, AdjEM, AdjO, AdjD, AdjT, SOS, 3PT%, Opp3PT%, FT%, TOV%, ORB%, Experience</strong>
     </p>
     <textarea class="paste-area" id="paste-area" placeholder="Paste data here..."></textarea>
     <div class="modal-actions">
@@ -356,7 +302,6 @@ header p { color: var(--text-dim); font-size: 13px; margin-top: 8px; letter-spac
 // ============================================================
 
 const TEAMS = {
-  // ============ EAST REGION - 1 seed: Duke ============
   "Duke"            : { seed:1, region:"East", adjEM:37.4, adjO:128.2, adjD:90.8, adjT:65.8, sos:10.9, threePtPct:0.371, threePtDefPct:0.292, ftPct:0.766, tovRate:14.7, orbPct:32.2, experience:1.8, record:"32-2" },
   "Siena"           : { seed:16, region:"East", adjEM:-1.7, adjO:107.2, adjD:108.9, adjT:64.6, sos:-1.3, threePtPct:0.329, threePtDefPct:0.347, ftPct:0.724, tovRate:16.4, orbPct:29.1, experience:2.9, record:"23-11" },
   "Ohio State"      : { seed:8, region:"East", adjEM:23.6, adjO:125.2, adjD:101.6, adjT:66.2, sos:8.7, threePtPct:0.36, threePtDefPct:0.325, ftPct:0.76, tovRate:15.0, orbPct:31.8, experience:2.0, record:"21-12" },
@@ -374,7 +319,6 @@ const TEAMS = {
   "UConn"           : { seed:2, region:"East", adjEM:28.1, adjO:123.1, adjD:95.0, adjT:64.6, sos:10.1, threePtPct:0.361, threePtDefPct:0.305, ftPct:0.756, tovRate:15.2, orbPct:31.5, experience:1.8, record:"29-5" },
   "Furman"          : { seed:15, region:"East", adjEM:-2.1, adjO:106.9, adjD:109.0, adjT:65.8, sos:-1.7, threePtPct:0.329, threePtDefPct:0.347, ftPct:0.724, tovRate:16.4, orbPct:29.0, experience:2.9, record:"22-12" },
 
-  // ============ WEST REGION - 1 seed: Arizona ============
   "Arizona"         : { seed:1, region:"West", adjEM:35.5, adjO:126.9, adjD:91.4, adjT:70.0, sos:10.7, threePtPct:0.364, threePtDefPct:0.294, ftPct:0.764, tovRate:14.8, orbPct:32.0, experience:1.8, record:"32-2" },
   "Long Island"     : { seed:16, region:"West", adjEM:-6.2, adjO:103.6, adjD:109.8, adjT:67.8, sos:-4.4, threePtPct:0.317, threePtDefPct:0.349, ftPct:0.717, tovRate:16.7, orbPct:28.5, experience:2.9, record:"24-10" },
   "Villanova"       : { seed:8, region:"West", adjEM:19.1, adjO:119.6, adjD:100.5, adjT:64.9, sos:7.5, threePtPct:0.354, threePtDefPct:0.321, ftPct:0.749, tovRate:15.4, orbPct:30.9, experience:2.0, record:"24-8" },
@@ -392,7 +336,6 @@ const TEAMS = {
   "Purdue"          : { seed:2, region:"West", adjEM:33.0, adjO:133.3, adjD:100.3, adjT:64.4, sos:10.2, threePtPct:0.382, threePtDefPct:0.321, ftPct:0.777, tovRate:14.3, orbPct:33.0, experience:1.8, record:"27-8" },
   "Queens"          : { seed:15, region:"West", adjEM:-2.4, adjO:114.7, adjD:117.1, adjT:69.5, sos:-1.9, threePtPct:0.339, threePtDefPct:0.37, ftPct:0.739, tovRate:15.8, orbPct:30.2, experience:2.9, record:"21-13" },
 
-  // ============ MIDWEST REGION - 1 seed: Michigan ============
   "Michigan"        : { seed:1, region:"Midwest", adjEM:36.6, adjO:127.6, adjD:91.0, adjT:71.2, sos:10.8, threePtPct:0.365, threePtDefPct:0.293, ftPct:0.765, tovRate:14.8, orbPct:32.1, experience:1.8, record:"31-3" },
   "UMBC"            : { seed:16, region:"Midwest", adjEM:-1.6, adjO:107.6, adjD:109.2, adjT:66.0, sos:-1.2, threePtPct:0.325, threePtDefPct:0.348, ftPct:0.725, tovRate:16.4, orbPct:29.1, experience:2.9, record:"24-8" },
   "Georgia"         : { seed:8, region:"Midwest", adjEM:19.5, adjO:124.3, adjD:104.8, adjT:72.0, sos:7.4, threePtPct:0.359, threePtDefPct:0.334, ftPct:0.759, tovRate:15.1, orbPct:31.6, experience:2.0, record:"22-10" },
@@ -410,7 +353,6 @@ const TEAMS = {
   "Iowa State"      : { seed:2, region:"Midwest", adjEM:31.2, adjO:123.8, adjD:92.6, adjT:67.0, sos:10.3, threePtPct:0.358, threePtDefPct:0.298, ftPct:0.758, tovRate:15.1, orbPct:31.6, experience:1.8, record:"27-7" },
   "Tennessee State" : { seed:15, region:"Midwest", adjEM:-4.1, adjO:107.8, adjD:111.9, adjT:70.1, sos:-4.1, threePtPct:0.326, threePtDefPct:0.356, ftPct:0.726, tovRate:16.4, orbPct:29.2, experience:2.9, record:"23-9" },
 
-  // ============ SOUTH REGION - 1 seed: Florida ============
   "Florida"         : { seed:1, region:"South", adjEM:33.8, adjO:126.1, adjD:92.3, adjT:70.4, sos:10.6, threePtPct:0.362, threePtDefPct:0.297, ftPct:0.762, tovRate:14.9, orbPct:31.9, experience:1.8, record:"26-7" },
   "Lehigh"          : { seed:16, region:"South", adjEM:-10.2, adjO:102.6, adjD:112.8, adjT:66.9, sos:-5.4, threePtPct:0.315, threePtDefPct:0.358, ftPct:0.715, tovRate:16.8, orbPct:28.4, experience:2.9, record:"18-16" },
   "Clemson"         : { seed:8, region:"South", adjEM:19.6, adjO:116.6, adjD:97.0, adjT:64.3, sos:8.0, threePtPct:0.348, threePtDefPct:0.311, ftPct:0.743, tovRate:15.7, orbPct:30.5, experience:2.0, record:"24-10" },
@@ -429,7 +371,6 @@ const TEAMS = {
   "Idaho"           : { seed:15, region:"South", adjEM:2.6, adjO:108.8, adjD:106.2, adjT:67.4, sos:1.2, threePtPct:0.328, threePtDefPct:0.339, ftPct:0.728, tovRate:16.3, orbPct:29.3, experience:2.9, record:"21-14" },
 };
 
-// Historical seed matchup win rates (1985-2024, Round of 64)
 const SEED_HISTORY = {
   "1v16": { wins: 151, losses: 2, pct: .987 },
   "2v15": { wins: 143, losses: 10, pct: .935 },
@@ -441,13 +382,11 @@ const SEED_HISTORY = {
   "8v9":  { wins: 82, losses: 71, pct: .536 },
 };
 
-// How far each seed typically advances (avg wins in tournament)
 const SEED_DEEP_RUN = {
   1: .78, 2: .65, 3: .55, 4: .48, 5: .38, 6: .40, 7: .35, 8: .28,
   9: .25, 10: .22, 11: .20, 12: .18, 13: .08, 14: .05, 15: .03, 16: .01
 };
 
-// Bracket structure per region (matchup order)
 const BRACKET_SEEDS = [
   [1, 16], [8, 9], [5, 12], [4, 13],
   [6, 11], [3, 14], [7, 10], [2, 15]
@@ -470,10 +409,7 @@ function getSeedHistoryProb(seedA, seedB) {
   const lower = Math.max(seedA, seedB);
   const key = higher + "v" + lower;
   const entry = SEED_HISTORY[key];
-  if (!entry) {
-    // For later rounds or non-standard matchups, use seed ratio
-    return higher / (higher + lower);
-  }
+  if (!entry) return higher / (higher + lower);
   return seedA <= seedB ? entry.pct : (1 - entry.pct);
 }
 
@@ -483,81 +419,33 @@ function calcUpsetFactors(favorite, underdog) {
   const emGap = favorite.adjEM - underdog.adjEM;
   const seedGap = underdog.seed - favorite.seed;
 
-  // Small efficiency gap despite large seed difference
-  if (emGap < 6 && seedGap >= 4) {
-    factors.push("Small efficiency gap");
-    adjustment += .06;
-  } else if (emGap < 10 && seedGap >= 6) {
-    factors.push("Modest efficiency gap");
-    adjustment += .04;
-  }
-
-  // 3PT shooting edge for underdog
-  if (underdog.threePtPct - favorite.threePtPct > .015) {
-    factors.push("3PT shooting edge");
-    adjustment += .03;
-  }
-
-  // Slow tempo favorite (more variance)
-  if (favorite.adjT < 64) {
-    factors.push("Slow tempo = more variance");
-    adjustment += .025;
-  }
-
-  // Turnover-prone favorite
-  if (favorite.tovRate > 18) {
-    factors.push("Favorite turnover-prone");
-    adjustment += .03;
-  }
-
-  // Free throw weakness
-  if (favorite.ftPct < .70) {
-    factors.push("Favorite weak FT shooting");
-    adjustment += .025;
-  }
-
-  // Experience edge for underdog
-  if (underdog.experience - favorite.experience > .4) {
-    factors.push("Underdog more experienced");
-    adjustment += .025;
-  }
-
-  // Defensive weakness in favorite
-  if (favorite.adjD > 100) {
-    factors.push("Favorite weak defense");
-    adjustment += .02;
-  }
-
-  // Underdog has strong defense
-  if (underdog.adjD < 96) {
-    factors.push("Underdog strong defense");
-    adjustment += .02;
-  }
+  if (emGap < 6 && seedGap >= 4) { factors.push("Small efficiency gap"); adjustment += .06; }
+  else if (emGap < 10 && seedGap >= 6) { factors.push("Modest efficiency gap"); adjustment += .04; }
+  if (underdog.threePtPct - favorite.threePtPct > .015) { factors.push("3PT shooting edge"); adjustment += .03; }
+  if (favorite.adjT < 64) { factors.push("Slow tempo = more variance"); adjustment += .025; }
+  if (favorite.tovRate > 18) { factors.push("Favorite turnover-prone"); adjustment += .03; }
+  if (favorite.ftPct < .70) { factors.push("Favorite weak FT shooting"); adjustment += .025; }
+  if (underdog.experience - favorite.experience > .4) { factors.push("Underdog more experienced"); adjustment += .025; }
+  if (favorite.adjD > 100) { factors.push("Favorite weak defense"); adjustment += .02; }
+  if (underdog.adjD < 96) { factors.push("Underdog strong defense"); adjustment += .02; }
 
   return { factors, adjustment };
 }
 
 function predictMatchup(teamA, teamB) {
-  if (!teamA || !teamB) return { prob: .5, factors: [], upsetFactors: [] };
+  if (!teamA || !teamB) return { prob: .5, factors: [], upsetFactors: [], upsetAdjustment: 0, effProb: .5, seedProb: .5 };
 
   const kProb = efficiencyWinProb(teamA.adjEM, teamB.adjEM);
   const seedProb = getSeedHistoryProb(teamA.seed, teamB.seed);
 
-  // Determine favorite and underdog
   const aIsFav = teamA.seed <= teamB.seed;
   const fav = aIsFav ? teamA : teamB;
   const dog = aIsFav ? teamB : teamA;
   const { factors: upsetFactors, adjustment } = calcUpsetFactors(fav, dog);
 
-  // Weighted composite
   let composite = (0.55 * kProb) + (0.30 * seedProb) + (0.15 * 0.5);
-
-  // Apply upset adjustment (shifts probability toward underdog)
-  if (aIsFav) {
-    composite -= adjustment;
-  } else {
-    composite += adjustment;
-  }
+  if (aIsFav) composite -= adjustment;
+  else composite += adjustment;
 
   return {
     prob: Math.max(.02, Math.min(.98, composite)),
@@ -570,85 +458,13 @@ function predictMatchup(teamA, teamB) {
 
 function championshipViability(team) {
   let score = 0;
-  // AdjEM rank (top teams ~25+)
-  if (team.adjEM >= 25) score += 25;
-  else if (team.adjEM >= 20) score += 18;
-  else if (team.adjEM >= 15) score += 10;
-  else if (team.adjEM >= 10) score += 5;
-
-  // Defense
-  if (team.adjD <= 92) score += 20;
-  else if (team.adjD <= 96) score += 14;
-  else if (team.adjD <= 100) score += 7;
-
-  // FT shooting
-  if (team.ftPct >= .76) score += 15;
-  else if (team.ftPct >= .73) score += 10;
-  else if (team.ftPct >= .70) score += 5;
-
-  // Seed
-  if (team.seed <= 2) score += 15;
-  else if (team.seed <= 4) score += 10;
-  else if (team.seed <= 8) score += 5;
-
-  // Experience
-  if (team.experience >= 3.0) score += 15;
-  else if (team.experience >= 2.5) score += 10;
-  else if (team.experience >= 2.0) score += 5;
-
-  // Low turnovers
-  if (team.tovRate <= 15) score += 10;
-  else if (team.tovRate <= 17) score += 6;
-
+  if (team.adjEM >= 25) score += 25; else if (team.adjEM >= 20) score += 18; else if (team.adjEM >= 15) score += 10; else if (team.adjEM >= 10) score += 5;
+  if (team.adjD <= 92) score += 20; else if (team.adjD <= 96) score += 14; else if (team.adjD <= 100) score += 7;
+  if (team.ftPct >= .76) score += 15; else if (team.ftPct >= .73) score += 10; else if (team.ftPct >= .70) score += 5;
+  if (team.seed <= 2) score += 15; else if (team.seed <= 4) score += 10; else if (team.seed <= 8) score += 5;
+  if (team.experience >= 3.0) score += 15; else if (team.experience >= 2.5) score += 10; else if (team.experience >= 2.0) score += 5;
+  if (team.tovRate <= 15) score += 10; else if (team.tovRate <= 17) score += 6;
   return Math.min(100, score);
-}
-
-// Team colors for logo circles
-const TEAM_COLORS = {
-  "Duke":"#003087","Arizona":"#CC0033","Michigan":"#FFCB05","Florida":"#0021A5",
-  "UConn":"#000E2F","Houston":"#C8102E","Iowa State":"#C8102E","Purdue":"#CEB888",
-  "Kansas":"#0051BA","Alabama":"#9E1B32","Gonzaga":"#002967","Illinois":"#E84A27",
-  "Tennessee":"#FF8200","Virginia":"#232D4B","Michigan State":"#18453B","Auburn":"#0C2340",
-  "St. John's":"#D30024","Kentucky":"#0033A0","Texas Tech":"#CC0000","Wisconsin":"#C5050C",
-  "Louisville":"#AD0000","Clemson":"#F56600","North Carolina":"#7BAFD4","UCLA":"#2D68C4",
-  "Ohio State":"#BB0000","Vanderbilt":"#866D4B","Arkansas":"#9D2235","BYU":"#002E5D",
-  "Nebraska":"#D00000","Oregon":"#154733","Marquette":"#003366","Iowa":"#FFCD00",
-  "Texas":"#BF5700","Texas A&M":"#500000","Miami FL":"#F47321","Missouri":"#F1B82D",
-  "Georgia":"#BA0C2F","Creighton":"#005CA9","SMU":"#354CA1","VCU":"#F8B800",
-  "South Florida":"#006747","UCF":"#BA9B37","Saint Mary's":"#D6001C","Villanova":"#13294B",
-  "McNeese":"#005CA9","Akron":"#041E42","Santa Clara":"#862633","Northern Iowa":"#4B116F",
-  "Troy":"#8B2332","High Point":"#330072","Hofstra":"#00338D","Drake":"#004477",
-  "Cal Baptist":"#003DA5","Vermont":"#154734","Hawaii":"#024731","Penn":"#011F5B",
-  "N. Dakota State":"#006A31","Kennesaw State":"#FDBB30","Wright State":"#007A33",
-  "Furman":"#582C83","Queens":"#002D62","UMBC":"#F7B538","Long Island":"#004C97",
-  "Lehigh":"#653819","Idaho":"#B59A57","Tennessee State":"#004B8D","Utah State":"#0F2439",
-  "Saint Louis":"#003DA5","Mississippi State":"#660000"
-};
-
-function getTeamColor(name) {
-  return TEAM_COLORS[name] || '#555';
-}
-
-function getTeamAbbr(name) {
-  const abbrs = {
-    "Duke":"DUK","Arizona":"ARIZ","Michigan":"MICH","Florida":"FLA","UConn":"UCON",
-    "Houston":"HOU","Iowa State":"ISU","Purdue":"PUR","Kansas":"KU","Alabama":"BAMA",
-    "Gonzaga":"GONZ","Illinois":"ILL","Tennessee":"TENN","Virginia":"UVA",
-    "Michigan State":"MSU","Auburn":"AUB","St. John's":"SJU","Kentucky":"UK",
-    "Texas Tech":"TTU","Wisconsin":"WISC","Louisville":"LOU","Clemson":"CLEM",
-    "North Carolina":"UNC","UCLA":"UCLA","Ohio State":"OSU","Vanderbilt":"VAN",
-    "Arkansas":"ARK","BYU":"BYU","Nebraska":"NEB","Oregon":"ORE","Marquette":"MARQ",
-    "Iowa":"IOWA","Texas":"TEX","Texas A&M":"A&M","Miami FL":"MIA","Missouri":"MIZ",
-    "Georgia":"UGA","Creighton":"CRE","SMU":"SMU","VCU":"VCU","South Florida":"USF",
-    "UCF":"UCF","Saint Mary's":"SMC","Villanova":"NOVA","McNeese":"MCN","Akron":"AKR",
-    "Santa Clara":"SCU","Northern Iowa":"UNI","Troy":"TROY","High Point":"HPU",
-    "Hofstra":"HOF","Drake":"DRK","Cal Baptist":"CBU","Vermont":"UVM","Hawaii":"HAW",
-    "Penn":"PENN","N. Dakota State":"NDSU","Kennesaw State":"KSU","Wright State":"WSU",
-    "Furman":"FUR","Queens":"QU","UMBC":"UMBC","Long Island":"LIU","Lehigh":"LEH",
-    "Idaho":"IDHO","Tennessee State":"TSU","Utah State":"USU","Saint Louis":"SLU",
-    "Mississippi State":"MSST"
-  };
-  return abbrs[name] || name.substring(0, 3).toUpperCase();
 }
 
 function getConfClass(prob) {
@@ -667,14 +483,6 @@ let editingTeam = null;
 let dataSortCol = 'adjEM';
 let dataSortAsc = false;
 
-function getTeamsByRegion(region) {
-  const teams = [];
-  for (const [name, data] of Object.entries(TEAMS)) {
-    if (data.region === region) teams.push({ name, ...data });
-  }
-  return teams;
-}
-
 function getTeamBySeedRegion(seed, region) {
   for (const [name, data] of Object.entries(TEAMS)) {
     if (data.seed === seed && data.region === region) return { name, ...data };
@@ -686,13 +494,11 @@ function initBracket() {
   bracket = {};
   for (const region of REGIONS) {
     bracket[region] = { rounds: [[], [], [], []] };
-    // R64 matchups
     for (const [s1, s2] of BRACKET_SEEDS) {
       const t1 = getTeamBySeedRegion(s1, region);
       const t2 = getTeamBySeedRegion(s2, region);
       bracket[region].rounds[0].push({ team1: t1, team2: t2, winner: null });
     }
-    // Initialize later rounds as empty
     for (let r = 1; r < 4; r++) {
       const numMatchups = 8 / Math.pow(2, r);
       for (let i = 0; i < numMatchups; i++) {
@@ -701,8 +507,8 @@ function initBracket() {
     }
   }
   bracket.finalFour = [
-    { team1: null, team2: null, winner: null }, // South vs East winner
-    { team1: null, team2: null, winner: null }  // West vs Midwest winner
+    { team1: null, team2: null, winner: null },
+    { team1: null, team2: null, winner: null }
   ];
   bracket.championship = { team1: null, team2: null, winner: null };
   bracket.champion = null;
@@ -710,30 +516,18 @@ function initBracket() {
 
 function advanceWinner(region, round, matchupIdx, winnerTeam) {
   const m = bracket[region].rounds[round][matchupIdx];
-  const oldWinner = m.winner;
   m.winner = winnerTeam;
 
   if (round < 3) {
-    // Advance to next round
     const nextMatchupIdx = Math.floor(matchupIdx / 2);
     const slot = matchupIdx % 2 === 0 ? 'team1' : 'team2';
-    const nextMatchup = bracket[region].rounds[round + 1][nextMatchupIdx];
-
-    // If old winner was in next round, cascade clear
-    if (oldWinner && nextMatchup[slot] && nextMatchup[slot].name === oldWinner.name) {
-      // Different winner chosen, cascade
-    }
-    nextMatchup[slot] = winnerTeam;
-
-    // Clear downstream if the next matchup had a winner that depended on old pick
+    bracket[region].rounds[round + 1][nextMatchupIdx][slot] = winnerTeam;
     cascadeClear(region, round + 1, nextMatchupIdx);
   } else if (round === 3) {
-    // Elite 8 winner goes to Final Four
     const regionIdx = REGIONS.indexOf(region);
     const ffIdx = Math.floor(regionIdx / 2);
     const slot = regionIdx % 2 === 0 ? 'team1' : 'team2';
     bracket.finalFour[ffIdx][slot] = winnerTeam;
-    // Clear FF downstream
     cascadeClearFF(ffIdx);
   }
 
@@ -745,7 +539,6 @@ function cascadeClear(region, round, matchupIdx) {
   if (round > 3) return;
   const m = bracket[region].rounds[round][matchupIdx];
   if (m.winner) {
-    // Check if winner is still one of the teams
     if (m.team1 && m.team2 && m.winner.name !== m.team1.name && m.winner.name !== m.team2.name) {
       m.winner = null;
       if (round < 3) {
@@ -781,7 +574,6 @@ function pickFFWinner(ffIdx, team) {
   bracket.finalFour[ffIdx].winner = team;
   const slot = ffIdx === 0 ? 'team1' : 'team2';
   bracket.championship[slot] = team;
-  // Check if championship winner is still valid
   if (bracket.championship.winner && bracket.championship.winner.name !== team.name &&
       bracket.championship[slot === 'team1' ? 'team2' : 'team1']?.name !== bracket.championship.winner.name) {
     bracket.championship.winner = null;
@@ -800,7 +592,6 @@ function pickChampion(team) {
 
 function autoFill(withUpsets) {
   initBracket();
-  // Fill each region
   for (const region of REGIONS) {
     for (let round = 0; round < 4; round++) {
       for (let i = 0; i < bracket[region].rounds[round].length; i++) {
@@ -809,7 +600,6 @@ function autoFill(withUpsets) {
           const pred = predictMatchup(m.team1, m.team2);
           let winner;
           if (withUpsets && pred.prob < .65 && pred.prob > .35) {
-            // Pick the underdog if close enough (simulates realistic upsets)
             const dogIsTeam2 = m.team1.seed < m.team2.seed;
             const upsetRoll = Math.random();
             const upsetThreshold = dogIsTeam2 ? (1 - pred.prob) : pred.prob;
@@ -818,7 +608,6 @@ function autoFill(withUpsets) {
             winner = pred.prob >= .5 ? m.team1 : m.team2;
           }
           m.winner = winner;
-          // Advance
           if (round < 3) {
             const nextIdx = Math.floor(i / 2);
             const slot = i % 2 === 0 ? 'team1' : 'team2';
@@ -833,34 +622,26 @@ function autoFill(withUpsets) {
       }
     }
   }
-  // Fill Final Four
   for (let i = 0; i < 2; i++) {
     const m = bracket.finalFour[i];
     if (m.team1 && m.team2) {
       const pred = predictMatchup(m.team1, m.team2);
       const winner = pred.prob >= .5 ? m.team1 : m.team2;
       m.winner = winner;
-      const slot = i === 0 ? 'team1' : 'team2';
-      bracket.championship[slot] = winner;
+      bracket.championship[i === 0 ? 'team1' : 'team2'] = winner;
     }
   }
-  // Championship
   const cm = bracket.championship;
   if (cm.team1 && cm.team2) {
     const pred = predictMatchup(cm.team1, cm.team2);
     cm.winner = pred.prob >= .5 ? cm.team1 : cm.team2;
     bracket.champion = cm.winner;
   }
-
   saveBracket();
   renderAll();
 }
 
-function resetBracket() {
-  initBracket();
-  saveBracket();
-  renderAll();
-}
+function resetBracket() { initBracket(); saveBracket(); renderAll(); }
 
 function saveBracket() {
   try { localStorage.setItem('mm_bracket', JSON.stringify(bracket)); } catch(e) {}
@@ -869,10 +650,7 @@ function saveBracket() {
 function loadBracket() {
   try {
     const saved = localStorage.getItem('mm_bracket');
-    if (saved) {
-      bracket = JSON.parse(saved);
-      return true;
-    }
+    if (saved) { bracket = JSON.parse(saved); return true; }
   } catch(e) {}
   return false;
 }
@@ -886,7 +664,6 @@ function switchTab(tab) {
   document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
   document.getElementById(tab + '-tab').classList.add('active');
   event.target.classList.add('active');
-
   if (tab === 'upsets') renderUpsetAlerts();
   if (tab === 'data') renderDataTable();
   if (tab === 'analyzer') initAnalyzer();
@@ -898,50 +675,37 @@ function renderAll() {
 
 function renderUnifiedBracket() {
   const container = document.getElementById('unified-bracket');
-
-  // Left side: South (top) + East (bottom), flowing left-to-right
-  // Right side: West (top) + Midwest (bottom), flowing right-to-left
-  const leftRegions = ['South', 'East'];
-  const rightRegions = ['West', 'Midwest'];
-
   let html = '';
 
-  // LEFT HALF
   html += '<div class="bracket-half left">';
-  html += renderHalf(leftRegions, false);
+  html += renderHalf(['South', 'East'], 'left');
   html += '</div>';
 
-  // CENTER: Final Four + Championship
   html += '<div class="bracket-center">';
   html += renderCenterColumn();
   html += '</div>';
 
-  // RIGHT HALF
   html += '<div class="bracket-half right">';
-  html += renderHalf(rightRegions, true);
+  html += renderHalf(['West', 'Midwest'], 'right');
   html += '</div>';
 
   container.innerHTML = html;
   attachAllHandlers();
+
+  // Draw connector lines after paint
+  requestAnimationFrame(() => requestAnimationFrame(() => drawConnectorLines()));
 }
 
-function renderHalf(regions, reversed) {
+function renderHalf(regions, side) {
   let html = '<div style="display:flex;flex-direction:column;flex:1;">';
-  for (let ri = 0; ri < regions.length; ri++) {
-    const region = regions[ri];
+  for (const region of regions) {
     html += `<div class="half-section">`;
-    html += `<div class="region-label">${region} Region</div>`;
+    html += `<div class="region-label">${region}</div>`;
     html += `<div class="region-rounds">`;
-
-    const roundOrder = reversed ? [0, 1, 2, 3] : [0, 1, 2, 3];
-    for (const r of roundOrder) {
-      html += `<div class="round">`;
-      if (ri === 0) html += `<div class="round-header">${ROUND_NAMES[r]}</div>`;
-      else html += `<div class="round-header" style="visibility:hidden">${ROUND_NAMES[r]}</div>`;
-
+    for (let r = 0; r < 4; r++) {
+      html += `<div class="round" data-round="${r}" data-side="${side}" data-region="${region}">`;
       for (let i = 0; i < bracket[region].rounds[r].length; i++) {
-        const m = bracket[region].rounds[r][i];
-        html += renderMatchupHTML(m, region, r, i);
+        html += renderMatchupHTML(bracket[region].rounds[r][i], region, r, i, side);
       }
       html += '</div>';
     }
@@ -951,82 +715,163 @@ function renderHalf(regions, reversed) {
   return html;
 }
 
-function renderMatchupHTML(matchup, region, round, idx) {
+function renderMatchupHTML(matchup, region, round, idx, side) {
   const t1 = matchup.team1;
   const t2 = matchup.team2;
+  const s1Picked = matchup.winner && t1 && matchup.winner.name === t1.name;
+  const s2Picked = matchup.winner && t2 && matchup.winner.name === t2.name;
 
-  let probHtml = '';
-  let analyzeBtn = '';
+  let analyzeHtml = '';
   if (t1 && t2) {
-    const pred = predictMatchup(t1, t2);
-    const p1 = (pred.prob * 100).toFixed(0);
-    const p2 = ((1 - pred.prob) * 100).toFixed(0);
-    const confClass = getConfClass(Math.max(pred.prob, 1 - pred.prob));
-    probHtml = `<div class="matchup-prob"><span class="${confClass}">${p1}%-${p2}%</span><button class="analyze-btn" data-team-a="${t1.name}" data-team-b="${t2.name}">Analyze</button></div>`;
+    analyzeHtml = `<button class="analyze-btn" data-team-a="${t1.name}" data-team-b="${t2.name}">ANALYZE</button>`;
   }
 
-  const s1Class = (matchup.winner && t1 && matchup.winner.name === t1.name) ? ' picked' : '';
-  const s2Class = (matchup.winner && t2 && matchup.winner.name === t2.name) ? ' picked' : '';
+  // Win probabilities
+  let pct1 = '', pct2 = '';
+  if (t1 && t2) {
+    const pred = predictMatchup(t1, t2);
+    pct1 = Math.round(pred.prob * 100) + '%';
+    pct2 = Math.round((1 - pred.prob) * 100) + '%';
+  }
 
-  return `<div class="matchup">
-    ${probHtml}
-    <div class="team-slot${s1Class} bracket-team" data-region="${region}" data-round="${round}" data-idx="${idx}" data-slot="1">
-      ${t1 ? `<div class="team-logo" style="background:${getTeamColor(t1.name)}">${getTeamAbbr(t1.name)}</div><span class="seed">${t1.seed}</span><span class="team-name">${t1.name}</span><span class="adjEM">${t1.adjEM.toFixed(1)}</span>` : '<span style="color:var(--text-dim);font-style:italic;font-size:11px;">TBD</span>'}
+  const roundLabel = ['Round of 64', 'Round of 32', 'Sweet 16', 'Quarterfinal'][round];
+
+  return `<div class="matchup" data-region="${region}" data-round="${round}" data-idx="${idx}">
+    ${analyzeHtml}
+    <div class="team-slot${s1Picked ? ' picked' : ''}${!t1 ? ' empty' : ''} bracket-team" data-region="${region}" data-round="${round}" data-idx="${idx}" data-slot="1">
+      ${t1 ? `<span class="seed">${t1.seed}</span><span class="team-name">${t1.name}</span><span class="win-pct">${pct1}</span><div class="pick-check">${s1Picked ? '&#10003;' : ''}</div>` : '<span style="color:var(--text-muted);font-size:10px;">TBD</span>'}
     </div>
-    <div class="team-slot${s2Class} bracket-team" data-region="${region}" data-round="${round}" data-idx="${idx}" data-slot="2">
-      ${t2 ? `<div class="team-logo" style="background:${getTeamColor(t2.name)}">${getTeamAbbr(t2.name)}</div><span class="seed">${t2.seed}</span><span class="team-name">${t2.name}</span><span class="adjEM">${t2.adjEM.toFixed(1)}</span>` : '<span style="color:var(--text-dim);font-style:italic;font-size:11px;">TBD</span>'}
+    <div class="team-slot${s2Picked ? ' picked' : ''}${!t2 ? ' empty' : ''} bracket-team" data-region="${region}" data-round="${round}" data-idx="${idx}" data-slot="2">
+      ${t2 ? `<span class="seed">${t2.seed}</span><span class="team-name">${t2.name}</span><span class="win-pct">${pct2}</span><div class="pick-check">${s2Picked ? '&#10003;' : ''}</div>` : '<span style="color:var(--text-muted);font-size:10px;">TBD</span>'}
     </div>
+    <div class="matchup-round-label">${roundLabel}</div>
   </div>`;
 }
 
 function renderCenterColumn() {
   let html = '';
+  html += renderCenterMatchup(bracket.finalFour[0], 'ff', 0, 'Semifinal');
 
-  // FF Game 1: South vs East (top)
-  html += renderCenterMatchup(bracket.finalFour[0], 'ff', 0, 'Final Four');
-
-  // Championship
   html += renderCenterMatchup(bracket.championship, 'champ', 0, 'Championship', true);
 
-  // Champion
   if (bracket.champion) {
     html += `<div class="champion-display">
       <div class="trophy">&#127942;</div>
       <div class="label">Champion</div>
       <div class="champ-name">${bracket.champion.name}</div>
     </div>`;
+  } else {
+    html += `<div class="center-title"><h2>NCAA Tournament</h2><p>March Madness 2026</p></div>`;
   }
 
-  // FF Game 2: West vs Midwest (bottom)
-  html += renderCenterMatchup(bracket.finalFour[1], 'ff', 1, 'Final Four');
-
+  html += renderCenterMatchup(bracket.finalFour[1], 'ff', 1, 'Semifinal');
   return html;
 }
 
 function renderCenterMatchup(m, type, idx, title, isChamp) {
-  let probHtml = '';
+  const t1Picked = m.winner && m.team1 && m.winner.name === m.team1.name;
+  const t2Picked = m.winner && m.team2 && m.winner.name === m.team2.name;
+
+  let pct1 = '', pct2 = '';
   if (m.team1 && m.team2) {
     const pred = predictMatchup(m.team1, m.team2);
-    const confClass = getConfClass(Math.max(pred.prob, 1 - pred.prob));
-    probHtml = `<div class="matchup-prob"><span class="${confClass}">${(pred.prob*100).toFixed(0)}%-${((1-pred.prob)*100).toFixed(0)}%</span><button class="analyze-btn" data-team-a="${m.team1.name}" data-team-b="${m.team2.name}">Analyze</button></div>`;
+    pct1 = Math.round(pred.prob * 100) + '%';
+    pct2 = Math.round((1 - pred.prob) * 100) + '%';
   }
-  const t1Class = (m.winner && m.team1 && m.winner.name === m.team1.name) ? ' picked' : '';
-  const t2Class = (m.winner && m.team2 && m.winner.name === m.team2.name) ? ' picked' : '';
 
   return `<div class="center-matchup${isChamp ? ' championship-matchup' : ''}">
-    <div class="matchup-title">${title}</div>
-    ${probHtml}
-    <div class="team-slot${t1Class} center-team" data-type="${type}" data-idx="${idx}" data-slot="1">
-      ${m.team1 ? `<div class="team-logo" style="background:${getTeamColor(m.team1.name)}">${getTeamAbbr(m.team1.name)}</div><span class="seed">${m.team1.seed}</span><span class="team-name">${m.team1.name}</span>` : '<span style="color:var(--text-dim);font-style:italic;font-size:11px;">TBD</span>'}
+    <div class="team-slot${t1Picked ? ' picked' : ''} center-team" data-type="${type}" data-idx="${idx}" data-slot="1">
+      ${m.team1 ? `<span class="seed">${m.team1.seed}</span><span class="team-name">${m.team1.name}</span><span class="win-pct">${pct1}</span><div class="pick-check">${t1Picked ? '&#10003;' : ''}</div>` : '<span style="color:var(--text-muted);font-size:10px;">TBD</span>'}
     </div>
-    <div class="team-slot${t2Class} center-team" data-type="${type}" data-idx="${idx}" data-slot="2">
-      ${m.team2 ? `<div class="team-logo" style="background:${getTeamColor(m.team2.name)}">${getTeamAbbr(m.team2.name)}</div><span class="seed">${m.team2.seed}</span><span class="team-name">${m.team2.name}</span>` : '<span style="color:var(--text-dim);font-style:italic;font-size:11px;">TBD</span>'}
+    <div class="team-slot${t2Picked ? ' picked' : ''} center-team" data-type="${type}" data-idx="${idx}" data-slot="2">
+      ${m.team2 ? `<span class="seed">${m.team2.seed}</span><span class="team-name">${m.team2.name}</span><span class="win-pct">${pct2}</span><div class="pick-check">${t2Picked ? '&#10003;' : ''}</div>` : '<span style="color:var(--text-muted);font-size:10px;">TBD</span>'}
     </div>
+    <div class="matchup-label">${title}</div>
   </div>`;
 }
 
+// ============================================================
+// CONNECTOR LINES (drawn as absolute-positioned divs)
+// ============================================================
+
+function drawConnectorLines() {
+  // Remove old lines
+  document.querySelectorAll('.bracket-line').forEach(el => el.remove());
+
+  const bracketEl = document.getElementById('unified-bracket');
+  if (!bracketEl) return;
+  const bRect = bracketEl.getBoundingClientRect();
+
+  const regions = ['South', 'East', 'West', 'Midwest'];
+  const sides = { 'South': 'left', 'East': 'left', 'West': 'right', 'Midwest': 'right' };
+
+  for (const region of regions) {
+    const side = sides[region];
+
+    for (let r = 0; r < 3; r++) {
+      const curMatchups = bracketEl.querySelectorAll(`.matchup[data-region="${region}"][data-round="${r}"]`);
+      const nextMatchups = bracketEl.querySelectorAll(`.matchup[data-region="${region}"][data-round="${r + 1}"]`);
+
+      for (let pair = 0; pair < curMatchups.length; pair += 2) {
+        const m1 = curMatchups[pair];
+        const m2 = curMatchups[pair + 1];
+        const target = nextMatchups[Math.floor(pair / 2)];
+        if (!m1 || !m2 || !target) continue;
+
+        const r1 = m1.getBoundingClientRect();
+        const r2 = m2.getBoundingClientRect();
+        const rt = target.getBoundingClientRect();
+
+        const y1 = r1.top + r1.height / 2 - bRect.top;
+        const y2 = r2.top + r2.height / 2 - bRect.top;
+        const yt = rt.top + rt.height / 2 - bRect.top;
+
+        if (side === 'left') {
+          const x1 = r1.right - bRect.left;
+          const xMid = x1 + 12;
+          const xTarget = rt.left - bRect.left;
+
+          drawH(bracketEl, x1, y1, xMid - x1);
+          drawH(bracketEl, x1, y2, xMid - x1);
+          drawV(bracketEl, xMid, y1, y2);
+          drawH(bracketEl, xMid, (y1 + y2) / 2, xTarget - xMid);
+        } else {
+          const x1 = r1.left - bRect.left;
+          const xMid = x1 - 12;
+          const xTarget = rt.right - bRect.left;
+
+          drawH(bracketEl, xMid, y1, x1 - xMid);
+          drawH(bracketEl, xMid, y2, x1 - xMid);
+          drawV(bracketEl, xMid, y1, y2);
+          drawH(bracketEl, xTarget, (y1 + y2) / 2, xMid - xTarget);
+        }
+      }
+    }
+  }
+}
+
+function drawH(parent, x, y, w) {
+  const el = document.createElement('div');
+  el.className = 'bracket-line bracket-line-h';
+  el.style.cssText = `position:absolute;left:${x}px;top:${y}px;width:${Math.abs(w)}px;height:1px;background:rgba(255,255,255,.1);pointer-events:none;z-index:0;`;
+  if (w < 0) el.style.left = (x + w) + 'px';
+  parent.appendChild(el);
+}
+
+function drawV(parent, x, y1, y2) {
+  const el = document.createElement('div');
+  el.className = 'bracket-line bracket-line-v';
+  const top = Math.min(y1, y2);
+  const h = Math.abs(y2 - y1);
+  el.style.cssText = `position:absolute;left:${x}px;top:${top}px;width:1px;height:${h}px;background:rgba(255,255,255,.1);pointer-events:none;z-index:0;`;
+  parent.appendChild(el);
+}
+
+// ============================================================
+// EVENT HANDLERS
+// ============================================================
+
 function attachAllHandlers() {
-  // Regional bracket picks
   document.querySelectorAll('.bracket-team').forEach(el => {
     el.addEventListener('click', () => {
       const region = el.dataset.region;
@@ -1039,7 +884,6 @@ function attachAllHandlers() {
     });
   });
 
-  // Final Four picks
   document.querySelectorAll('.center-team').forEach(el => {
     el.addEventListener('click', () => {
       const type = el.dataset.type;
@@ -1057,7 +901,6 @@ function attachAllHandlers() {
     });
   });
 
-  // Analyze buttons
   document.querySelectorAll('.analyze-btn').forEach(el => {
     el.addEventListener('click', (e) => {
       e.stopPropagation();
@@ -1067,21 +910,14 @@ function attachAllHandlers() {
 }
 
 function openAnalyzer(teamA, teamB) {
-  // Switch to analyzer tab
   document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
   document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
   document.getElementById('analyzer-tab').classList.add('active');
   document.querySelectorAll('.tab-btn')[1].classList.add('active');
-
-  // Initialize selects if needed
   initAnalyzer();
-
-  // Set the teams
   document.getElementById('team-a-select').value = teamA;
   document.getElementById('team-b-select').value = teamB;
   renderAnalyzer();
-
-  // Scroll to top
   window.scrollTo(0, 0);
 }
 
@@ -1101,7 +937,6 @@ function initAnalyzer() {
       selA.innerHTML += `<option value="${name}">(${t.seed}) ${name}</option>`;
       selB.innerHTML += `<option value="${name}">(${t.seed}) ${name}</option>`;
     });
-    // Default to first interesting matchup
     if (names.length >= 2) {
       selA.value = names.find(n => TEAMS[n].seed === 5) || names[0];
       selB.value = names.find(n => TEAMS[n].seed === 12 && TEAMS[n].region === TEAMS[selA.value]?.region) || names[1];
@@ -1127,11 +962,9 @@ function renderAnalyzer() {
   const winnerName = pred.prob >= .5 ? nameA : nameB;
   const winPct = (Math.max(pred.prob, 1 - pred.prob) * 100).toFixed(1);
   const confClass = getConfClass(Math.max(pred.prob, 1 - pred.prob));
-
   const champA = championshipViability(teamA);
   const champB = championshipViability(teamB);
 
-  // Stat comparison
   const stats = [
     { label: 'Adj. Efficiency', valA: teamA.adjEM, valB: teamB.adjEM, higher: true },
     { label: 'Offense', valA: teamA.adjO, valB: teamB.adjO, higher: true },
@@ -1148,11 +981,9 @@ function renderAnalyzer() {
 
   let statBarsHtml = '';
   for (const s of stats) {
-    const a = parseFloat(s.valA);
-    const b = parseFloat(s.valB);
+    const a = parseFloat(s.valA), b = parseFloat(s.valB);
     const total = a + b;
     const pctA = total > 0 ? (a / total * 100) : 50;
-    const pctB = 100 - pctA;
     const aBetter = s.higher ? a > b : a < b;
     const bBetter = s.higher ? b > a : b < a;
 
@@ -1160,16 +991,15 @@ function renderAnalyzer() {
       <span class="stat-val" style="${aBetter ? 'color:var(--green);font-weight:700' : ''}">${s.valA}</span>
       <div class="stat-bar-container">
         <div class="stat-bar-left" style="width:${pctA}%"></div>
-        <div class="stat-bar-right" style="width:${pctB}%"></div>
+        <div class="stat-bar-right" style="width:${100 - pctA}%"></div>
       </div>
       <span class="stat-val" style="${bBetter ? 'color:var(--green);font-weight:700' : ''}">${s.valB}</span>
     </div>
     <div style="text-align:center;font-size:10px;color:var(--text-dim);margin-bottom:6px;">${s.label}</div>`;
   }
 
-  // Factor chips
-  let factorChips = '';
   const aIsFav = teamA.seed <= teamB.seed;
+  let factorChips = '';
   if (pred.upsetFactors.length > 0) {
     factorChips = '<div class="factor-chips">';
     pred.upsetFactors.forEach(f => {
@@ -1178,7 +1008,6 @@ function renderAnalyzer() {
     factorChips += '</div>';
   }
 
-  // Upset alert
   let upsetBanner = '';
   if (pred.upsetFactors.length >= 2) {
     const dogName = aIsFav ? nameB : nameA;
@@ -1186,8 +1015,8 @@ function renderAnalyzer() {
       <span class="alert-icon">&#9888;</span>
       <div class="alert-text">
         <div class="alert-title">UPSET ALERT</div>
-        ${dogName} has ${pred.upsetFactors.length} upset indicators firing: ${pred.upsetFactors.join(', ')}.
-        This adds +${(pred.upsetAdjustment * 100).toFixed(1)}% to the underdog's win probability.
+        ${dogName} has ${pred.upsetFactors.length} upset indicators: ${pred.upsetFactors.join(', ')}.
+        Adds +${(pred.upsetAdjustment * 100).toFixed(1)}% to underdog win probability.
       </div>
     </div>`;
   }
@@ -1197,12 +1026,12 @@ function renderAnalyzer() {
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
         <div style="text-align:center;flex:1;">
           <div style="font-size:12px;color:var(--text-dim);">${teamA.seed} seed | ${teamA.region}</div>
-          <div style="font-size:18px;font-weight:700;color:var(--blue);">${nameA}</div>
+          <div style="font-size:18px;font-weight:700;color:var(--accent);">${nameA}</div>
           <div style="font-size:11px;color:var(--text-dim);">${teamA.record}</div>
         </div>
         <div style="text-align:center;flex:1;">
           <div style="font-size:12px;color:var(--text-dim);">${teamB.seed} seed | ${teamB.region}</div>
-          <div style="font-size:18px;font-weight:700;color:var(--accent);">${nameB}</div>
+          <div style="font-size:18px;font-weight:700;color:var(--orange);">${nameB}</div>
           <div style="font-size:11px;color:var(--text-dim);">${teamB.record}</div>
         </div>
       </div>
@@ -1215,8 +1044,8 @@ function renderAnalyzer() {
         </div>
       </div>
       <div style="display:flex;gap:16px;margin-bottom:12px;">
-        <div style="text-align:center;font-size:11px;color:var(--blue);flex:1;font-weight:700">${nameA}</div>
-        <div style="text-align:center;font-size:11px;color:var(--accent);flex:1;font-weight:700">${nameB}</div>
+        <div style="text-align:center;font-size:11px;color:var(--accent);flex:1;font-weight:700">${nameA}</div>
+        <div style="text-align:center;font-size:11px;color:var(--orange);flex:1;font-weight:700">${nameB}</div>
       </div>
       <div class="stat-bars">${statBarsHtml}</div>
       ${factorChips}
@@ -1233,7 +1062,6 @@ function renderUpsetAlerts() {
   const container = document.getElementById('upsets-list');
   const alerts = [];
 
-  // Gather all matchups from R64 and R32
   for (const region of REGIONS) {
     for (let r = 0; r < 2; r++) {
       for (let i = 0; i < bracket[region].rounds[r].length; i++) {
@@ -1247,27 +1075,17 @@ function renderUpsetAlerts() {
         const upsetProb = aIsFav ? (1 - pred.prob) : pred.prob;
 
         if (dog.seed - fav.seed >= 1) {
-          alerts.push({
-            fav, dog, upsetProb,
-            factors: pred.upsetFactors,
-            region,
-            round: r === 0 ? 'R64' : 'R32',
-            seedGap: dog.seed - fav.seed,
-            emGap: (fav.adjEM - dog.adjEM).toFixed(1)
-          });
+          alerts.push({ fav, dog, upsetProb, factors: pred.upsetFactors, region, round: r === 0 ? 'R64' : 'R32', seedGap: dog.seed - fav.seed, emGap: (fav.adjEM - dog.adjEM).toFixed(1) });
         }
       }
     }
   }
 
-  // Sort by upset probability descending
   alerts.sort((a, b) => b.upsetProb - a.upsetProb);
-
-  // Filter
   const filtered = currentUpsetFilter === 'all' ? alerts : alerts.filter(a => a.round === currentUpsetFilter);
 
   if (filtered.length === 0) {
-    container.innerHTML = '<p style="text-align:center;color:var(--text-dim);padding:40px;">No matchups available. Fill in bracket picks to see upset alerts for Round of 32.</p>';
+    container.innerHTML = '<p style="text-align:center;color:var(--text-dim);padding:40px;">No matchups available.</p>';
     return;
   }
 
@@ -1275,7 +1093,6 @@ function renderUpsetAlerts() {
     const pct = (a.upsetProb * 100).toFixed(0);
     const badgeClass = a.upsetProb >= .40 ? 'hot' : a.upsetProb >= .30 ? 'warm' : 'mild';
     const indicators = a.factors.map(f => `<span class="upset-indicator">${f}</span>`).join('');
-
     return `<div class="upset-row">
       <div class="upset-prob-badge ${badgeClass}">${pct}%</div>
       <div class="upset-matchup-info">
@@ -1303,36 +1120,21 @@ function renderDataTable() {
   const search = document.getElementById('data-search').value.toLowerCase();
   const regionFilter = document.getElementById('region-filter').value;
 
-  let teams = Object.entries(TEAMS).map(([name, data]) => ({
-    name, ...data, champScore: championshipViability(data)
-  }));
-
-  // Filter
+  let teams = Object.entries(TEAMS).map(([name, data]) => ({ name, ...data, champScore: championshipViability(data) }));
   if (search) teams = teams.filter(t => t.name.toLowerCase().includes(search));
   if (regionFilter) teams = teams.filter(t => t.region === regionFilter);
 
-  // Sort
   teams.sort((a, b) => {
     let va = a[dataSortCol], vb = b[dataSortCol];
-    if (dataSortCol === 'name') {
-      return dataSortAsc ? va.localeCompare(vb) : vb.localeCompare(va);
-    }
+    if (dataSortCol === 'name') return dataSortAsc ? va.localeCompare(vb) : vb.localeCompare(va);
     return dataSortAsc ? va - vb : vb - va;
   });
 
   const cols = [
-    { key: 'name', label: 'Team' },
-    { key: 'seed', label: 'Seed' },
-    { key: 'region', label: 'Region' },
-    { key: 'adjEM', label: 'AdjEM' },
-    { key: 'adjO', label: 'AdjO' },
-    { key: 'adjD', label: 'AdjD' },
-    { key: 'adjT', label: 'Tempo' },
-    { key: 'threePtPct', label: '3PT%' },
-    { key: 'ftPct', label: 'FT%' },
-    { key: 'tovRate', label: 'TOV%' },
-    { key: 'experience', label: 'Exp' },
-    { key: 'champScore', label: 'Title' },
+    { key: 'name', label: 'Team' }, { key: 'seed', label: 'Seed' }, { key: 'region', label: 'Region' },
+    { key: 'adjEM', label: 'AdjEM' }, { key: 'adjO', label: 'AdjO' }, { key: 'adjD', label: 'AdjD' },
+    { key: 'adjT', label: 'Tempo' }, { key: 'threePtPct', label: '3PT%' }, { key: 'ftPct', label: 'FT%' },
+    { key: 'tovRate', label: 'TOV%' }, { key: 'experience', label: 'Exp' }, { key: 'champScore', label: 'Title' },
   ];
 
   let html = '<thead><tr>';
@@ -1346,17 +1148,10 @@ function renderDataTable() {
     const cs = t.champScore;
     const champClass = cs >= 70 ? 'champ-high' : cs >= 45 ? 'champ-med' : 'champ-low';
     html += `<tr>
-      <td><strong>${t.name}</strong></td>
-      <td>${t.seed}</td>
-      <td>${t.region}</td>
-      <td><strong>${t.adjEM.toFixed(1)}</strong></td>
-      <td>${t.adjO.toFixed(1)}</td>
-      <td>${t.adjD.toFixed(1)}</td>
-      <td>${t.adjT.toFixed(1)}</td>
-      <td>${(t.threePtPct*100).toFixed(1)}%</td>
-      <td>${(t.ftPct*100).toFixed(1)}%</td>
-      <td>${t.tovRate.toFixed(1)}</td>
-      <td>${t.experience.toFixed(1)}</td>
+      <td><strong>${t.name}</strong></td><td>${t.seed}</td><td>${t.region}</td>
+      <td><strong>${t.adjEM.toFixed(1)}</strong></td><td>${t.adjO.toFixed(1)}</td><td>${t.adjD.toFixed(1)}</td>
+      <td>${t.adjT.toFixed(1)}</td><td>${(t.threePtPct*100).toFixed(1)}%</td><td>${(t.ftPct*100).toFixed(1)}%</td>
+      <td>${t.tovRate.toFixed(1)}</td><td>${t.experience.toFixed(1)}</td>
       <td class="champ-score ${champClass}">${cs}</td>
       <td><button class="btn" style="padding:2px 8px;font-size:10px;" onclick="openEditModal('${t.name}')">Edit</button></td>
     </tr>`;
@@ -1381,27 +1176,17 @@ function openEditModal(teamName) {
   document.getElementById('edit-modal-title').textContent = `Edit: ${teamName}`;
 
   const fields = [
-    { key: 'seed', label: 'Seed', type: 'number' },
-    { key: 'adjEM', label: 'Adj. Efficiency Margin', type: 'number' },
-    { key: 'adjO', label: 'Adj. Offense', type: 'number' },
-    { key: 'adjD', label: 'Adj. Defense', type: 'number' },
-    { key: 'adjT', label: 'Adj. Tempo', type: 'number' },
-    { key: 'sos', label: 'Strength of Schedule', type: 'number' },
-    { key: 'threePtPct', label: '3PT % (decimal)', type: 'number' },
-    { key: 'threePtDefPct', label: 'Opp 3PT % (decimal)', type: 'number' },
-    { key: 'ftPct', label: 'FT % (decimal)', type: 'number' },
-    { key: 'tovRate', label: 'Turnover Rate', type: 'number' },
-    { key: 'orbPct', label: 'Off. Rebound %', type: 'number' },
-    { key: 'experience', label: 'Experience (1-4)', type: 'number' },
+    { key: 'seed', label: 'Seed', type: 'number' }, { key: 'adjEM', label: 'Adj. Efficiency Margin', type: 'number' },
+    { key: 'adjO', label: 'Adj. Offense', type: 'number' }, { key: 'adjD', label: 'Adj. Defense', type: 'number' },
+    { key: 'adjT', label: 'Adj. Tempo', type: 'number' }, { key: 'sos', label: 'Strength of Schedule', type: 'number' },
+    { key: 'threePtPct', label: '3PT % (decimal)', type: 'number' }, { key: 'threePtDefPct', label: 'Opp 3PT % (decimal)', type: 'number' },
+    { key: 'ftPct', label: 'FT % (decimal)', type: 'number' }, { key: 'tovRate', label: 'Turnover Rate', type: 'number' },
+    { key: 'orbPct', label: 'Off. Rebound %', type: 'number' }, { key: 'experience', label: 'Experience (1-4)', type: 'number' },
     { key: 'record', label: 'Record', type: 'text' },
   ];
 
-  const container = document.getElementById('edit-modal-fields');
-  container.innerHTML = fields.map(f => `
-    <div class="modal-field">
-      <label>${f.label}</label>
-      <input type="${f.type}" id="edit-${f.key}" value="${team[f.key]}" step="any">
-    </div>
+  document.getElementById('edit-modal-fields').innerHTML = fields.map(f => `
+    <div class="modal-field"><label>${f.label}</label><input type="${f.type}" id="edit-${f.key}" value="${team[f.key]}" step="any"></div>
   `).join('');
 
   document.getElementById('edit-modal').classList.remove('hidden');
@@ -1415,92 +1200,45 @@ function saveTeamEdit() {
     if (!isNaN(val)) team[key] = key === 'seed' ? Math.round(val) : val;
   }
   team.record = document.getElementById('edit-record').value;
-
   closeModal('edit-modal');
-
-  // Rebuild bracket with updated stats
-  initBracket();
-  saveBracket();
-  renderAll();
-  renderDataTable();
+  initBracket(); saveBracket(); renderAll(); renderDataTable();
 }
 
-function closeModal(id) {
-  document.getElementById(id).classList.add('hidden');
-}
+function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
 
-// Close modals on overlay click
 document.addEventListener('click', (e) => {
-  if (e.target.classList.contains('modal-overlay')) {
-    e.target.classList.add('hidden');
-  }
+  if (e.target.classList.contains('modal-overlay')) e.target.classList.add('hidden');
 });
 
 // ============================================================
 // PASTE / IMPORT
 // ============================================================
 
-function showPasteModal() {
-  document.getElementById('paste-modal').classList.remove('hidden');
-}
+function showPasteModal() { document.getElementById('paste-modal').classList.remove('hidden'); }
 
 function parsePastedData() {
   const raw = document.getElementById('paste-area').value.trim();
   if (!raw) return;
-
   const lines = raw.split('\n').map(l => l.trim()).filter(l => l);
-  if (lines.length < 2) { alert('Need at least 2 lines of data.'); return; }
-
-  // Detect delimiter
+  if (lines.length < 2) { alert('Need at least 2 lines.'); return; }
   const delim = lines[0].includes('\t') ? '\t' : ',';
-
-  // Skip header if first column looks like a header
   const start = isNaN(parseFloat(lines[0].split(delim)[1])) ? 1 : 0;
-
   let updated = 0;
+
   for (let i = start; i < lines.length; i++) {
-    const parts = lines[i].split(delim).map(s => s.trim());
-    if (parts.length < 4) continue;
-
-    const name = parts[0];
-    const seed = parseInt(parts[1]) || 0;
-    const region = parts[2] || '';
-    const adjEM = parseFloat(parts[3]) || 0;
-    const adjO = parseFloat(parts[4]) || 0;
-    const adjD = parseFloat(parts[5]) || 0;
-    const adjT = parseFloat(parts[6]) || 0;
-    const sos = parseFloat(parts[7]) || 0;
-    const threePtPct = parseFloat(parts[8]) || 0;
-    const threePtDefPct = parseFloat(parts[9]) || 0;
-    const ftPct = parseFloat(parts[10]) || 0;
-    const tovRate = parseFloat(parts[11]) || 0;
-    const orbPct = parseFloat(parts[12]) || 0;
-    const experience = parseFloat(parts[13]) || 2.5;
-
-    // Convert percentages if they look like whole numbers
+    const p = lines[i].split(delim).map(s => s.trim());
+    if (p.length < 4) continue;
     const fix = v => v > 1 ? v / 100 : v;
-
-    if (TEAMS[name]) {
-      Object.assign(TEAMS[name], { seed, region, adjEM, adjO, adjD, adjT, sos,
-        threePtPct: fix(threePtPct), threePtDefPct: fix(threePtDefPct),
-        ftPct: fix(ftPct), tovRate, orbPct, experience });
-      updated++;
-    } else {
-      TEAMS[name] = { seed, region, adjEM, adjO, adjD, adjT, sos,
-        threePtPct: fix(threePtPct), threePtDefPct: fix(threePtDefPct),
-        ftPct: fix(ftPct), tovRate, orbPct, experience, record: '' };
-      updated++;
-    }
+    const obj = { seed: parseInt(p[1])||0, region: p[2]||'', adjEM: parseFloat(p[3])||0, adjO: parseFloat(p[4])||0, adjD: parseFloat(p[5])||0, adjT: parseFloat(p[6])||0, sos: parseFloat(p[7])||0, threePtPct: fix(parseFloat(p[8])||0), threePtDefPct: fix(parseFloat(p[9])||0), ftPct: fix(parseFloat(p[10])||0), tovRate: parseFloat(p[11])||0, orbPct: parseFloat(p[12])||0, experience: parseFloat(p[13])||2.5 };
+    if (TEAMS[p[0]]) Object.assign(TEAMS[p[0]], obj);
+    else TEAMS[p[0]] = { ...obj, record: '' };
+    updated++;
   }
 
   closeModal('paste-modal');
   document.getElementById('paste-area').value = '';
-  alert(`Updated ${updated} teams. Bracket has been reset.`);
-
-  initBracket();
-  saveBracket();
-  renderAll();
-  renderDataTable();
+  alert(`Updated ${updated} teams.`);
+  initBracket(); saveBracket(); renderAll(); renderDataTable();
 }
 
 // ============================================================
@@ -1509,7 +1247,6 @@ function parsePastedData() {
 
 function exportBracket() {
   let text = "=== MARCH MADNESS BRACKET PICKS ===\n\n";
-
   for (const region of REGIONS) {
     text += `--- ${region} Region ---\n`;
     for (let r = 0; r < 4; r++) {
@@ -1517,54 +1254,41 @@ function exportBracket() {
       for (const m of bracket[region].rounds[r]) {
         const t1 = m.team1 ? `(${m.team1.seed}) ${m.team1.name}` : 'TBD';
         const t2 = m.team2 ? `(${m.team2.seed}) ${m.team2.name}` : 'TBD';
-        const w = m.winner ? `=> ${m.winner.name}` : '';
-        text += `  ${t1} vs ${t2} ${w}\n`;
+        text += `  ${t1} vs ${t2} ${m.winner ? '=> ' + m.winner.name : ''}\n`;
       }
     }
     text += '\n';
   }
-
   text += "--- Final Four ---\n";
   for (let i = 0; i < 2; i++) {
     const m = bracket.finalFour[i];
-    const t1 = m.team1 ? `(${m.team1.seed}) ${m.team1.name}` : 'TBD';
-    const t2 = m.team2 ? `(${m.team2.seed}) ${m.team2.name}` : 'TBD';
-    const w = m.winner ? `=> ${m.winner.name}` : '';
-    text += `  ${t1} vs ${t2} ${w}\n`;
+    text += `  ${m.team1 ? '(' + m.team1.seed + ') ' + m.team1.name : 'TBD'} vs ${m.team2 ? '(' + m.team2.seed + ') ' + m.team2.name : 'TBD'} ${m.winner ? '=> ' + m.winner.name : ''}\n`;
   }
-
   text += "\n--- Championship ---\n";
   const cm = bracket.championship;
-  const ct1 = cm.team1 ? `(${cm.team1.seed}) ${cm.team1.name}` : 'TBD';
-  const ct2 = cm.team2 ? `(${cm.team2.seed}) ${cm.team2.name}` : 'TBD';
-  text += `  ${ct1} vs ${ct2}\n`;
+  text += `  ${cm.team1 ? '(' + cm.team1.seed + ') ' + cm.team1.name : 'TBD'} vs ${cm.team2 ? '(' + cm.team2.seed + ') ' + cm.team2.name : 'TBD'}\n`;
   if (bracket.champion) text += `\n  CHAMPION: ${bracket.champion.name}\n`;
 
-  // Copy to clipboard
-  navigator.clipboard.writeText(text).then(() => {
-    alert('Bracket picks copied to clipboard!');
-  }).catch(() => {
-    // Fallback
+  navigator.clipboard.writeText(text).then(() => alert('Copied to clipboard!')).catch(() => {
     const ta = document.createElement('textarea');
-    ta.value = text;
-    document.body.appendChild(ta);
-    ta.select();
-    document.execCommand('copy');
-    document.body.removeChild(ta);
-    alert('Bracket picks copied to clipboard!');
+    ta.value = text; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+    alert('Copied to clipboard!');
   });
 }
 
 // ============================================================
-// INITIALIZATION
+// INIT
 // ============================================================
 
 function init() {
-  if (!loadBracket()) {
-    initBracket();
-    saveBracket();
-  }
+  if (!loadBracket()) { initBracket(); saveBracket(); }
   renderAll();
+
+  let resizeTimer;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => drawConnectorLines(), 100);
+  });
 }
 
 document.addEventListener('DOMContentLoaded', init);
