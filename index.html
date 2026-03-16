@@ -1105,7 +1105,7 @@ function renderCenterMatchup(m, type, idx, title, isChamp) {
     pct2 = Math.round((1 - pred.prob) * 100) + '%';
   }
 
-  return `<div class="center-matchup${isChamp ? ' championship-matchup' : ''}">
+  return `<div class="center-matchup${isChamp ? ' championship-matchup' : ''}" data-center-type="${type}" data-center-idx="${idx}">
     <div class="team-slot${t1Picked ? ' picked' : ''} center-team" data-type="${type}" data-idx="${idx}" data-slot="1">
       ${m.team1 ? `<span class="seed">${m.team1.seed}</span><span class="team-name">${m.team1.name}</span><span class="win-pct">${pct1}</span><div class="pick-check">${t1Picked ? '&#10003;' : ''}</div>` : '<span style="color:var(--text-muted);font-size:10px;">TBD</span>'}
     </div>
@@ -1174,22 +1174,87 @@ function drawConnectorLines() {
       }
     }
   }
+
+  // Skip Final Four connectors in mobile/stacked layout
+  if (window.innerWidth <= 768) return;
+
+  // Draw Final Four connector lines
+  // Left side: South E8 → FF0 top, East E8 → FF0 bottom
+  // Right side: West E8 → FF1 top, Midwest E8 → FF1 bottom
+  const ff0 = bracketEl.querySelector('[data-center-type="ff"][data-center-idx="0"]');
+  const ff1 = bracketEl.querySelector('[data-center-type="ff"][data-center-idx="1"]');
+  const champ = bracketEl.querySelector('[data-center-type="champ"]');
+
+  const ffConnections = [
+    { region: 'South', side: 'left', ff: ff0, slot: 'top' },
+    { region: 'East', side: 'left', ff: ff0, slot: 'bottom' },
+    { region: 'West', side: 'right', ff: ff1, slot: 'top' },
+    { region: 'Midwest', side: 'right', ff: ff1, slot: 'bottom' },
+  ];
+
+  const ffColor = 'rgba(63,185,80,.5)';
+  for (const conn of ffConnections) {
+    const e8 = bracketEl.querySelector(`.matchup[data-region="${conn.region}"][data-round="3"]`);
+    if (!e8 || !conn.ff) continue;
+    const eR = e8.getBoundingClientRect();
+    const fR = conn.ff.getBoundingClientRect();
+    const eY = eR.top + eR.height / 2 - bRect.top;
+    const fY = conn.slot === 'top' ? fR.top + fR.height * .25 - bRect.top : fR.top + fR.height * .75 - bRect.top;
+
+    if (conn.side === 'left') {
+      const x1 = eR.right - bRect.left;
+      const x2 = fR.left - bRect.left;
+      const xMid = (x1 + x2) / 2;
+      drawH(bracketEl, x1, eY, xMid - x1, ffColor);
+      drawV(bracketEl, xMid, eY, fY, ffColor);
+      drawH(bracketEl, xMid, fY, x2 - xMid, ffColor);
+    } else {
+      const x1 = eR.left - bRect.left;
+      const x2 = fR.right - bRect.left;
+      const xMid = (x1 + x2) / 2;
+      drawH(bracketEl, xMid, eY, x1 - xMid, ffColor);
+      drawV(bracketEl, xMid, eY, fY, ffColor);
+      drawH(bracketEl, x2, fY, xMid - x2, ffColor);
+    }
+  }
+
+  // Semifinal → Championship lines
+  if (ff0 && champ) {
+    const fR = ff0.getBoundingClientRect();
+    const cR = champ.getBoundingClientRect();
+    const fY = fR.top + fR.height / 2 - bRect.top;
+    const cY = cR.top + cR.height * .25 - bRect.top;
+    const xMid = (fR.left + fR.width / 2) - bRect.left;
+    drawV(bracketEl, xMid, fY + fR.height / 2 + 2, cY, ffColor);
+  }
+  if (ff1 && champ) {
+    const fR = ff1.getBoundingClientRect();
+    const cR = champ.getBoundingClientRect();
+    const fY = fR.top + fR.height / 2 - bRect.top;
+    const cY = cR.top + cR.height * .75 - bRect.top;
+    const xMid = (fR.left + fR.width / 2) - bRect.left;
+    drawV(bracketEl, xMid, cY, fY - fR.height / 2 - 2, ffColor);
+  }
 }
 
-function drawH(parent, x, y, w) {
+function drawH(parent, x, y, w, color) {
   const el = document.createElement('div');
   el.className = 'bracket-line bracket-line-h';
-  el.style.cssText = `position:absolute;left:${x}px;top:${y}px;width:${Math.abs(w)}px;height:1px;background:rgba(255,255,255,.1);pointer-events:none;z-index:0;`;
+  const bg = color || 'rgba(255,255,255,.25)';
+  const h = color ? '2px' : '1px';
+  el.style.cssText = `position:absolute;left:${x}px;top:${y}px;width:${Math.abs(w)}px;height:${h};background:${bg};pointer-events:none;z-index:0;`;
   if (w < 0) el.style.left = (x + w) + 'px';
   parent.appendChild(el);
 }
 
-function drawV(parent, x, y1, y2) {
+function drawV(parent, x, y1, y2, color) {
   const el = document.createElement('div');
   el.className = 'bracket-line bracket-line-v';
   const top = Math.min(y1, y2);
   const h = Math.abs(y2 - y1);
-  el.style.cssText = `position:absolute;left:${x}px;top:${top}px;width:1px;height:${h}px;background:rgba(255,255,255,.1);pointer-events:none;z-index:0;`;
+  const bg = color || 'rgba(255,255,255,.25)';
+  const w = color ? '2px' : '1px';
+  el.style.cssText = `position:absolute;left:${x}px;top:${top}px;width:${w};height:${h}px;background:${bg};pointer-events:none;z-index:0;`;
   parent.appendChild(el);
 }
 
