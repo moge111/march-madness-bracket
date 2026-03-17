@@ -609,6 +609,95 @@ header p { color: var(--text-dim); font-size: 12px; margin-top: 4px; }
 
 <script>
 // ============================================================
+// INDEXEDDB — sim bracket storage (unlimited size)
+// ============================================================
+const simDB = (() => {
+  const DB_NAME = 'mm_sims';
+  const STORE = 'brackets';
+  const DB_VER = 1;
+
+  function open() {
+    return new Promise((resolve, reject) => {
+      const req = indexedDB.open(DB_NAME, DB_VER);
+      req.onupgradeneeded = () => {
+        const db = req.result;
+        if (!db.objectStoreNames.contains(STORE)) {
+          db.createObjectStore(STORE, { keyPath: 'name' });
+        }
+      };
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => reject(req.error);
+    });
+  }
+
+  return {
+    async getAll() {
+      const db = await open();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE, 'readonly');
+        const req = tx.objectStore(STORE).getAll();
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error);
+      });
+    },
+    async putAll(items) {
+      const db = await open();
+      const tx = db.transaction(STORE, 'readwrite');
+      const store = tx.objectStore(STORE);
+      items.forEach(item => store.put(item));
+      return new Promise((resolve, reject) => {
+        tx.oncomplete = () => resolve();
+        tx.onerror = () => reject(tx.error);
+      });
+    },
+    async remove(name) {
+      const db = await open();
+      const tx = db.transaction(STORE, 'readwrite');
+      tx.objectStore(STORE).delete(name);
+      return new Promise((resolve, reject) => {
+        tx.oncomplete = () => resolve();
+        tx.onerror = () => reject(tx.error);
+      });
+    },
+    async clear() {
+      const db = await open();
+      const tx = db.transaction(STORE, 'readwrite');
+      tx.objectStore(STORE).clear();
+      return new Promise((resolve, reject) => {
+        tx.oncomplete = () => resolve();
+        tx.onerror = () => reject(tx.error);
+      });
+    },
+    async deleteRange(lo, hi) {
+      const all = await this.getAll();
+      const toDelete = all.filter(s => {
+        const m = s.name.match(/^Sim-(\d+)$/);
+        if (!m) return false;
+        const num = parseInt(m[1]);
+        return num >= lo && num <= hi;
+      });
+      const db = await open();
+      const tx = db.transaction(STORE, 'readwrite');
+      const store = tx.objectStore(STORE);
+      toDelete.forEach(s => store.delete(s.name));
+      return new Promise((resolve, reject) => {
+        tx.oncomplete = () => resolve(toDelete.length);
+        tx.onerror = () => reject(tx.error);
+      });
+    },
+    async getMaxSimNum() {
+      const all = await this.getAll();
+      let max = 0;
+      all.forEach(s => {
+        const m = s.name && s.name.match(/^Sim-(\d+)$/);
+        if (m) max = Math.max(max, parseInt(m[1]));
+      });
+      return max;
+    }
+  };
+})();
+
+// ============================================================
 // DATA LAYER
 // ============================================================
 
@@ -1940,37 +2029,41 @@ function submitBracket() {
 
 function deleteBracket(name) {
   if (!confirm(`Delete bracket "${name}"?`)) return;
-  let submissions = JSON.parse(localStorage.getItem('mm_submissions') || '[]');
-  submissions = submissions.filter(s => s.name !== name);
-  localStorage.setItem('mm_submissions', JSON.stringify(submissions));
-  renderLeaderboard();
+  if (name.match(/^Sim-\d+$/)) {
+    simDB.remove(name).then(() => renderLeaderboard());
+  } else {
+    let submissions = JSON.parse(localStorage.getItem('mm_submissions') || '[]');
+    submissions = submissions.filter(s => s.name !== name);
+    localStorage.setItem('mm_submissions', JSON.stringify(submissions));
+    renderLeaderboard();
+  }
 }
 
 function bulkDeleteSims() {
-  const range = prompt('Enter sim range to delete (e.g. "1002-1300"):');
+  const range = prompt('Enter sim range to delete (e.g. "1002-1300"), or "all" to delete all sims:');
   if (!range) return;
+  if (range.trim().toLowerCase() === 'all') {
+    if (!confirm('Delete ALL sim brackets?')) return;
+    simDB.clear().then(() => { renderLeaderboard(); alert('All sim brackets deleted.'); });
+    return;
+  }
   const parts = range.match(/^(\d+)\s*-\s*(\d+)$/);
-  if (!parts) { alert('Invalid format. Use "start-end" like "1002-1300".'); return; }
+  if (!parts) { alert('Invalid format. Use "start-end" like "1002-1300", or "all".'); return; }
   const lo = parseInt(parts[1]), hi = parseInt(parts[2]);
-  let submissions = JSON.parse(localStorage.getItem('mm_submissions') || '[]');
-  const before = submissions.length;
-  submissions = submissions.filter(s => {
-    const m = s.name && s.name.match(/^Sim-(\d+)$/);
-    if (!m) return true;
-    const num = parseInt(m[1]);
-    return num < lo || num > hi;
+  if (!confirm(`Delete sim brackets Sim-${lo} to Sim-${hi}?`)) return;
+  simDB.deleteRange(lo, hi).then(deleted => {
+    renderLeaderboard();
+    alert(`Deleted ${deleted} sim brackets.`);
   });
-  const deleted = before - submissions.length;
-  if (deleted === 0) { alert('No matching sims found in that range.'); return; }
-  if (!confirm(`Delete ${deleted} sim brackets (Sim-${lo} to Sim-${hi})?`)) return;
-  localStorage.setItem('mm_submissions', JSON.stringify(submissions));
-  renderLeaderboard();
-  alert(`Deleted ${deleted} sim brackets.`);
 }
 
-function editBracket(name) {
-  const submissions = JSON.parse(localStorage.getItem('mm_submissions') || '[]');
-  const sub = submissions.find(s => s.name === name);
+async function editBracket(name) {
+  const humanSubs = JSON.parse(localStorage.getItem('mm_submissions') || '[]');
+  let sub = humanSubs.find(s => s.name === name);
+  if (!sub) {
+    const simSubs = await simDB.getAll();
+    sub = simSubs.find(s => s.name === name);
+  }
   if (!sub) { alert('Bracket not found.'); return; }
 
   // Load picks back into the bracket
@@ -2033,9 +2126,9 @@ function editBracket(name) {
 }
 
 function clearSubmissions() {
-  if (!confirm('Delete all submitted brackets?')) return;
+  if (!confirm('Delete all submitted brackets (human + sims)?')) return;
   localStorage.removeItem('mm_submissions');
-  renderLeaderboard();
+  simDB.clear().then(() => renderLeaderboard());
 }
 
 function generateSimBrackets(count) {
@@ -2117,31 +2210,29 @@ function generateSimBrackets(count) {
     return picks;
   }
 
-  const submissions = JSON.parse(localStorage.getItem('mm_submissions') || '[]');
-  // Find highest existing sim number to avoid naming collisions
-  let maxExisting = 0;
-  submissions.forEach(s => {
-    const m = s.name && s.name.match(/^Sim-(\d+)$/);
-    if (m) maxExisting = Math.max(maxExisting, parseInt(m[1]));
+  // Store sims in IndexedDB (unlimited storage)
+  simDB.getMaxSimNum().then(maxExisting => {
+    const totalAfter = maxExisting + count;
+    const padLen = String(totalAfter).length;
+    const newSims = [];
+    for (let i = 0; i < count; i++) {
+      const sim = simBracket();
+      const picks = serializeSim(sim);
+      const num = String(maxExisting + i + 1).padStart(padLen, '0');
+      newSims.push({ name: `Sim-${num}`, picks, timestamp: Date.now() });
+    }
+    simDB.putAll(newSims).then(() => {
+      renderLeaderboard();
+      alert(`Generated ${count} simulated brackets.`);
+    });
   });
-  const totalAfter = maxExisting + count;
-  const padLen = String(totalAfter).length;
-  for (let i = 0; i < count; i++) {
-    const sim = simBracket();
-    const picks = serializeSim(sim);
-    const num = String(maxExisting + i + 1).padStart(padLen, '0');
-    submissions.push({ name: `Sim-${num}`, picks, timestamp: Date.now() });
-  }
-  localStorage.setItem('mm_submissions', JSON.stringify(submissions));
-  renderLeaderboard();
-  alert(`Generated ${count} simulated brackets.`);
 }
 
 function promptSimBrackets() {
   const input = prompt('How many simulated brackets to generate?', '1000');
   if (!input) return;
   const count = parseInt(input);
-  if (isNaN(count) || count < 1 || count > 2000) { alert('Enter a number between 1 and 2000.'); return; }
+  if (isNaN(count) || count < 1 || count > 50000) { alert('Enter a number between 1 and 50,000.'); return; }
   generateSimBrackets(count);
 }
 
@@ -2297,8 +2388,12 @@ function scoreBracket(submission) {
 
 function renderSimStats() {
   const container = document.getElementById('sim-stats');
-  const submissions = JSON.parse(localStorage.getItem('mm_submissions') || '[]');
-  const sims = submissions.filter(s => s.name && s.name.startsWith('Sim-'));
+  simDB.getAll().then(sims => {
+    _renderSimStatsInner(container, sims);
+  });
+}
+
+function _renderSimStatsInner(container, sims) {
   if (sims.length === 0) { container.style.display = 'none'; return; }
 
   // Count champions and Final Four teams
@@ -2357,56 +2452,62 @@ function renderSimStats() {
 }
 
 function renderLeaderboard() {
-  const submissions = JSON.parse(localStorage.getItem('mm_submissions') || '[]');
+  const humanSubs = JSON.parse(localStorage.getItem('mm_submissions') || '[]');
   const body = document.getElementById('lb-body');
   const detailArea = document.getElementById('lb-detail-area');
-
   const colSpan = window._isAdmin ? 9 : 8;
-  if (submissions.length === 0) {
-    body.innerHTML = `<tr><td colspan="${colSpan}" style="text-align:center;padding:30px;color:var(--text-dim);">No brackets submitted yet. Fill out your bracket and click "Submit Bracket" above.</td></tr>`;
-    detailArea.innerHTML = '';
-    return;
-  }
 
-  // Score all brackets
-  const scored = submissions.map(s => ({ ...s, ...scoreBracket(s) }));
-  scored.sort((a, b) => b.score - a.score);
+  // Merge human brackets (localStorage) + sim brackets (IndexedDB)
+  simDB.getAll().then(simSubs => {
+    const submissions = [...humanSubs, ...simSubs];
 
-  body.innerHTML = scored.map((s, i) => {
-    const rankClass = i === 0 ? 'rank-1' : i === 1 ? 'rank-2' : i === 2 ? 'rank-3' : '';
-    const ts = s.timestamp ? new Date(s.timestamp).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : '—';
-    const editBtn = window._isAdmin ? `<td style="white-space:nowrap;"><button class="btn" style="font-size:10px;padding:3px 8px;" onclick="event.stopPropagation();editBracket('${s.name.replace(/'/g, "\\'")}')">Edit</button> <button class="btn btn-danger" style="font-size:10px;padding:3px 8px;" onclick="event.stopPropagation();deleteBracket('${s.name.replace(/'/g, "\\'")}')">✕</button></td>` : '';
-    return `<tr class="lb-expand" onclick="toggleDetail(${i})">
-      <td class="${rankClass}">${i + 1}</td>
-      <td style="font-weight:600;">${s.name}</td>
-      <td class="lb-score">${s.score}</td>
-      <td class="lb-correct">${s.correct}</td>
-      <td class="lb-wrong">${s.wrong}</td>
-      <td class="lb-pending">${s.pending}</td>
-      <td>${s.champion || '—'}</td>
-      <td style="font-size:11px;color:var(--text-dim);">${ts}</td>
-      ${editBtn}
-    </tr>
-    <tr id="detail-row-${i}" style="display:none;"><td colspan="${colSpan}" class="lb-detail">
-      <div class="lb-detail-grid">
-        ${s.details.filter(d => d.pick).map(d => `<div class="lb-pick ${d.status}">
-          <span>${d.pick}</span>
-          <span>${d.status === 'correct' ? '+' + d.pts : d.status === 'wrong' ? 'X' : '?'}</span>
-        </div>`).join('')}
-      </div>
-    </td></tr>`;
-  }).join('');
+    if (submissions.length === 0) {
+      body.innerHTML = `<tr><td colspan="${colSpan}" style="text-align:center;padding:30px;color:var(--text-dim);">No brackets submitted yet. Fill out your bracket and click "Submit Bracket" above.</td></tr>`;
+      detailArea.innerHTML = '';
+      renderSimStats();
+      return;
+    }
 
-  // Show results summary
-  const totalActual = Object.keys(actualWinners).length;
-  const summaryEl = document.getElementById('lb-results-summary');
-  if (totalActual > 0) {
-    summaryEl.innerHTML = `<div style="text-align:center;margin-bottom:12px;font-size:12px;color:var(--text-dim);">${totalActual} game results entered &bull; ESPN scoring: R64=1, R32=2, S16=4, E8=8, FF=16, Champ=32</div>`;
-  } else {
-    summaryEl.innerHTML = `<div style="text-align:center;margin-bottom:12px;font-size:12px;color:var(--text-dim);">No results yet. Connect Kalshi API or enter results manually to start scoring. &bull; ESPN scoring: R64=1, R32=2, S16=4, E8=8, FF=16, Champ=32</div>`;
-  }
+    // Score all brackets
+    const scored = submissions.map(s => ({ ...s, ...scoreBracket(s) }));
+    scored.sort((a, b) => b.score - a.score);
 
-  renderSimStats();
+    body.innerHTML = scored.map((s, i) => {
+      const rankClass = i === 0 ? 'rank-1' : i === 1 ? 'rank-2' : i === 2 ? 'rank-3' : '';
+      const ts = s.timestamp ? new Date(s.timestamp).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : '—';
+      const editBtn = window._isAdmin ? `<td style="white-space:nowrap;"><button class="btn" style="font-size:10px;padding:3px 8px;" onclick="event.stopPropagation();editBracket('${s.name.replace(/'/g, "\\'")}')">Edit</button> <button class="btn btn-danger" style="font-size:10px;padding:3px 8px;" onclick="event.stopPropagation();deleteBracket('${s.name.replace(/'/g, "\\'")}')">✕</button></td>` : '';
+      return `<tr class="lb-expand" onclick="toggleDetail(${i})">
+        <td class="${rankClass}">${i + 1}</td>
+        <td style="font-weight:600;">${s.name}</td>
+        <td class="lb-score">${s.score}</td>
+        <td class="lb-correct">${s.correct}</td>
+        <td class="lb-wrong">${s.wrong}</td>
+        <td class="lb-pending">${s.pending}</td>
+        <td>${s.champion || '—'}</td>
+        <td style="font-size:11px;color:var(--text-dim);">${ts}</td>
+        ${editBtn}
+      </tr>
+      <tr id="detail-row-${i}" style="display:none;"><td colspan="${colSpan}" class="lb-detail">
+        <div class="lb-detail-grid">
+          ${s.details.filter(d => d.pick).map(d => `<div class="lb-pick ${d.status}">
+            <span>${d.pick}</span>
+            <span>${d.status === 'correct' ? '+' + d.pts : d.status === 'wrong' ? 'X' : '?'}</span>
+          </div>`).join('')}
+        </div>
+      </td></tr>`;
+    }).join('');
+
+    // Show results summary
+    const totalActual = Object.keys(actualWinners).length;
+    const summaryEl = document.getElementById('lb-results-summary');
+    if (totalActual > 0) {
+      summaryEl.innerHTML = `<div style="text-align:center;margin-bottom:12px;font-size:12px;color:var(--text-dim);">${totalActual} game results entered &bull; ESPN scoring: R64=1, R32=2, S16=4, E8=8, FF=16, Champ=32</div>`;
+    } else {
+      summaryEl.innerHTML = `<div style="text-align:center;margin-bottom:12px;font-size:12px;color:var(--text-dim);">No results yet. Enter results manually to start scoring. &bull; ESPN scoring: R64=1, R32=2, S16=4, E8=8, FF=16, Champ=32</div>`;
+    }
+
+    renderSimStats();
+  });
 }
 
 function toggleDetail(idx) {
