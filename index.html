@@ -418,6 +418,7 @@ header p { color: var(--text-dim); font-size: 12px; margin-top: 4px; }
     </div>
     <div class="lb-controls" id="lb-admin-controls" style="display:none;">
       <button class="btn" onclick="toggleResultsEntry()" id="results-toggle-btn">Enter Results</button>
+      <button class="btn" onclick="promptSimBrackets()" style="border-color:var(--accent);color:var(--accent);">Generate Sim Brackets</button>
       <button class="btn btn-danger" onclick="clearSubmissions()">Clear All Brackets</button>
       <button class="btn" onclick="clearResults()" style="border-color:var(--yellow);color:var(--yellow);">Reset Results</button>
     </div>
@@ -1939,6 +1940,105 @@ function clearSubmissions() {
   if (!confirm('Delete all submitted brackets?')) return;
   localStorage.removeItem('mm_submissions');
   renderLeaderboard();
+}
+
+function generateSimBrackets(count) {
+  // Build a fresh bracket to simulate on (don't touch the user's actual bracket)
+  function simBracket() {
+    const sim = {};
+    for (const region of REGIONS) {
+      sim[region] = { rounds: [[], [], [], []] };
+      for (const [s1, s2] of BRACKET_SEEDS) {
+        const t1 = getTeamBySeedRegion(s1, region);
+        const t2 = getTeamBySeedRegion(s2, region);
+        sim[region].rounds[0].push({ team1: t1, team2: t2, winner: null });
+      }
+      for (let r = 1; r < 4; r++) {
+        const numMatchups = 8 / Math.pow(2, r);
+        for (let i = 0; i < numMatchups; i++) {
+          sim[region].rounds[r].push({ team1: null, team2: null, winner: null });
+        }
+      }
+    }
+    sim.finalFour = [{ team1: null, team2: null, winner: null }, { team1: null, team2: null, winner: null }];
+    sim.championship = { team1: null, team2: null, winner: null };
+    sim.champion = null;
+
+    // Fill using probability-weighted coin flips
+    for (const region of REGIONS) {
+      for (let round = 0; round < 4; round++) {
+        for (let i = 0; i < sim[region].rounds[round].length; i++) {
+          const m = sim[region].rounds[round][i];
+          if (m.team1 && m.team2) {
+            const pred = predictMatchup(m.team1, m.team2);
+            // Weighted coin flip: team1 wins with probability pred.prob
+            m.winner = Math.random() < pred.prob ? m.team1 : m.team2;
+            if (round < 3) {
+              const nextIdx = Math.floor(i / 2);
+              const slot = i % 2 === 0 ? 'team1' : 'team2';
+              sim[region].rounds[round + 1][nextIdx][slot] = m.winner;
+            } else {
+              const regionIdx = REGIONS.indexOf(region);
+              const ffIdx = Math.floor(regionIdx / 2);
+              const slot = regionIdx % 2 === 0 ? 'team1' : 'team2';
+              sim.finalFour[ffIdx][slot] = m.winner;
+            }
+          }
+        }
+      }
+    }
+    for (let i = 0; i < 2; i++) {
+      const m = sim.finalFour[i];
+      if (m.team1 && m.team2) {
+        const pred = predictMatchup(m.team1, m.team2);
+        m.winner = Math.random() < pred.prob ? m.team1 : m.team2;
+        sim.championship[i === 0 ? 'team1' : 'team2'] = m.winner;
+      }
+    }
+    const cm = sim.championship;
+    if (cm.team1 && cm.team2) {
+      const pred = predictMatchup(cm.team1, cm.team2);
+      cm.winner = Math.random() < pred.prob ? cm.team1 : cm.team2;
+      sim.champion = cm.winner;
+    }
+    return sim;
+  }
+
+  // Serialize a sim bracket into the picks format
+  function serializeSim(sim) {
+    const picks = { regions: {}, ff: [], champ: null, champion: null };
+    for (const region of REGIONS) {
+      picks.regions[region] = [];
+      for (let r = 0; r < 4; r++) {
+        for (const m of sim[region].rounds[r]) {
+          picks.regions[region].push(m.winner ? m.winner.name : null);
+        }
+      }
+    }
+    for (const m of sim.finalFour) picks.ff.push(m.winner ? m.winner.name : null);
+    picks.champ = sim.championship.winner ? sim.championship.winner.name : null;
+    picks.champion = sim.champion ? sim.champion.name : null;
+    return picks;
+  }
+
+  const submissions = JSON.parse(localStorage.getItem('mm_submissions') || '[]');
+  for (let i = 0; i < count; i++) {
+    const sim = simBracket();
+    const picks = serializeSim(sim);
+    const num = String(i + 1).padStart(String(count).length, '0');
+    submissions.push({ name: `Sim-${num}`, picks, timestamp: Date.now() });
+  }
+  localStorage.setItem('mm_submissions', JSON.stringify(submissions));
+  renderLeaderboard();
+  alert(`Generated ${count} simulated brackets.`);
+}
+
+function promptSimBrackets() {
+  const input = prompt('How many simulated brackets to generate?', '1000');
+  if (!input) return;
+  const count = parseInt(input);
+  if (isNaN(count) || count < 1 || count > 2000) { alert('Enter a number between 1 and 2000.'); return; }
+  generateSimBrackets(count);
 }
 
 // ============================================================
