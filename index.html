@@ -46,6 +46,44 @@ header p { color: var(--text-dim); font-size: 12px; margin-top: 4px; }
 .prob-tracker .prob-value { font-size: 18px; font-weight: 800; color: var(--accent2); font-variant-numeric: tabular-nums; }
 .prob-tracker .prob-picks { font-size: 11px; color: var(--text-muted); }
 .prob-tracker .prob-odds { font-size: 11px; color: var(--text-dim); }
+
+/* Submit bracket */
+.submit-row { display: flex; gap: 8px; justify-content: center; align-items: center; margin-bottom: 14px; }
+.submit-row input { padding: 7px 14px; background: var(--surface); border: 1px solid var(--border); color: var(--text); border-radius: 6px; font-size: 12px; width: 180px; }
+.submit-row input:focus { border-color: var(--accent); outline: none; }
+.submit-row input::placeholder { color: var(--text-muted); }
+
+/* Leaderboard */
+.leaderboard-header { text-align: center; margin-bottom: 20px; }
+.leaderboard-header h2 { color: var(--accent2); font-size: 18px; margin-bottom: 4px; }
+.leaderboard-header p { color: var(--text-dim); font-size: 12px; }
+.lb-status { text-align: center; padding: 12px; margin-bottom: 16px; border-radius: 8px; font-size: 12px; }
+.lb-status.connected { background: rgba(63,185,80,.08); border: 1px solid rgba(63,185,80,.2); color: var(--accent2); }
+.lb-status.disconnected { background: rgba(248,81,73,.08); border: 1px solid rgba(248,81,73,.2); color: var(--red); }
+.lb-controls { display: flex; gap: 8px; justify-content: center; margin-bottom: 16px; flex-wrap: wrap; }
+.lb-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.lb-table th { background: var(--surface2); padding: 10px 12px; text-align: left; font-size: 10px; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; color: var(--text-dim); border-bottom: 2px solid var(--accent); }
+.lb-table td { padding: 10px 12px; border-bottom: 1px solid var(--border); }
+.lb-table tr:hover { background: var(--surface2); }
+.lb-table .rank-1 { color: #ffd700; font-weight: 800; }
+.lb-table .rank-2 { color: #c0c0c0; font-weight: 700; }
+.lb-table .rank-3 { color: #cd7f32; font-weight: 700; }
+.lb-score { font-weight: 800; color: var(--accent2); font-size: 15px; }
+.lb-correct { color: var(--green); }
+.lb-wrong { color: var(--red); }
+.lb-pending { color: var(--text-muted); }
+.lb-expand { cursor: pointer; }
+.lb-expand:hover { background: var(--surface2); }
+.lb-detail { background: var(--surface2); padding: 12px 16px; }
+.lb-detail-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; }
+.lb-pick { padding: 4px 8px; border-radius: 4px; font-size: 11px; display: flex; justify-content: space-between; }
+.lb-pick.correct { background: rgba(63,185,80,.08); border: 1px solid rgba(63,185,80,.15); }
+.lb-pick.wrong { background: rgba(248,81,73,.08); border: 1px solid rgba(248,81,73,.15); }
+.lb-pick.pending { background: var(--surface); border: 1px solid var(--border); }
+.kalshi-settings { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
+.kalshi-settings summary { cursor: pointer; color: var(--text-dim); font-size: 11px; }
+.kalshi-settings input, .kalshi-settings textarea { width: 100%; padding: 8px; background: var(--surface); border: 1px solid var(--border); color: var(--text); border-radius: 6px; font-size: 11px; font-family: monospace; margin-top: 6px; }
+.kalshi-settings textarea { min-height: 80px; resize: vertical; }
 .btn { padding: 7px 14px; border: 1px solid var(--border); background: var(--surface); color: var(--text); border-radius: 6px; cursor: pointer; font-size: 11px; font-weight: 600; transition: all .2s; text-transform: uppercase; letter-spacing: .5px; }
 .btn:hover { border-color: var(--accent); color: var(--accent); }
 .btn-primary { background: var(--accent); border-color: var(--accent); color: #fff; }
@@ -297,6 +335,7 @@ header p { color: var(--text-dim); font-size: 12px; margin-top: 4px; }
     <button class="tab-btn" onclick="switchTab('analyzer')">Matchup Analyzer</button>
     <button class="tab-btn" onclick="switchTab('upsets')">Upset Alerts</button>
     <button class="tab-btn" onclick="switchTab('data')">Team Data</button>
+    <button class="tab-btn" onclick="switchTab('leaderboard')">Leaderboard</button>
     <button class="tab-btn" onclick="switchTab('guide')">How It Works</button>
   </div>
 
@@ -309,6 +348,10 @@ header p { color: var(--text-dim); font-size: 12px; margin-top: 4px; }
       <button class="btn" onclick="autoFill(true)">Auto-Fill w/ Upsets</button>
       <button class="btn" onclick="showWeightsModal()" style="border-color: var(--accent); color: var(--accent);">Customize Model</button>
       <button class="btn btn-danger" onclick="resetBracket()">Reset</button>
+    </div>
+    <div class="submit-row">
+      <input type="text" id="submit-name" placeholder="Enter your name..." maxlength="30">
+      <button class="btn btn-primary" onclick="submitBracket()">Submit Bracket</button>
     </div>
     <div class="prob-tracker" id="prob-tracker" style="display:none;">
       <div>
@@ -365,6 +408,38 @@ header p { color: var(--text-dim); font-size: 12px; margin-top: 4px; }
         <table class="data-table" id="data-table"></table>
       </div>
     </div>
+  </div>
+
+  <!-- LEADERBOARD TAB -->
+  <div id="leaderboard-tab" class="tab-content">
+    <div class="leaderboard-header">
+      <h2>Bracket Leaderboard</h2>
+      <p>Submit brackets and track scores as results come in</p>
+    </div>
+    <div id="lb-status"></div>
+    <div class="lb-controls">
+      <button class="btn" onclick="fetchKalshiResults()">Refresh Results</button>
+      <button class="btn btn-danger" onclick="clearSubmissions()">Clear All Brackets</button>
+    </div>
+    <div id="lb-results-summary"></div>
+    <div style="border-radius:10px;border:1px solid var(--border);overflow:hidden;">
+      <table class="lb-table">
+        <thead><tr><th>#</th><th>Name</th><th>Score</th><th>Correct</th><th>Wrong</th><th>Pending</th><th>Champion</th></tr></thead>
+        <tbody id="lb-body"></tbody>
+      </table>
+    </div>
+    <div id="lb-detail-area"></div>
+    <details class="kalshi-settings" style="margin-top:20px;">
+      <summary>Kalshi API Settings</summary>
+      <p style="font-size:11px;color:var(--text-dim);margin-top:8px;">Enter your Kalshi API credentials to auto-fetch game results.</p>
+      <input type="text" id="kalshi-key-id" placeholder="API Key ID" value="">
+      <textarea id="kalshi-private-key" placeholder="RSA Private Key (PEM format)"></textarea>
+      <div style="margin-top:8px;display:flex;gap:8px;">
+        <button class="btn" onclick="saveKalshiCreds()">Save Credentials</button>
+        <button class="btn" onclick="testKalshiConnection()">Test Connection</button>
+      </div>
+      <div id="kalshi-test-result" style="margin-top:8px;font-size:11px;"></div>
+    </details>
   </div>
 
   <!-- HOW IT WORKS TAB -->
@@ -1021,6 +1096,7 @@ function switchTab(tab) {
   if (tab === 'upsets') renderUpsetAlerts();
   if (tab === 'data') renderDataTable();
   if (tab === 'analyzer') initAnalyzer();
+  if (tab === 'leaderboard') renderLeaderboard();
 }
 
 function renderAll() {
@@ -1795,6 +1871,368 @@ function exportBracket() {
     ta.value = text; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
     alert('Copied to clipboard!');
   });
+}
+
+// ============================================================
+// BRACKET SUBMISSIONS
+// ============================================================
+
+function serializePicks() {
+  const picks = { regions: {}, ff: [], champ: null, champion: null };
+  for (const region of REGIONS) {
+    picks.regions[region] = [];
+    for (let r = 0; r < 4; r++) {
+      for (const m of bracket[region].rounds[r]) {
+        picks.regions[region].push(m.winner ? m.winner.name : null);
+      }
+    }
+  }
+  for (const m of bracket.finalFour) picks.ff.push(m.winner ? m.winner.name : null);
+  picks.champ = bracket.championship.winner ? bracket.championship.winner.name : null;
+  picks.champion = bracket.champion ? bracket.champion.name : null;
+  return picks;
+}
+
+function countPicks() {
+  let count = 0;
+  for (const region of REGIONS) {
+    for (let r = 0; r < 4; r++) {
+      for (const m of bracket[region].rounds[r]) { if (m.winner) count++; }
+    }
+  }
+  for (const m of bracket.finalFour) { if (m.winner) count++; }
+  if (bracket.championship.winner) count++;
+  return count;
+}
+
+function submitBracket() {
+  const nameInput = document.getElementById('submit-name');
+  const name = nameInput.value.trim();
+  if (!name) { alert('Please enter your name.'); nameInput.focus(); return; }
+  if (countPicks() < 63) { alert(`You have ${countPicks()} of 63 picks. Complete your bracket before submitting.`); return; }
+
+  const submissions = JSON.parse(localStorage.getItem('mm_submissions') || '[]');
+  const existing = submissions.findIndex(s => s.name.toLowerCase() === name.toLowerCase());
+
+  if (existing >= 0) {
+    if (!confirm(`"${submissions[existing].name}" already submitted. Replace their bracket?`)) return;
+    submissions[existing] = { name: submissions[existing].name, picks: serializePicks(), timestamp: Date.now() };
+  } else {
+    submissions.push({ name, picks: serializePicks(), timestamp: Date.now() });
+  }
+
+  localStorage.setItem('mm_submissions', JSON.stringify(submissions));
+  nameInput.value = '';
+  alert(`Bracket submitted for ${name}!`);
+}
+
+function clearSubmissions() {
+  if (!confirm('Delete all submitted brackets?')) return;
+  localStorage.removeItem('mm_submissions');
+  renderLeaderboard();
+}
+
+// ============================================================
+// KALSHI API
+// ============================================================
+
+function getKalshiCreds() {
+  return {
+    keyId: localStorage.getItem('kalshi_key_id') || '',
+    privateKey: localStorage.getItem('kalshi_private_key') || ''
+  };
+}
+
+function saveKalshiCreds() {
+  const keyId = document.getElementById('kalshi-key-id').value.trim();
+  const pk = document.getElementById('kalshi-private-key').value.trim();
+  localStorage.setItem('kalshi_key_id', keyId);
+  localStorage.setItem('kalshi_private_key', pk);
+  alert('Credentials saved.');
+}
+
+function pemToArrayBuffer(pem) {
+  const b64 = pem.replace(/-----BEGIN (RSA )?PRIVATE KEY-----/g, '').replace(/-----END (RSA )?PRIVATE KEY-----/g, '').replace(/\s/g, '');
+  const binary = atob(b64);
+  const buf = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) buf[i] = binary.charCodeAt(i);
+  return buf.buffer;
+}
+
+// Wrap PKCS#1 key in PKCS#8 envelope for Web Crypto API
+function pkcs1ToPkcs8(pkcs1Buffer) {
+  const pkcs1 = new Uint8Array(pkcs1Buffer);
+  // PKCS#8 header for RSA: SEQUENCE { version, AlgorithmIdentifier { OID rsaEncryption, NULL }, OCTET STRING { pkcs1 key } }
+  const header = new Uint8Array([
+    0x30, 0x82, 0x00, 0x00, // SEQUENCE (length placeholder)
+    0x02, 0x01, 0x00,       // INTEGER version = 0
+    0x30, 0x0d,             // SEQUENCE (AlgorithmIdentifier)
+    0x06, 0x09, 0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x01, 0x01, 0x01, // OID 1.2.840.113549.1.1.1 (rsaEncryption)
+    0x05, 0x00,             // NULL
+    0x04, 0x82, 0x00, 0x00  // OCTET STRING (length placeholder)
+  ]);
+  const totalLen = header.length - 4 + pkcs1.length;
+  const octetLen = pkcs1.length;
+  const result = new Uint8Array(header.length + pkcs1.length);
+  result.set(header);
+  result.set(pkcs1, header.length);
+  // Fix SEQUENCE length (total - 4 for the tag+length bytes)
+  const seqLen = totalLen;
+  result[2] = (seqLen >> 8) & 0xff;
+  result[3] = seqLen & 0xff;
+  // Fix OCTET STRING length
+  result[header.length - 2] = (octetLen >> 8) & 0xff;
+  result[header.length - 1] = octetLen & 0xff;
+  return result.buffer;
+}
+
+async function signKalshiRequest(privateKeyPem, timestamp, method, path) {
+  const pathNoQuery = path.split('?')[0];
+  const message = `${timestamp}${method}${pathNoQuery}`;
+  const encoded = new TextEncoder().encode(message);
+
+  let keyBuffer = pemToArrayBuffer(privateKeyPem);
+  // If PKCS#1 (BEGIN RSA PRIVATE KEY), convert to PKCS#8
+  if (privateKeyPem.includes('BEGIN RSA PRIVATE KEY')) {
+    keyBuffer = pkcs1ToPkcs8(keyBuffer);
+  }
+
+  const cryptoKey = await crypto.subtle.importKey('pkcs8', keyBuffer, { name: 'RSA-PSS', hash: 'SHA-256' }, false, ['sign']);
+  const sig = await crypto.subtle.sign({ name: 'RSA-PSS', saltLength: 32 }, cryptoKey, encoded);
+  return btoa(String.fromCharCode(...new Uint8Array(sig)));
+}
+
+async function kalshiFetch(method, path) {
+  const creds = getKalshiCreds();
+  if (!creds.keyId || !creds.privateKey) throw new Error('Kalshi credentials not configured');
+  const ts = Date.now().toString();
+  const sig = await signKalshiRequest(creds.privateKey, ts, method, path);
+  const resp = await fetch(`https://trading-api.kalshi.com/trade-api/v2${path}`, {
+    method,
+    headers: {
+      'KALSHI-ACCESS-KEY': creds.keyId,
+      'KALSHI-ACCESS-TIMESTAMP': ts,
+      'KALSHI-ACCESS-SIGNATURE': sig,
+      'Content-Type': 'application/json'
+    }
+  });
+  if (!resp.ok) throw new Error(`Kalshi API ${resp.status}: ${resp.statusText}`);
+  return resp.json();
+}
+
+async function testKalshiConnection() {
+  const el = document.getElementById('kalshi-test-result');
+  el.textContent = 'Testing...';
+  el.style.color = 'var(--text-dim)';
+  try {
+    const data = await kalshiFetch('GET', '/exchange/status');
+    el.textContent = 'Connected! Exchange status: ' + (data.exchange_active ? 'Active' : 'Inactive');
+    el.style.color = 'var(--green)';
+  } catch(e) {
+    el.textContent = 'Error: ' + e.message;
+    el.style.color = 'var(--red)';
+  }
+}
+
+// Map Kalshi market titles to team names
+function extractTeamFromMarket(title) {
+  if (!title) return null;
+  // Try common patterns: "Will Duke win...", "Duke to win...", team name in title
+  const teamNames = Object.keys(TEAMS);
+  for (const t of teamNames) {
+    if (title.toLowerCase().includes(t.toLowerCase())) return t;
+  }
+  return null;
+}
+
+async function fetchKalshiResults() {
+  const statusEl = document.getElementById('lb-status');
+  const creds = getKalshiCreds();
+  if (!creds.keyId || !creds.privateKey) {
+    statusEl.innerHTML = '<div class="lb-status disconnected">Kalshi API not configured. Open settings below to add credentials, or enter results manually.</div>';
+    return;
+  }
+
+  statusEl.innerHTML = '<div class="lb-status" style="background:var(--surface2);border:1px solid var(--border);color:var(--text-dim);">Fetching results from Kalshi...</div>';
+
+  try {
+    // Search for March Madness markets
+    let allMarkets = [];
+    const searchTerms = ['NCAA', 'March Madness', 'NCAAM', 'MARCHMAD', 'CBB'];
+    for (const term of searchTerms) {
+      try {
+        const data = await kalshiFetch('GET', `/markets?series_ticker=${term}&limit=200&status=settled`);
+        if (data.markets && data.markets.length) allMarkets.push(...data.markets);
+      } catch(e) { /* try next term */ }
+      try {
+        const data = await kalshiFetch('GET', `/events?series_ticker=${term}&with_nested_markets=true&limit=200`);
+        if (data.events) {
+          for (const ev of data.events) {
+            if (ev.markets) allMarkets.push(...ev.markets);
+          }
+        }
+      } catch(e) { /* try next term */ }
+    }
+
+    // Deduplicate
+    const seen = new Set();
+    allMarkets = allMarkets.filter(m => { if (seen.has(m.ticker)) return false; seen.add(m.ticker); return true; });
+
+    // Extract results
+    const results = {};
+    for (const m of allMarkets) {
+      if (m.result === 'yes') {
+        const team = extractTeamFromMarket(m.yes_sub_title || m.title);
+        if (team) results[m.ticker] = { team, title: m.title, result: 'yes' };
+      }
+    }
+
+    // Store results
+    localStorage.setItem('mm_kalshi_results', JSON.stringify({ markets: allMarkets, results, lastFetch: Date.now() }));
+
+    const settledCount = allMarkets.filter(m => m.result).length;
+    statusEl.innerHTML = `<div class="lb-status connected">Found ${allMarkets.length} markets (${settledCount} settled). Last updated: ${new Date().toLocaleTimeString()}</div>`;
+
+    // Update actual results from settled markets and re-render
+    updateActualResults(allMarkets);
+    renderLeaderboard();
+  } catch(e) {
+    statusEl.innerHTML = `<div class="lb-status disconnected">Error: ${e.message}</div>`;
+  }
+}
+
+function updateActualResults(markets) {
+  // Build a map of actual game winners from Kalshi markets
+  const actual = JSON.parse(localStorage.getItem('mm_actual_results') || '{}');
+
+  for (const m of markets) {
+    if (!m.result) continue;
+    const winTeam = m.result === 'yes' ? extractTeamFromMarket(m.yes_sub_title || m.title) : null;
+    if (winTeam && TEAMS[winTeam]) {
+      actual[winTeam] = true; // This team has won at least one game
+    }
+  }
+
+  localStorage.setItem('mm_actual_results', JSON.stringify(actual));
+}
+
+// Manual results entry (fallback if Kalshi doesn't have granular game markets)
+let actualWinners = JSON.parse(localStorage.getItem('mm_actual_winners') || '{}');
+
+function saveActualWinners() {
+  localStorage.setItem('mm_actual_winners', JSON.stringify(actualWinners));
+}
+
+// ============================================================
+// LEADERBOARD SCORING
+// ============================================================
+
+const ROUND_POINTS = [1, 2, 4, 8, 16, 32]; // R64, R32, S16, E8, FF, Championship
+
+function scoreBracket(submission) {
+  const picks = submission.picks;
+  let score = 0, correct = 0, wrong = 0, pending = 0;
+  const details = [];
+  let pickIdx = 0;
+
+  for (const region of REGIONS) {
+    let roundStart = 0;
+    for (let r = 0; r < 4; r++) {
+      const roundSize = [8, 4, 2, 1][r];
+      for (let g = 0; g < roundSize; g++) {
+        const pick = picks.regions[region][roundStart + g];
+        const gameKey = `${region}_R${r}_G${g}`;
+        const actual = actualWinners[gameKey];
+
+        if (!pick) { pending++; details.push({ pick, actual, round: r, status: 'pending', region, pts: 0 }); }
+        else if (!actual) { pending++; details.push({ pick, actual, round: r, status: 'pending', region, pts: 0 }); }
+        else if (pick === actual) {
+          const pts = ROUND_POINTS[r];
+          score += pts; correct++;
+          details.push({ pick, actual, round: r, status: 'correct', region, pts });
+        } else {
+          wrong++;
+          details.push({ pick, actual, round: r, status: 'wrong', region, pts: 0 });
+        }
+        pickIdx++;
+      }
+      roundStart += roundSize;
+    }
+  }
+
+  // Final Four
+  for (let i = 0; i < 2; i++) {
+    const pick = picks.ff[i];
+    const actual = actualWinners[`FF_${i}`];
+    if (!pick || !actual) { pending++; details.push({ pick, actual, round: 4, status: 'pending', region: 'FF', pts: 0 }); }
+    else if (pick === actual) { score += 16; correct++; details.push({ pick, actual, round: 4, status: 'correct', region: 'FF', pts: 16 }); }
+    else { wrong++; details.push({ pick, actual, round: 4, status: 'wrong', region: 'FF', pts: 0 }); }
+  }
+
+  // Championship
+  const champPick = picks.champ;
+  const champActual = actualWinners['Championship'];
+  if (!champPick || !champActual) { pending++; details.push({ pick: champPick, actual: champActual, round: 5, status: 'pending', region: 'Champ', pts: 0 }); }
+  else if (champPick === champActual) { score += 32; correct++; details.push({ pick: champPick, actual: champActual, round: 5, status: 'correct', region: 'Champ', pts: 32 }); }
+  else { wrong++; details.push({ pick: champPick, actual: champActual, round: 5, status: 'wrong', region: 'Champ', pts: 0 }); }
+
+  return { score, correct, wrong, pending, details, champion: picks.champion };
+}
+
+function renderLeaderboard() {
+  const submissions = JSON.parse(localStorage.getItem('mm_submissions') || '[]');
+  const body = document.getElementById('lb-body');
+  const detailArea = document.getElementById('lb-detail-area');
+
+  if (submissions.length === 0) {
+    body.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--text-dim);">No brackets submitted yet. Fill out your bracket and click "Submit Bracket" above.</td></tr>';
+    detailArea.innerHTML = '';
+    return;
+  }
+
+  // Score all brackets
+  const scored = submissions.map(s => ({ ...s, ...scoreBracket(s) }));
+  scored.sort((a, b) => b.score - a.score);
+
+  body.innerHTML = scored.map((s, i) => {
+    const rankClass = i === 0 ? 'rank-1' : i === 1 ? 'rank-2' : i === 2 ? 'rank-3' : '';
+    return `<tr class="lb-expand" onclick="toggleDetail(${i})">
+      <td class="${rankClass}">${i + 1}</td>
+      <td style="font-weight:600;">${s.name}</td>
+      <td class="lb-score">${s.score}</td>
+      <td class="lb-correct">${s.correct}</td>
+      <td class="lb-wrong">${s.wrong}</td>
+      <td class="lb-pending">${s.pending}</td>
+      <td>${s.champion || '—'}</td>
+    </tr>
+    <tr id="detail-row-${i}" style="display:none;"><td colspan="7" class="lb-detail">
+      <div class="lb-detail-grid">
+        ${s.details.filter(d => d.pick).map(d => `<div class="lb-pick ${d.status}">
+          <span>${d.pick}</span>
+          <span>${d.status === 'correct' ? '+' + d.pts : d.status === 'wrong' ? 'X' : '?'}</span>
+        </div>`).join('')}
+      </div>
+    </td></tr>`;
+  }).join('');
+
+  // Show results summary
+  const totalActual = Object.keys(actualWinners).length;
+  const summaryEl = document.getElementById('lb-results-summary');
+  if (totalActual > 0) {
+    summaryEl.innerHTML = `<div style="text-align:center;margin-bottom:12px;font-size:12px;color:var(--text-dim);">${totalActual} game results entered &bull; ESPN scoring: R64=1, R32=2, S16=4, E8=8, FF=16, Champ=32</div>`;
+  } else {
+    summaryEl.innerHTML = `<div style="text-align:center;margin-bottom:12px;font-size:12px;color:var(--text-dim);">No results yet. Connect Kalshi API or enter results manually to start scoring. &bull; ESPN scoring: R64=1, R32=2, S16=4, E8=8, FF=16, Champ=32</div>`;
+  }
+
+  // Load kalshi creds into fields
+  const creds = getKalshiCreds();
+  document.getElementById('kalshi-key-id').value = creds.keyId;
+  document.getElementById('kalshi-private-key').value = creds.privateKey;
+}
+
+function toggleDetail(idx) {
+  const row = document.getElementById('detail-row-' + idx);
+  row.style.display = row.style.display === 'none' ? '' : 'none';
 }
 
 // ============================================================
