@@ -2087,10 +2087,18 @@ function generateSimBrackets(count) {
   }
 
   const submissions = JSON.parse(localStorage.getItem('mm_submissions') || '[]');
+  // Find highest existing sim number to avoid naming collisions
+  let maxExisting = 0;
+  submissions.forEach(s => {
+    const m = s.name && s.name.match(/^Sim-(\d+)$/);
+    if (m) maxExisting = Math.max(maxExisting, parseInt(m[1]));
+  });
+  const totalAfter = maxExisting + count;
+  const padLen = String(totalAfter).length;
   for (let i = 0; i < count; i++) {
     const sim = simBracket();
     const picks = serializeSim(sim);
-    const num = String(i + 1).padStart(String(count).length, '0');
+    const num = String(maxExisting + i + 1).padStart(padLen, '0');
     submissions.push({ name: `Sim-${num}`, picks, timestamp: Date.now() });
   }
   localStorage.setItem('mm_submissions', JSON.stringify(submissions));
