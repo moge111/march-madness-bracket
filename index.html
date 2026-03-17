@@ -41,6 +41,11 @@ header p { color: var(--text-dim); font-size: 12px; margin-top: 4px; }
 .tab-content.active { display: block; }
 
 .bracket-controls { display: flex; gap: 8px; justify-content: center; margin-bottom: 14px; flex-wrap: wrap; }
+.prob-tracker { display: flex; align-items: center; justify-content: center; gap: 16px; padding: 10px 20px; margin-bottom: 14px; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; }
+.prob-tracker .prob-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--text-dim); font-weight: 600; }
+.prob-tracker .prob-value { font-size: 18px; font-weight: 800; color: var(--accent2); font-variant-numeric: tabular-nums; }
+.prob-tracker .prob-picks { font-size: 11px; color: var(--text-muted); }
+.prob-tracker .prob-odds { font-size: 11px; color: var(--text-dim); }
 .btn { padding: 7px 14px; border: 1px solid var(--border); background: var(--surface); color: var(--text); border-radius: 6px; cursor: pointer; font-size: 11px; font-weight: 600; transition: all .2s; text-transform: uppercase; letter-spacing: .5px; }
 .btn:hover { border-color: var(--accent); color: var(--accent); }
 .btn-primary { background: var(--accent); border-color: var(--accent); color: #fff; }
@@ -304,6 +309,16 @@ header p { color: var(--text-dim); font-size: 12px; margin-top: 4px; }
       <button class="btn" onclick="autoFill(true)">Auto-Fill w/ Upsets</button>
       <button class="btn" onclick="showWeightsModal()" style="border-color: var(--accent); color: var(--accent);">Customize Model</button>
       <button class="btn btn-danger" onclick="resetBracket()">Reset</button>
+    </div>
+    <div class="prob-tracker" id="prob-tracker" style="display:none;">
+      <div>
+        <div class="prob-label">Perfect bracket probability</div>
+        <div style="display:flex;align-items:baseline;gap:10px;">
+          <span class="prob-value" id="prob-value">—</span>
+          <span class="prob-picks" id="prob-picks"></span>
+          <span class="prob-odds" id="prob-odds"></span>
+        </div>
+      </div>
     </div>
     <div class="bracket-container">
       <div class="unified-bracket" id="unified-bracket"></div>
@@ -1010,6 +1025,84 @@ function switchTab(tab) {
 
 function renderAll() {
   renderUnifiedBracket();
+  updateProbTracker();
+}
+
+function updateProbTracker() {
+  let totalProb = 1;
+  let pickCount = 0;
+  let totalGames = 0;
+
+  for (const region of REGIONS) {
+    for (let round = 0; round < 4; round++) {
+      for (const m of bracket[region].rounds[round]) {
+        if (m.team1 && m.team2) {
+          totalGames++;
+          if (m.winner) {
+            pickCount++;
+            const pred = predictMatchup(m.team1, m.team2);
+            const winProb = m.winner.name === m.team1.name ? pred.prob : (1 - pred.prob);
+            totalProb *= winProb;
+          }
+        }
+      }
+    }
+  }
+
+  for (const m of bracket.finalFour) {
+    if (m.team1 && m.team2) {
+      totalGames++;
+      if (m.winner) {
+        pickCount++;
+        const pred = predictMatchup(m.team1, m.team2);
+        const winProb = m.winner.name === m.team1.name ? pred.prob : (1 - pred.prob);
+        totalProb *= winProb;
+      }
+    }
+  }
+
+  if (bracket.championship.team1 && bracket.championship.team2) {
+    totalGames++;
+    if (bracket.championship.winner) {
+      pickCount++;
+      const pred = predictMatchup(bracket.championship.team1, bracket.championship.team2);
+      const winProb = bracket.championship.winner.name === bracket.championship.team1.name ? pred.prob : (1 - pred.prob);
+      totalProb *= winProb;
+    }
+  }
+
+  const tracker = document.getElementById('prob-tracker');
+  if (pickCount === 0) {
+    tracker.style.display = 'none';
+    return;
+  }
+
+  tracker.style.display = 'flex';
+  const probEl = document.getElementById('prob-value');
+  const picksEl = document.getElementById('prob-picks');
+  const oddsEl = document.getElementById('prob-odds');
+
+  let probStr;
+  if (totalProb >= .01) {
+    probStr = (totalProb * 100).toFixed(2) + '%';
+  } else if (totalProb >= 1e-10) {
+    probStr = totalProb.toExponential(2);
+  } else {
+    probStr = totalProb.toExponential(1);
+  }
+
+  const oddsRatio = Math.round(1 / totalProb);
+  let oddsStr = '';
+  if (oddsRatio > 1) {
+    if (oddsRatio >= 1e12) oddsStr = '1 in ' + oddsRatio.toExponential(1);
+    else if (oddsRatio >= 1e6) oddsStr = '1 in ' + (oddsRatio / 1e6).toFixed(1) + 'M';
+    else if (oddsRatio >= 1e3) oddsStr = '1 in ' + (oddsRatio / 1e3).toFixed(1) + 'K';
+    else oddsStr = '1 in ' + oddsRatio.toLocaleString();
+  }
+
+  probEl.textContent = probStr;
+  picksEl.textContent = pickCount + ' of ' + totalGames + ' picks';
+  oddsEl.textContent = oddsStr ? '(' + oddsStr + ')' : '';
 }
 
 function renderUnifiedBracket() {
