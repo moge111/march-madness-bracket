@@ -184,10 +184,18 @@ header p { color: var(--text-dim); font-size: 12px; margin-top: 4px; }
 .modal-field input { padding: 8px 12px; background: var(--surface2); border: 1px solid var(--border); color: var(--text); border-radius: 6px; font-size: 13px; width: 100%; }
 .modal-field input:focus { border-color: var(--accent); outline: none; }
 .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
-.weight-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; padding: 6px 0; }
-.weight-row label { min-width: 130px; font-size: 12px; color: var(--text-dim); font-weight: 600; }
-.weight-row input[type="range"] { flex: 1; accent-color: var(--accent); height: 6px; cursor: pointer; }
-.weight-row .weight-val { min-width: 32px; text-align: right; font-size: 13px; font-weight: 700; color: var(--accent2); font-variant-numeric: tabular-nums; }
+.weights-section { margin-bottom: 18px; }
+.weights-section-title { font-size: 9px; text-transform: uppercase; letter-spacing: 2px; color: var(--accent); font-weight: 700; margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+.weight-row { display: flex; align-items: center; gap: 12px; margin-bottom: 2px; padding: 8px 10px; border-radius: 6px; transition: background .15s; }
+.weight-row:hover { background: rgba(255,255,255,.03); }
+.weight-info { min-width: 140px; }
+.weight-info .weight-label { font-size: 12px; color: var(--text); font-weight: 600; }
+.weight-info .weight-desc { font-size: 9px; color: var(--text-muted); margin-top: 1px; }
+.weight-row input[type="range"] { flex: 1; accent-color: var(--accent); height: 6px; cursor: pointer; -webkit-appearance: none; appearance: none; background: var(--border); border-radius: 3px; outline: none; }
+.weight-row input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%; background: var(--accent); cursor: pointer; border: 2px solid var(--surface); box-shadow: 0 0 4px rgba(63,185,80,.3); }
+.weight-row .weight-val { min-width: 36px; text-align: center; font-size: 13px; font-weight: 700; color: var(--accent2); font-variant-numeric: tabular-nums; background: var(--surface2); border-radius: 4px; padding: 3px 6px; }
+.weight-row .weight-val.off { color: var(--text-muted); }
+.weight-row .weight-val.high { color: var(--green); }
 .paste-area { width: 100%; min-height: 200px; background: var(--surface2); border: 1px solid var(--border); color: var(--text); border-radius: 8px; padding: 12px; font-family: monospace; font-size: 12px; resize: vertical; }
 .paste-area:focus { border-color: var(--accent); outline: none; }
 .paste-help { font-size: 12px; color: var(--text-dim); margin: 10px 0; line-height: 1.6; }
@@ -767,17 +775,17 @@ let dataSortAsc = false;
 
 // Custom stat weights (0-100 sliders, normalized at prediction time)
 const DEFAULT_WEIGHTS = {
-  efficiency: 60,   // AdjEM (KenPom efficiency margin)
-  seedHistory: 30,  // Historical seed matchup win rates
-  threePt: 40,      // 3PT shooting percentage
-  defense: 50,      // Defensive efficiency (AdjD)
-  ftPct: 35,        // Free throw percentage
-  tovRate: 35,      // Turnover rate
-  experience: 30,   // Roster experience
-  tempo: 25,        // Tempo (AdjT)
-  offReb: 20,       // Offensive rebounding
-  defReb: 25,       // Defensive rebounding
-  sos: 25           // Strength of schedule
+  efficiency: 85,   // AdjEM — foundation of every pro model
+  seedHistory: 15,  // Pool strategy tool, pros use market odds instead
+  threePt: 45,      // Variance/upset factor, hot shooting wins games
+  defense: 75,      // Every champion top-18 AdjD, defense travels
+  ftPct: 55,        // Close-game edge, tournament games decided at the line
+  tovRate: 60,      // Pressure performance, low-TO teams hold up
+  experience: 25,   // Matters but hard to quantify precisely
+  tempo: 30,        // Matchup tool, slow games = more variance
+  offReb: 25,       // Second chances, moderate importance
+  defReb: 40,       // Ends possessions, key defensive metric
+  sos: 50           // Context for all stats, separates real strength
 };
 
 let customWeights = { ...DEFAULT_WEIGHTS };
@@ -1422,8 +1430,6 @@ function renderAnalyzer() {
         <div style="text-align:center;font-size:11px;color:var(--orange);flex:1;font-weight:700">${nameB}</div>
       </div>
       <div class="stat-bars">${statBarsHtml}</div>
-      ${factorChips}
-      ${upsetBanner}
     </div>
   `;
 }
