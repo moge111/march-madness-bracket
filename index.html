@@ -58,7 +58,7 @@ header p { color: var(--text-dim); font-size: 12px; margin-top: 4px; }
 .leaderboard-header h2 { color: var(--accent2); font-size: 18px; margin-bottom: 4px; }
 .leaderboard-header p { color: var(--text-dim); font-size: 12px; }
 .lb-controls { display: flex; gap: 8px; justify-content: center; margin-bottom: 16px; flex-wrap: wrap; }
-.lb-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.lb-table { width: 100%; min-width: 750px; border-collapse: collapse; font-size: 13px; }
 .lb-table th { background: var(--surface2); padding: 10px 12px; text-align: left; font-size: 10px; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; color: var(--text-dim); border-bottom: 2px solid var(--accent); }
 .lb-table td { padding: 10px 12px; border-bottom: 1px solid var(--border); }
 .lb-table tr:hover { background: var(--surface2); }
@@ -444,7 +444,7 @@ header p { color: var(--text-dim); font-size: 12px; margin-top: 4px; }
         <div id="results-games" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:8px;"></div>
       </div>
     </div>
-    <div style="border-radius:10px;border:1px solid var(--border);overflow:hidden;">
+    <div style="border-radius:10px;border:1px solid var(--border);overflow-x:auto;">
       <table class="lb-table">
         <thead><tr><th>#</th><th>Name</th><th>Score</th><th>Correct</th><th>Wrong</th><th>Pending</th><th>Champion</th><th>Submitted</th><th id="lb-edit-col" style="display:none;"></th></tr></thead>
         <tbody id="lb-body"></tbody>
@@ -1937,6 +1937,14 @@ function submitBracket() {
   alert(`Bracket submitted for ${name}!`);
 }
 
+function deleteBracket(name) {
+  if (!confirm(`Delete bracket "${name}"?`)) return;
+  let submissions = JSON.parse(localStorage.getItem('mm_submissions') || '[]');
+  submissions = submissions.filter(s => s.name !== name);
+  localStorage.setItem('mm_submissions', JSON.stringify(submissions));
+  renderLeaderboard();
+}
+
 function editBracket(name) {
   const submissions = JSON.parse(localStorage.getItem('mm_submissions') || '[]');
   const sub = submissions.find(s => s.name === name);
@@ -2344,7 +2352,7 @@ function renderLeaderboard() {
   body.innerHTML = scored.map((s, i) => {
     const rankClass = i === 0 ? 'rank-1' : i === 1 ? 'rank-2' : i === 2 ? 'rank-3' : '';
     const ts = s.timestamp ? new Date(s.timestamp).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : '—';
-    const editBtn = window._isAdmin ? `<td><button class="btn" style="font-size:10px;padding:3px 8px;" onclick="event.stopPropagation();editBracket('${s.name.replace(/'/g, "\\'")}')">Edit</button></td>` : '';
+    const editBtn = window._isAdmin ? `<td style="white-space:nowrap;"><button class="btn" style="font-size:10px;padding:3px 8px;" onclick="event.stopPropagation();editBracket('${s.name.replace(/'/g, "\\'")}')">Edit</button> <button class="btn btn-danger" style="font-size:10px;padding:3px 8px;" onclick="event.stopPropagation();deleteBracket('${s.name.replace(/'/g, "\\'")}')">✕</button></td>` : '';
     return `<tr class="lb-expand" onclick="toggleDetail(${i})">
       <td class="${rankClass}">${i + 1}</td>
       <td style="font-weight:600;">${s.name}</td>
