@@ -445,11 +445,20 @@ header p { color: var(--text-dim); font-size: 12px; margin-top: 4px; }
         <div id="results-games" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:8px;"></div>
       </div>
     </div>
+    <div id="lb-loading" style="display:none;text-align:center;padding:40px;color:var(--accent2);font-size:14px;">
+      <div style="margin-bottom:8px;">⏳ Scoring brackets...</div>
+      <div id="lb-loading-progress" style="font-size:12px;color:var(--text-dim);"></div>
+    </div>
     <div style="border-radius:10px;border:1px solid var(--border);overflow-x:auto;">
       <table class="lb-table">
         <thead><tr><th>#</th><th>Name</th><th>Score</th><th>Correct</th><th>Wrong</th><th>Pending</th><th>Champion</th><th>Submitted</th><th id="lb-edit-col" style="display:none;"></th></tr></thead>
         <tbody id="lb-body"></tbody>
       </table>
+    </div>
+    <div id="lb-pagination" style="display:none;text-align:center;padding:12px;display:flex;justify-content:center;align-items:center;gap:12px;">
+      <button class="btn" onclick="lbPageChange(-1)" id="lb-prev" style="font-size:11px;padding:4px 12px;">← Prev</button>
+      <span id="lb-page-info" style="font-size:12px;color:var(--text-dim);"></span>
+      <button class="btn" onclick="lbPageChange(1)" id="lb-next" style="font-size:11px;padding:4px 12px;">Next →</button>
     </div>
     <div id="lb-detail-area"></div>
   </div>
@@ -2210,21 +2219,42 @@ function generateSimBrackets(count) {
     return picks;
   }
 
-  // Store sims in IndexedDB (unlimited storage)
+  // Store sims in IndexedDB (unlimited storage) — generate in async chunks
+  const loadingEl = document.getElementById('lb-loading');
+  const progressEl = document.getElementById('lb-loading-progress');
+  loadingEl.style.display = '';
+  progressEl.textContent = 'Preparing...';
+
   simDB.getMaxSimNum().then(maxExisting => {
     const totalAfter = maxExisting + count;
     const padLen = String(totalAfter).length;
     const newSims = [];
-    for (let i = 0; i < count; i++) {
-      const sim = simBracket();
-      const picks = serializeSim(sim);
-      const num = String(maxExisting + i + 1).padStart(padLen, '0');
-      newSims.push({ name: `Sim-${num}`, picks, timestamp: Date.now() });
+    const GEN_CHUNK = 500;
+    let idx = 0;
+
+    function genChunk() {
+      const end = Math.min(idx + GEN_CHUNK, count);
+      for (let i = idx; i < end; i++) {
+        const sim = simBracket();
+        const picks = serializeSim(sim);
+        const num = String(maxExisting + i + 1).padStart(padLen, '0');
+        newSims.push({ name: `Sim-${num}`, picks, timestamp: Date.now() });
+      }
+      idx = end;
+      progressEl.textContent = `Generating: ${idx.toLocaleString()} / ${count.toLocaleString()}...`;
+
+      if (idx < count) {
+        requestAnimationFrame(genChunk);
+      } else {
+        progressEl.textContent = `Saving ${count.toLocaleString()} brackets...`;
+        simDB.putAll(newSims).then(() => {
+          loadingEl.style.display = 'none';
+          renderLeaderboard();
+          alert(`Generated ${count.toLocaleString()} simulated brackets.`);
+        });
+      }
     }
-    simDB.putAll(newSims).then(() => {
-      renderLeaderboard();
-      alert(`Generated ${count} simulated brackets.`);
-    });
+    requestAnimationFrame(genChunk);
   });
 }
 
@@ -2232,7 +2262,7 @@ function promptSimBrackets() {
   const input = prompt('How many simulated brackets to generate?', '1000');
   if (!input) return;
   const count = parseInt(input);
-  if (isNaN(count) || count < 1 || count > 50000) { alert('Enter a number between 1 and 50,000.'); return; }
+  if (isNaN(count) || count < 1 || count > 100000) { alert('Enter a number between 1 and 100,000.'); return; }
   generateSimBrackets(count);
 }
 
@@ -2386,11 +2416,13 @@ function scoreBracket(submission) {
   return { score, correct, wrong, pending, details, champion: picks.champion };
 }
 
-function renderSimStats() {
+function renderSimStats(sims) {
   const container = document.getElementById('sim-stats');
-  simDB.getAll().then(sims => {
+  if (sims) {
     _renderSimStatsInner(container, sims);
-  });
+  } else {
+    simDB.getAll().then(s => _renderSimStatsInner(container, s));
+  }
 }
 
 function _renderSimStatsInner(container, sims) {
@@ -2451,11 +2483,69 @@ function _renderSimStatsInner(container, sims) {
     </div>`;
 }
 
+// Pagination state
+let _lbPage = 0;
+let _lbScored = [];
+const LB_PAGE_SIZE = 100;
+
+function lbPageChange(delta) {
+  const maxPage = Math.max(0, Math.ceil(_lbScored.length / LB_PAGE_SIZE) - 1);
+  _lbPage = Math.max(0, Math.min(maxPage, _lbPage + delta));
+  _renderLbPage();
+}
+
+function _renderLbPage() {
+  const body = document.getElementById('lb-body');
+  const colSpan = window._isAdmin ? 9 : 8;
+  const start = _lbPage * LB_PAGE_SIZE;
+  const pageItems = _lbScored.slice(start, start + LB_PAGE_SIZE);
+  const totalPages = Math.ceil(_lbScored.length / LB_PAGE_SIZE);
+
+  body.innerHTML = pageItems.map((s, j) => {
+    const i = start + j; // global index for rank
+    const rankClass = i === 0 ? 'rank-1' : i === 1 ? 'rank-2' : i === 2 ? 'rank-3' : '';
+    const ts = s.timestamp ? new Date(s.timestamp).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : '—';
+    const editBtn = window._isAdmin ? `<td style="white-space:nowrap;"><button class="btn" style="font-size:10px;padding:3px 8px;" onclick="event.stopPropagation();editBracket('${s.name.replace(/'/g, "\\'")}')">Edit</button> <button class="btn btn-danger" style="font-size:10px;padding:3px 8px;" onclick="event.stopPropagation();deleteBracket('${s.name.replace(/'/g, "\\'")}')">✕</button></td>` : '';
+    return `<tr class="lb-expand" onclick="toggleDetail(${i})">
+      <td class="${rankClass}">${i + 1}</td>
+      <td style="font-weight:600;">${s.name}</td>
+      <td class="lb-score">${s.score}</td>
+      <td class="lb-correct">${s.correct}</td>
+      <td class="lb-wrong">${s.wrong}</td>
+      <td class="lb-pending">${s.pending}</td>
+      <td>${s.champion || '—'}</td>
+      <td style="font-size:11px;color:var(--text-dim);">${ts}</td>
+      ${editBtn}
+    </tr>
+    <tr id="detail-row-${i}" style="display:none;"><td colspan="${colSpan}" class="lb-detail">
+      <div class="lb-detail-grid">
+        ${s.details.filter(d => d.pick).map(d => `<div class="lb-pick ${d.status}">
+          <span>${d.pick}</span>
+          <span>${d.status === 'correct' ? '+' + d.pts : d.status === 'wrong' ? 'X' : '?'}</span>
+        </div>`).join('')}
+      </div>
+    </td></tr>`;
+  }).join('');
+
+  // Pagination controls
+  const pag = document.getElementById('lb-pagination');
+  if (totalPages > 1) {
+    pag.style.display = 'flex';
+    document.getElementById('lb-page-info').textContent = `Page ${_lbPage + 1} of ${totalPages} (${_lbScored.length} brackets)`;
+    document.getElementById('lb-prev').disabled = _lbPage === 0;
+    document.getElementById('lb-next').disabled = _lbPage >= totalPages - 1;
+  } else {
+    pag.style.display = 'none';
+  }
+}
+
 function renderLeaderboard() {
   const humanSubs = JSON.parse(localStorage.getItem('mm_submissions') || '[]');
   const body = document.getElementById('lb-body');
   const detailArea = document.getElementById('lb-detail-area');
   const colSpan = window._isAdmin ? 9 : 8;
+  const loadingEl = document.getElementById('lb-loading');
+  const progressEl = document.getElementById('lb-loading-progress');
 
   // Merge human brackets (localStorage) + sim brackets (IndexedDB)
   simDB.getAll().then(simSubs => {
@@ -2464,38 +2554,14 @@ function renderLeaderboard() {
     if (submissions.length === 0) {
       body.innerHTML = `<tr><td colspan="${colSpan}" style="text-align:center;padding:30px;color:var(--text-dim);">No brackets submitted yet. Fill out your bracket and click "Submit Bracket" above.</td></tr>`;
       detailArea.innerHTML = '';
-      renderSimStats();
+      document.getElementById('lb-pagination').style.display = 'none';
+      loadingEl.style.display = 'none';
+      renderSimStats(simSubs);
       return;
     }
 
-    // Score all brackets
-    const scored = submissions.map(s => ({ ...s, ...scoreBracket(s) }));
-    scored.sort((a, b) => b.score - a.score);
-
-    body.innerHTML = scored.map((s, i) => {
-      const rankClass = i === 0 ? 'rank-1' : i === 1 ? 'rank-2' : i === 2 ? 'rank-3' : '';
-      const ts = s.timestamp ? new Date(s.timestamp).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : '—';
-      const editBtn = window._isAdmin ? `<td style="white-space:nowrap;"><button class="btn" style="font-size:10px;padding:3px 8px;" onclick="event.stopPropagation();editBracket('${s.name.replace(/'/g, "\\'")}')">Edit</button> <button class="btn btn-danger" style="font-size:10px;padding:3px 8px;" onclick="event.stopPropagation();deleteBracket('${s.name.replace(/'/g, "\\'")}')">✕</button></td>` : '';
-      return `<tr class="lb-expand" onclick="toggleDetail(${i})">
-        <td class="${rankClass}">${i + 1}</td>
-        <td style="font-weight:600;">${s.name}</td>
-        <td class="lb-score">${s.score}</td>
-        <td class="lb-correct">${s.correct}</td>
-        <td class="lb-wrong">${s.wrong}</td>
-        <td class="lb-pending">${s.pending}</td>
-        <td>${s.champion || '—'}</td>
-        <td style="font-size:11px;color:var(--text-dim);">${ts}</td>
-        ${editBtn}
-      </tr>
-      <tr id="detail-row-${i}" style="display:none;"><td colspan="${colSpan}" class="lb-detail">
-        <div class="lb-detail-grid">
-          ${s.details.filter(d => d.pick).map(d => `<div class="lb-pick ${d.status}">
-            <span>${d.pick}</span>
-            <span>${d.status === 'correct' ? '+' + d.pts : d.status === 'wrong' ? 'X' : '?'}</span>
-          </div>`).join('')}
-        </div>
-      </td></tr>`;
-    }).join('');
+    // Render sim stats immediately (no scoring needed)
+    renderSimStats(simSubs);
 
     // Show results summary
     const totalActual = Object.keys(actualWinners).length;
@@ -2506,7 +2572,42 @@ function renderLeaderboard() {
       summaryEl.innerHTML = `<div style="text-align:center;margin-bottom:12px;font-size:12px;color:var(--text-dim);">No results yet. Enter results manually to start scoring. &bull; ESPN scoring: R64=1, R32=2, S16=4, E8=8, FF=16, Champ=32</div>`;
     }
 
-    renderSimStats();
+    // For small sets, score synchronously
+    if (submissions.length <= 500) {
+      _lbScored = submissions.map(s => ({ ...s, ...scoreBracket(s) }));
+      _lbScored.sort((a, b) => b.score - a.score);
+      _lbPage = 0;
+      loadingEl.style.display = 'none';
+      _renderLbPage();
+      return;
+    }
+
+    // For large sets, score in async chunks to avoid freezing
+    loadingEl.style.display = '';
+    body.innerHTML = '';
+    const scored = [];
+    const CHUNK = 500;
+    let idx = 0;
+
+    function scoreChunk() {
+      const end = Math.min(idx + CHUNK, submissions.length);
+      for (let i = idx; i < end; i++) {
+        scored.push({ ...submissions[i], ...scoreBracket(submissions[i]) });
+      }
+      idx = end;
+      progressEl.textContent = `${idx.toLocaleString()} / ${submissions.length.toLocaleString()} scored...`;
+
+      if (idx < submissions.length) {
+        requestAnimationFrame(scoreChunk);
+      } else {
+        scored.sort((a, b) => b.score - a.score);
+        _lbScored = scored;
+        _lbPage = 0;
+        loadingEl.style.display = 'none';
+        _renderLbPage();
+      }
+    }
+    requestAnimationFrame(scoreChunk);
   });
 }
 
