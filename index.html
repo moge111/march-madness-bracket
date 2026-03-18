@@ -1501,7 +1501,7 @@ function renderUnifiedBracket() {
   let html = '';
 
   html += '<div class="bracket-half left">';
-  html += renderHalf(['South', 'East'], 'left');
+  html += renderHalf(['South', 'West'], 'left');
   html += '</div>';
 
   html += '<div class="bracket-center">';
@@ -1509,7 +1509,7 @@ function renderUnifiedBracket() {
   html += '</div>';
 
   html += '<div class="bracket-half right">';
-  html += renderHalf(['West', 'Midwest'], 'right');
+  html += renderHalf(['East', 'Midwest'], 'right');
   html += '</div>';
 
   container.innerHTML = html;
