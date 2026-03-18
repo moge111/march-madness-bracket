@@ -571,7 +571,7 @@ header p { color: var(--text-dim); font-size: 12px; margin-top: 4px; }
       <p>A sortable, searchable table of all 64 tournament teams with every stat. Click column headers to sort. Use the search bar to filter by name, or the dropdown to filter by region. You can edit any team's stats individually, or paste in bulk data (CSV/tab-separated) to update everything at once. Hit <strong>Export Picks</strong> to copy your full bracket to clipboard.</p>
 
       <h2>Data Source</h2>
-      <p>All data is sourced from <strong>Barttorvik</strong> (barttorvik.com). Efficiency metrics (AdjO, AdjD, AdjT) and strength of schedule come from Barttorvik's team ratings. Shooting stats (3PT%, FT%), turnover rate, offensive rebound rate, and experience are aggregated from individual player data across every roster, weighted by minutes played. Opponent 3PT% is computed from actual game box scores across the full season. Seed matchup history covers every NCAA tournament game from 1985-2024. All stats can be fine-tuned in the Team Data tab.</p>
+      <p>All data is sourced from <strong>Barttorvik</strong> (barttorvik.com). Efficiency metrics (AdjO, AdjD, AdjT) and strength of schedule come from Barttorvik's team ratings. Shooting stats (3PT%, FT%), turnover rate, offensive rebound rate, and experience are aggregated from individual player data across every roster, weighted by minutes played. Opponent 3PT% is computed from actual game box scores across the full season. Seed matchup history covers every NCAA tournament game from 1985-2025. All stats can be fine-tuned in the Team Data tab.</p>
 
     </div>
   </div>
@@ -711,90 +711,141 @@ const simDB = (() => {
 // ============================================================
 
 const TEAMS = {
-  "Duke"              : { seed:1, region:"East", adjEM:37.4, adjO:128.2, adjD:90.8, adjT:65.8, sos:13.7, threePtPct:0.351, threePtDefPct:0.328, ftPct:0.724, tovRate:15.7, orbPct:6.7, experience:1.9, drbPct:14.3, record:"32-2" },
-  "Siena"             : { seed:16, region:"East", adjEM:-1.7, adjO:107.2, adjD:108.9, adjT:64.6, sos:-7.8, threePtPct:0.304, threePtDefPct:0.316, ftPct:0.769, tovRate:15.3, orbPct:5.5, experience:2.7, drbPct:13.1, record:"23-11" },
-  "Ohio State"        : { seed:8, region:"East", adjEM:23.6, adjO:125.2, adjD:101.6, adjT:66.2, sos:2.9, threePtPct:0.36, threePtDefPct:0.342, ftPct:0.775, tovRate:15.5, orbPct:5.0, experience:2.8, drbPct:13.1, record:"21-12" },
-  "TCU"               : { seed:9, region:"East", adjEM:15.3, adjO:114.9, adjD:99.6, adjT:67.6, sos:2.4, threePtPct:0.331, threePtDefPct:0.334, ftPct:0.708, tovRate:14.8, orbPct:5.7, experience:2.8, drbPct:13.2, record:"22-11" },
-  "St. John's"        : { seed:5, region:"East", adjEM:25.7, adjO:119.8, adjD:94.1, adjT:69.6, sos:7.3, threePtPct:0.332, threePtDefPct:0.32, ftPct:0.727, tovRate:14.0, orbPct:6.0, experience:3.3, drbPct:13.0, record:"28-6" },
-  "Northern Iowa"     : { seed:12, region:"East", adjEM:11.1, adjO:109.7, adjD:98.6, adjT:62.2, sos:-5.3, threePtPct:0.349, threePtDefPct:0.321, ftPct:0.697, tovRate:13.8, orbPct:3.7, experience:3.3, drbPct:13.3, record:"23-12" },
-  "Kansas"            : { seed:4, region:"East", adjEM:23.4, adjO:117.8, adjD:94.4, adjT:67.6, sos:6.3, threePtPct:0.35, threePtDefPct:0.324, ftPct:0.767, tovRate:15.4, orbPct:5.2, experience:2.6, drbPct:13.1, record:"23-10" },
-  "Cal Baptist"       : { seed:13, region:"East", adjEM:7.2, adjO:107.5, adjD:100.3, adjT:65.9, sos:-2.3, threePtPct:0.337, threePtDefPct:0.33, ftPct:0.719, tovRate:17.9, orbPct:6.4, experience:3.2, drbPct:13.4, record:"25-8" },
-  "Louisville"        : { seed:6, region:"East", adjEM:25.8, adjO:124.0, adjD:98.2, adjT:69.7, sos:4.0, threePtPct:0.357, threePtDefPct:0.374, ftPct:0.769, tovRate:15.9, orbPct:5.8, experience:3.2, drbPct:14.0, record:"23-10" },
-  "South Florida"     : { seed:11, region:"East", adjEM:15.4, adjO:116.8, adjD:101.4, adjT:71.4, sos:-0.3, threePtPct:0.331, threePtDefPct:0.325, ftPct:0.743, tovRate:14.5, orbPct:6.2, experience:3.2, drbPct:12.5, record:"25-8" },
-  "Michigan State"    : { seed:3, region:"East", adjEM:26.7, adjO:122.9, adjD:96.2, adjT:66.0, sos:7.4, threePtPct:0.359, threePtDefPct:0.355, ftPct:0.763, tovRate:16.6, orbPct:6.8, experience:2.8, drbPct:14.7, record:"25-7" },
-  "N. Dakota State"   : { seed:14, region:"East", adjEM:5.4, adjO:111.4, adjD:106.0, adjT:66.4, sos:-3.4, threePtPct:0.357, threePtDefPct:0.372, ftPct:0.716, tovRate:15.3, orbPct:5.8, experience:2.8, drbPct:13.8, record:"27-7" },
-  "UCLA"              : { seed:7, region:"East", adjEM:22.7, adjO:124.5, adjD:101.8, adjT:64.7, sos:3.6, threePtPct:0.382, threePtDefPct:0.381, ftPct:0.767, tovRate:12.9, orbPct:5.3, experience:3.2, drbPct:12.6, record:"23-11" },
-  "UCF"               : { seed:10, region:"East", adjEM:14.3, adjO:120.0, adjD:105.7, adjT:69.1, sos:2.1, threePtPct:0.362, threePtDefPct:0.352, ftPct:0.74, tovRate:15.0, orbPct:5.9, experience:3.4, drbPct:13.3, record:"21-11" },
-  "UConn"             : { seed:2, region:"East", adjEM:28.1, adjO:123.1, adjD:95.0, adjT:64.6, sos:8.8, threePtPct:0.352, threePtDefPct:0.32, ftPct:0.716, tovRate:15.9, orbPct:6.1, experience:3.0, drbPct:13.3, record:"29-5" },
-  "Furman"            : { seed:15, region:"East", adjEM:-2.1, adjO:106.9, adjD:109.0, adjT:65.8, sos:-8.7, threePtPct:0.333, threePtDefPct:0.325, ftPct:0.698, tovRate:16.5, orbPct:5.2, experience:2.6, drbPct:13.6, record:"22-12" },
+  "Duke"              : { seed:1, region:"East", adjEM:37.4, adjO:128.2, adjD:90.8, adjT:65.8, sos:13.7, threePtPct:0.351, threePtDefPct:0.328, ftPct:0.724, tovRate:15.7, orbPct:6.7, experience:1.9, drbPct:14.3, last10adjEM:36.2, state:"NC", record:"32-2" },
+  "Siena"             : { seed:16, region:"East", adjEM:-1.7, adjO:107.2, adjD:108.9, adjT:64.6, sos:-7.8, threePtPct:0.304, threePtDefPct:0.316, ftPct:0.769, tovRate:15.3, orbPct:5.5, experience:2.7, drbPct:13.1, last10adjEM:-2.0, state:"NY", record:"23-11" },
+  "Ohio State"        : { seed:8, region:"East", adjEM:23.6, adjO:125.2, adjD:101.6, adjT:66.2, sos:2.9, threePtPct:0.36, threePtDefPct:0.342, ftPct:0.775, tovRate:15.5, orbPct:5.0, experience:2.8, drbPct:13.1, last10adjEM:22.5, state:"OH", record:"21-12" },
+  "TCU"               : { seed:9, region:"East", adjEM:15.3, adjO:114.9, adjD:99.6, adjT:67.6, sos:2.4, threePtPct:0.331, threePtDefPct:0.334, ftPct:0.708, tovRate:14.8, orbPct:5.7, experience:2.8, drbPct:13.2, last10adjEM:15.1, state:"TX", record:"22-11" },
+  "St. John's"        : { seed:5, region:"East", adjEM:25.7, adjO:119.8, adjD:94.1, adjT:69.6, sos:7.3, threePtPct:0.332, threePtDefPct:0.32, ftPct:0.727, tovRate:14.0, orbPct:6.0, experience:3.3, drbPct:13.0, last10adjEM:25.4, state:"NY", record:"28-6" },
+  "Northern Iowa"     : { seed:12, region:"East", adjEM:11.1, adjO:109.7, adjD:98.6, adjT:62.2, sos:-5.3, threePtPct:0.349, threePtDefPct:0.321, ftPct:0.697, tovRate:13.8, orbPct:3.7, experience:3.3, drbPct:13.3, last10adjEM:10.7, state:"IA", record:"23-12" },
+  "Kansas"            : { seed:4, region:"East", adjEM:23.4, adjO:117.8, adjD:94.4, adjT:67.6, sos:6.3, threePtPct:0.35, threePtDefPct:0.324, ftPct:0.767, tovRate:15.4, orbPct:5.2, experience:2.6, drbPct:13.1, last10adjEM:24.3, state:"KS", record:"23-10" },
+  "Cal Baptist"       : { seed:13, region:"East", adjEM:7.2, adjO:107.5, adjD:100.3, adjT:65.9, sos:-2.3, threePtPct:0.337, threePtDefPct:0.33, ftPct:0.719, tovRate:17.9, orbPct:6.4, experience:3.2, drbPct:13.4, last10adjEM:6.6, state:"CA", record:"25-8" },
+  "Louisville"        : { seed:6, region:"East", adjEM:25.8, adjO:124.0, adjD:98.2, adjT:69.7, sos:4.0, threePtPct:0.357, threePtDefPct:0.374, ftPct:0.769, tovRate:15.9, orbPct:5.8, experience:3.2, drbPct:14.0, last10adjEM:26.2, state:"KY", record:"23-10" },
+  "South Florida"     : { seed:11, region:"East", adjEM:15.4, adjO:116.8, adjD:101.4, adjT:71.4, sos:-0.3, threePtPct:0.331, threePtDefPct:0.325, ftPct:0.743, tovRate:14.5, orbPct:6.2, experience:3.2, drbPct:12.5, last10adjEM:14.9, state:"FL", record:"25-8" },
+  "Michigan State"    : { seed:3, region:"East", adjEM:26.7, adjO:122.9, adjD:96.2, adjT:66.0, sos:7.4, threePtPct:0.359, threePtDefPct:0.355, ftPct:0.763, tovRate:16.6, orbPct:6.8, experience:2.8, drbPct:14.7, last10adjEM:26.9, state:"MI", record:"25-7" },
+  "N. Dakota State"   : { seed:14, region:"East", adjEM:5.4, adjO:111.4, adjD:106.0, adjT:66.4, sos:-3.4, threePtPct:0.357, threePtDefPct:0.372, ftPct:0.716, tovRate:15.3, orbPct:5.8, experience:2.8, drbPct:13.8, last10adjEM:5.1, state:"ND", record:"27-7" },
+  "UCLA"              : { seed:7, region:"East", adjEM:22.7, adjO:124.5, adjD:101.8, adjT:64.7, sos:3.6, threePtPct:0.382, threePtDefPct:0.381, ftPct:0.767, tovRate:12.9, orbPct:5.3, experience:3.2, drbPct:12.6, last10adjEM:22.1, state:"CA", record:"23-11" },
+  "UCF"               : { seed:10, region:"East", adjEM:14.3, adjO:120.0, adjD:105.7, adjT:69.1, sos:2.1, threePtPct:0.362, threePtDefPct:0.352, ftPct:0.74, tovRate:15.0, orbPct:5.9, experience:3.4, drbPct:13.3, last10adjEM:14.4, state:"FL", record:"21-11" },
+  "UConn"             : { seed:2, region:"East", adjEM:28.1, adjO:123.1, adjD:95.0, adjT:64.6, sos:8.8, threePtPct:0.352, threePtDefPct:0.32, ftPct:0.716, tovRate:15.9, orbPct:6.1, experience:3.0, drbPct:13.3, last10adjEM:28.7, state:"CT", record:"29-5" },
+  "Furman"            : { seed:15, region:"East", adjEM:-2.1, adjO:106.9, adjD:109.0, adjT:65.8, sos:-8.7, threePtPct:0.333, threePtDefPct:0.325, ftPct:0.698, tovRate:16.5, orbPct:5.2, experience:2.6, drbPct:13.6, last10adjEM:-2.2, state:"SC", record:"22-12" },
 
-  "Arizona"           : { seed:1, region:"West", adjEM:35.5, adjO:126.9, adjD:91.4, adjT:70.0, sos:13.7, threePtPct:0.36, threePtDefPct:0.342, ftPct:0.734, tovRate:15.0, orbPct:6.9, experience:2.4, drbPct:13.8, record:"32-2" },
-  "Long Island"       : { seed:16, region:"West", adjEM:-6.2, adjO:103.6, adjD:109.8, adjT:67.8, sos:-5.8, threePtPct:0.361, threePtDefPct:0.35, ftPct:0.668, tovRate:18.6, orbPct:6.1, experience:3.4, drbPct:12.5, record:"24-10" },
-  "Villanova"         : { seed:8, region:"West", adjEM:19.1, adjO:119.6, adjD:100.5, adjT:64.9, sos:3.9, threePtPct:0.353, threePtDefPct:0.348, ftPct:0.694, tovRate:14.0, orbPct:5.3, experience:2.5, drbPct:12.6, record:"24-8" },
-  "Utah State"        : { seed:9, region:"West", adjEM:20.9, adjO:123.0, adjD:102.1, adjT:67.6, sos:4.0, threePtPct:0.351, threePtDefPct:0.359, ftPct:0.706, tovRate:15.0, orbPct:5.6, experience:3.2, drbPct:12.4, record:"28-6" },
-  "Wisconsin"         : { seed:5, region:"West", adjEM:25.6, adjO:127.2, adjD:101.6, adjT:68.7, sos:5.4, threePtPct:0.361, threePtDefPct:0.353, ftPct:0.786, tovRate:13.4, orbPct:5.0, experience:2.9, drbPct:13.3, record:"24-10" },
-  "High Point"        : { seed:12, region:"West", adjEM:8.2, adjO:115.7, adjD:107.5, adjT:69.9, sos:-1.4, threePtPct:0.344, threePtDefPct:0.337, ftPct:0.742, tovRate:12.9, orbPct:5.5, experience:3.5, drbPct:12.6, record:"30-4" },
-  "Arkansas"          : { seed:4, region:"West", adjEM:26.2, adjO:127.9, adjD:101.7, adjT:71.0, sos:7.5, threePtPct:0.389, threePtDefPct:0.369, ftPct:0.747, tovRate:12.5, orbPct:5.5, experience:2.5, drbPct:12.7, record:"26-8" },
-  "Hawaii"            : { seed:13, region:"West", adjEM:5.1, adjO:106.9, adjD:101.8, adjT:69.6, sos:-3.7, threePtPct:0.316, threePtDefPct:0.293, ftPct:0.738, tovRate:18.9, orbPct:5.3, experience:3.6, drbPct:13.9, record:"24-8" },
-  "BYU"               : { seed:6, region:"West", adjEM:20.4, adjO:124.7, adjD:104.3, adjT:69.8, sos:4.5, threePtPct:0.349, threePtDefPct:0.356, ftPct:0.746, tovRate:15.4, orbPct:5.8, experience:2.5, drbPct:13.3, record:"23-11" },
-  "Texas"             : { seed:11, region:"West", adjEM:17.7, adjO:123.2, adjD:105.5, adjT:67.1, sos:-0.2, threePtPct:0.348, threePtDefPct:0.360, ftPct:0.752, tovRate:15.4, orbPct:6.2, experience:3.2, drbPct:13.9, record:"19-14" },
-  "Gonzaga"           : { seed:3, region:"West", adjEM:26.3, adjO:120.3, adjD:94.0, adjT:68.9, sos:7.4, threePtPct:0.34, threePtDefPct:0.341, ftPct:0.699, tovRate:13.7, orbPct:6.2, experience:3.1, drbPct:13.4, record:"30-3" },
-  "Kennesaw State"    : { seed:14, region:"West", adjEM:1.3, adjO:110.8, adjD:109.5, adjT:71.3, sos:-8.0, threePtPct:0.337, threePtDefPct:0.357, ftPct:0.7, tovRate:16.6, orbPct:6.0, experience:2.3, drbPct:12.7, record:"21-13" },
-  "Miami FL"          : { seed:7, region:"West", adjEM:19.6, adjO:121.1, adjD:101.5, adjT:67.9, sos:3.9, threePtPct:0.347, threePtDefPct:0.358, ftPct:0.685, tovRate:15.4, orbPct:6.2, experience:2.7, drbPct:13.9, record:"25-8" },
-  "Missouri"          : { seed:10, region:"West", adjEM:16.9, adjO:119.9, adjD:103.0, adjT:66.4, sos:1.2, threePtPct:0.35, threePtDefPct:0.372, ftPct:0.686, tovRate:16.9, orbPct:5.8, experience:3.3, drbPct:12.9, record:"20-12" },
-  "Purdue"            : { seed:2, region:"West", adjEM:33.0, adjO:133.3, adjD:100.3, adjT:64.4, sos:9.2, threePtPct:0.379, threePtDefPct:0.363, ftPct:0.743, tovRate:12.6, orbPct:6.5, experience:3.0, drbPct:13.9, record:"27-8" },
-  "Queens"            : { seed:15, region:"West", adjEM:-2.4, adjO:114.7, adjD:117.1, adjT:69.5, sos:-7.0, threePtPct:0.359, threePtDefPct:0.372, ftPct:0.749, tovRate:14.3, orbPct:5.2, experience:2.7, drbPct:12.7, record:"21-13" },
+  "Arizona"           : { seed:1, region:"West", adjEM:35.5, adjO:126.9, adjD:91.4, adjT:70.0, sos:13.7, threePtPct:0.36, threePtDefPct:0.342, ftPct:0.734, tovRate:15.0, orbPct:6.9, experience:2.4, drbPct:13.8, last10adjEM:35.3, state:"AZ", record:"32-2" },
+  "Long Island"       : { seed:16, region:"West", adjEM:-6.2, adjO:103.6, adjD:109.8, adjT:67.8, sos:-5.8, threePtPct:0.361, threePtDefPct:0.35, ftPct:0.668, tovRate:18.6, orbPct:6.1, experience:3.4, drbPct:12.5, last10adjEM:-5.8, state:"NY", record:"24-10" },
+  "Villanova"         : { seed:8, region:"West", adjEM:19.1, adjO:119.6, adjD:100.5, adjT:64.9, sos:3.9, threePtPct:0.353, threePtDefPct:0.348, ftPct:0.694, tovRate:14.0, orbPct:5.3, experience:2.5, drbPct:12.6, last10adjEM:19.3, state:"PA", record:"24-8" },
+  "Utah State"        : { seed:9, region:"West", adjEM:20.9, adjO:123.0, adjD:102.1, adjT:67.6, sos:4.0, threePtPct:0.351, threePtDefPct:0.359, ftPct:0.706, tovRate:15.0, orbPct:5.6, experience:3.2, drbPct:12.4, last10adjEM:21.1, state:"UT", record:"28-6" },
+  "Wisconsin"         : { seed:5, region:"West", adjEM:25.6, adjO:127.2, adjD:101.6, adjT:68.7, sos:5.4, threePtPct:0.361, threePtDefPct:0.353, ftPct:0.786, tovRate:13.4, orbPct:5.0, experience:2.9, drbPct:13.3, last10adjEM:24.3, state:"WI", record:"24-10" },
+  "High Point"        : { seed:12, region:"West", adjEM:8.2, adjO:115.7, adjD:107.5, adjT:69.9, sos:-1.4, threePtPct:0.344, threePtDefPct:0.337, ftPct:0.742, tovRate:12.9, orbPct:5.5, experience:3.5, drbPct:12.6, last10adjEM:8.6, state:"NC", record:"30-4" },
+  "Arkansas"          : { seed:4, region:"West", adjEM:26.2, adjO:127.9, adjD:101.7, adjT:71.0, sos:7.5, threePtPct:0.389, threePtDefPct:0.369, ftPct:0.747, tovRate:12.5, orbPct:5.5, experience:2.5, drbPct:12.7, last10adjEM:25.9, state:"AR", record:"26-8" },
+  "Hawaii"            : { seed:13, region:"West", adjEM:5.1, adjO:106.9, adjD:101.8, adjT:69.6, sos:-3.7, threePtPct:0.316, threePtDefPct:0.293, ftPct:0.738, tovRate:18.9, orbPct:5.3, experience:3.6, drbPct:13.9, last10adjEM:6.0, state:"HI", record:"24-8" },
+  "BYU"               : { seed:6, region:"West", adjEM:20.4, adjO:124.7, adjD:104.3, adjT:69.8, sos:4.5, threePtPct:0.349, threePtDefPct:0.356, ftPct:0.746, tovRate:15.4, orbPct:5.8, experience:2.5, drbPct:13.3, last10adjEM:21.3, state:"UT", record:"23-11" },
+  "Texas"             : { seed:11, region:"West", adjEM:17.7, adjO:123.2, adjD:105.5, adjT:67.1, sos:-0.2, threePtPct:0.348, threePtDefPct:0.360, ftPct:0.752, tovRate:15.4, orbPct:6.2, experience:3.2, drbPct:13.9, last10adjEM:26.9, state:"TX", record:"19-14" },
+  "Gonzaga"           : { seed:3, region:"West", adjEM:26.3, adjO:120.3, adjD:94.0, adjT:68.9, sos:7.4, threePtPct:0.34, threePtDefPct:0.341, ftPct:0.699, tovRate:13.7, orbPct:6.2, experience:3.1, drbPct:13.4, last10adjEM:27.1, state:"WA", record:"30-3" },
+  "Kennesaw State"    : { seed:14, region:"West", adjEM:1.3, adjO:110.8, adjD:109.5, adjT:71.3, sos:-8.0, threePtPct:0.337, threePtDefPct:0.357, ftPct:0.7, tovRate:16.6, orbPct:6.0, experience:2.3, drbPct:12.7, last10adjEM:1.1, state:"GA", record:"21-13" },
+  "Miami FL"          : { seed:7, region:"West", adjEM:19.6, adjO:121.1, adjD:101.5, adjT:67.9, sos:3.9, threePtPct:0.347, threePtDefPct:0.358, ftPct:0.685, tovRate:15.4, orbPct:6.2, experience:2.7, drbPct:13.9, last10adjEM:19.3, state:"FL", record:"25-8" },
+  "Missouri"          : { seed:10, region:"West", adjEM:16.9, adjO:119.9, adjD:103.0, adjT:66.4, sos:1.2, threePtPct:0.35, threePtDefPct:0.372, ftPct:0.686, tovRate:16.9, orbPct:5.8, experience:3.3, drbPct:12.9, last10adjEM:16.2, state:"MO", record:"20-12" },
+  "Purdue"            : { seed:2, region:"West", adjEM:33.0, adjO:133.3, adjD:100.3, adjT:64.4, sos:9.2, threePtPct:0.379, threePtDefPct:0.363, ftPct:0.743, tovRate:12.6, orbPct:6.5, experience:3.0, drbPct:13.9, last10adjEM:32.9, state:"IN", record:"27-8" },
+  "Queens"            : { seed:15, region:"West", adjEM:-2.4, adjO:114.7, adjD:117.1, adjT:69.5, sos:-7.0, threePtPct:0.359, threePtDefPct:0.372, ftPct:0.749, tovRate:14.3, orbPct:5.2, experience:2.7, drbPct:12.7, last10adjEM:-2.8, state:"NC", record:"21-13" },
 
-  "Michigan"          : { seed:1, region:"Midwest", adjEM:36.6, adjO:127.6, adjD:91.0, adjT:71.2, sos:14.0, threePtPct:0.36, threePtDefPct:0.342, ftPct:0.747, tovRate:16.0, orbPct:6.1, experience:2.9, drbPct:13.6, record:"31-3" },
-  "Howard"            : { seed:16, region:"Midwest", adjEM:-2.2, adjO:104.5, adjD:106.7, adjT:69.1, sos:-5.3, threePtPct:0.352, threePtDefPct:0.308, ftPct:0.741, tovRate:19.5, orbPct:6.1, experience:2.8, drbPct:13.0, record:"24-10" },
-  "Georgia"           : { seed:8, region:"Midwest", adjEM:19.5, adjO:124.3, adjD:104.8, adjT:72.0, sos:2.6, threePtPct:0.341, threePtDefPct:0.342, ftPct:0.754, tovRate:14.3, orbPct:6.0, experience:2.6, drbPct:12.4, record:"22-10" },
-  "Saint Louis"       : { seed:9, region:"Midwest", adjEM:17.3, adjO:119.5, adjD:102.2, adjT:71.0, sos:1.9, threePtPct:0.405, threePtDefPct:0.383, ftPct:0.744, tovRate:16.7, orbPct:5.4, experience:2.9, drbPct:13.7, record:"28-5" },
-  "Texas Tech"        : { seed:5, region:"Midwest", adjEM:27.5, adjO:126.3, adjD:98.8, adjT:66.4, sos:5.1, threePtPct:0.393, threePtDefPct:0.363, ftPct:0.715, tovRate:13.9, orbPct:5.8, experience:2.6, drbPct:13.0, record:"22-10" },
-  "Akron"             : { seed:12, region:"Midwest", adjEM:11.8, adjO:117.2, adjD:105.4, adjT:70.3, sos:-0.2, threePtPct:0.385, threePtDefPct:0.387, ftPct:0.753, tovRate:14.6, orbPct:5.8, experience:3.4, drbPct:13.3, record:"29-5" },
-  "Alabama"           : { seed:4, region:"Midwest", adjEM:26.7, adjO:129.5, adjD:102.8, adjT:73.1, sos:6.6, threePtPct:0.358, threePtDefPct:0.35, ftPct:0.765, tovRate:12.6, orbPct:5.3, experience:2.5, drbPct:12.7, record:"23-9" },
-  "Hofstra"           : { seed:13, region:"Midwest", adjEM:8.3, adjO:113.2, adjD:104.9, adjT:64.7, sos:-4.7, threePtPct:0.368, threePtDefPct:0.342, ftPct:0.759, tovRate:14.8, orbPct:6.0, experience:2.9, drbPct:12.7, record:"24-10" },
-  "Tennessee"         : { seed:6, region:"Midwest", adjEM:26.0, adjO:121.5, adjD:95.5, adjT:65.2, sos:4.1, threePtPct:0.334, threePtDefPct:0.32, ftPct:0.694, tovRate:17.2, orbPct:8.1, experience:2.5, drbPct:13.7, record:"22-11" },
-  "SMU"               : { seed:11, region:"Midwest", adjEM:18.0, adjO:123.0, adjD:105.0, adjT:68.6, sos:-0.0, threePtPct:0.374, threePtDefPct:0.358, ftPct:0.741, tovRate:15.4, orbPct:6.0, experience:3.0, drbPct:12.9, record:"20-13" },
-  "Virginia"          : { seed:3, region:"Midwest", adjEM:26.5, adjO:122.3, adjD:95.8, adjT:65.6, sos:7.8, threePtPct:0.359, threePtDefPct:0.354, ftPct:0.726, tovRate:15.8, orbPct:6.6, experience:2.7, drbPct:13.2, record:"29-5" },
-  "Wright State"      : { seed:14, region:"Midwest", adjEM:3.4, adjO:112.4, adjD:109.0, adjT:67.0, sos:-6.6, threePtPct:0.361, threePtDefPct:0.326, ftPct:0.745, tovRate:15.8, orbPct:5.5, experience:2.2, drbPct:13.1, record:"23-11" },
-  "Kentucky"          : { seed:7, region:"Midwest", adjEM:19.9, adjO:119.9, adjD:100.0, adjT:68.3, sos:3.3, threePtPct:0.341, threePtDefPct:0.357, ftPct:0.728, tovRate:14.4, orbPct:5.9, experience:2.6, drbPct:12.8, record:"21-13" },
-  "Santa Clara"       : { seed:10, region:"Midwest", adjEM:21.3, adjO:125.0, adjD:103.7, adjT:69.3, sos:2.1, threePtPct:0.349, threePtDefPct:0.349, ftPct:0.74, tovRate:15.2, orbPct:6.3, experience:2.4, drbPct:12.7, record:"26-8" },
-  "Iowa State"        : { seed:2, region:"Midwest", adjEM:31.2, adjO:123.8, adjD:92.6, adjT:67.0, sos:7.4, threePtPct:0.387, threePtDefPct:0.366, ftPct:0.672, tovRate:14.4, orbPct:6.0, experience:2.9, drbPct:13.5, record:"27-7" },
-  "Tennessee State"   : { seed:15, region:"Midwest", adjEM:-4.1, adjO:107.8, adjD:111.9, adjT:70.1, sos:-5.7, threePtPct:0.337, threePtDefPct:0.346, ftPct:0.763, tovRate:16.2, orbPct:5.8, experience:3.5, drbPct:13.2, record:"23-9" },
+  "Michigan"          : { seed:1, region:"Midwest", adjEM:36.6, adjO:127.6, adjD:91.0, adjT:71.2, sos:14.0, threePtPct:0.36, threePtDefPct:0.342, ftPct:0.747, tovRate:16.0, orbPct:6.1, experience:2.9, drbPct:13.6, last10adjEM:37.1, state:"MI", record:"31-3" },
+  "Howard"            : { seed:16, region:"Midwest", adjEM:-2.2, adjO:104.5, adjD:106.7, adjT:69.1, sos:-5.3, threePtPct:0.352, threePtDefPct:0.308, ftPct:0.741, tovRate:19.5, orbPct:6.1, experience:2.8, drbPct:13.0, last10adjEM:-3.6, state:"DC", record:"24-10" },
+  "Georgia"           : { seed:8, region:"Midwest", adjEM:19.5, adjO:124.3, adjD:104.8, adjT:72.0, sos:2.6, threePtPct:0.341, threePtDefPct:0.342, ftPct:0.754, tovRate:14.3, orbPct:6.0, experience:2.6, drbPct:12.4, last10adjEM:19.8, state:"GA", record:"22-10" },
+  "Saint Louis"       : { seed:9, region:"Midwest", adjEM:17.3, adjO:119.5, adjD:102.2, adjT:71.0, sos:1.9, threePtPct:0.405, threePtDefPct:0.383, ftPct:0.744, tovRate:16.7, orbPct:5.4, experience:2.9, drbPct:13.7, last10adjEM:18.4, state:"MO", record:"28-5" },
+  "Texas Tech"        : { seed:5, region:"Midwest", adjEM:27.5, adjO:126.3, adjD:98.8, adjT:66.4, sos:5.1, threePtPct:0.393, threePtDefPct:0.363, ftPct:0.715, tovRate:13.9, orbPct:5.8, experience:2.6, drbPct:13.0, last10adjEM:26.9, state:"TX", record:"22-10" },
+  "Akron"             : { seed:12, region:"Midwest", adjEM:11.8, adjO:117.2, adjD:105.4, adjT:70.3, sos:-0.2, threePtPct:0.385, threePtDefPct:0.387, ftPct:0.753, tovRate:14.6, orbPct:5.8, experience:3.4, drbPct:13.3, last10adjEM:12.0, state:"OH", record:"29-5" },
+  "Alabama"           : { seed:4, region:"Midwest", adjEM:26.7, adjO:129.5, adjD:102.8, adjT:73.1, sos:6.6, threePtPct:0.358, threePtDefPct:0.35, ftPct:0.765, tovRate:12.6, orbPct:5.3, experience:2.5, drbPct:12.7, last10adjEM:27.4, state:"AL", record:"23-9" },
+  "Hofstra"           : { seed:13, region:"Midwest", adjEM:8.3, adjO:113.2, adjD:104.9, adjT:64.7, sos:-4.7, threePtPct:0.368, threePtDefPct:0.342, ftPct:0.759, tovRate:14.8, orbPct:6.0, experience:2.9, drbPct:12.7, last10adjEM:7.8, state:"NY", record:"24-10" },
+  "Tennessee"         : { seed:6, region:"Midwest", adjEM:26.0, adjO:121.5, adjD:95.5, adjT:65.2, sos:4.1, threePtPct:0.334, threePtDefPct:0.32, ftPct:0.694, tovRate:17.2, orbPct:8.1, experience:2.5, drbPct:13.7, last10adjEM:26.2, state:"TN", record:"22-11" },
+  "SMU"               : { seed:11, region:"Midwest", adjEM:18.0, adjO:123.0, adjD:105.0, adjT:68.6, sos:-0.0, threePtPct:0.374, threePtDefPct:0.358, ftPct:0.741, tovRate:15.4, orbPct:6.0, experience:3.0, drbPct:12.9, last10adjEM:18.2, state:"TX", record:"20-13" },
+  "Virginia"          : { seed:3, region:"Midwest", adjEM:26.5, adjO:122.3, adjD:95.8, adjT:65.6, sos:7.8, threePtPct:0.359, threePtDefPct:0.354, ftPct:0.726, tovRate:15.8, orbPct:6.6, experience:2.7, drbPct:13.2, last10adjEM:26.5, state:"VA", record:"29-5" },
+  "Wright State"      : { seed:14, region:"Midwest", adjEM:3.4, adjO:112.4, adjD:109.0, adjT:67.0, sos:-6.6, threePtPct:0.361, threePtDefPct:0.326, ftPct:0.745, tovRate:15.8, orbPct:5.5, experience:2.2, drbPct:13.1, last10adjEM:3.8, state:"OH", record:"23-11" },
+  "Kentucky"          : { seed:7, region:"Midwest", adjEM:19.9, adjO:119.9, adjD:100.0, adjT:68.3, sos:3.3, threePtPct:0.341, threePtDefPct:0.357, ftPct:0.728, tovRate:14.4, orbPct:5.9, experience:2.6, drbPct:12.8, last10adjEM:19.6, state:"KY", record:"21-13" },
+  "Santa Clara"       : { seed:10, region:"Midwest", adjEM:21.3, adjO:125.0, adjD:103.7, adjT:69.3, sos:2.1, threePtPct:0.349, threePtDefPct:0.349, ftPct:0.74, tovRate:15.2, orbPct:6.3, experience:2.4, drbPct:12.7, last10adjEM:20.8, state:"CA", record:"26-8" },
+  "Iowa State"        : { seed:2, region:"Midwest", adjEM:31.2, adjO:123.8, adjD:92.6, adjT:67.0, sos:7.4, threePtPct:0.387, threePtDefPct:0.366, ftPct:0.672, tovRate:14.4, orbPct:6.0, experience:2.9, drbPct:13.5, last10adjEM:31.1, state:"IA", record:"27-7" },
+  "Tennessee State"   : { seed:15, region:"Midwest", adjEM:-4.1, adjO:107.8, adjD:111.9, adjT:70.1, sos:-5.7, threePtPct:0.337, threePtDefPct:0.346, ftPct:0.763, tovRate:16.2, orbPct:5.8, experience:3.5, drbPct:13.2, last10adjEM:-1.3, state:"TN", record:"23-9" },
 
-  "Florida"           : { seed:1, region:"South", adjEM:33.8, adjO:126.1, adjD:92.3, adjT:70.4, sos:8.5, threePtPct:0.308, threePtDefPct:0.303, ftPct:0.71, tovRate:15.7, orbPct:7.7, experience:2.9, drbPct:14.3, record:"26-7" },
-  "Lehigh"            : { seed:16, region:"South", adjEM:-10.2, adjO:102.6, adjD:112.8, adjT:66.9, sos:-12.0, threePtPct:0.365, threePtDefPct:0.372, ftPct:0.729, tovRate:17.9, orbPct:3.8, experience:2.4, drbPct:12.7, record:"18-16" },
-  "Clemson"           : { seed:8, region:"South", adjEM:19.6, adjO:116.6, adjD:97.0, adjT:64.3, sos:3.2, threePtPct:0.341, threePtDefPct:0.357, ftPct:0.726, tovRate:13.3, orbPct:4.8, experience:3.3, drbPct:14.0, record:"24-10" },
-  "Iowa"              : { seed:9, region:"South", adjEM:21.9, adjO:122.1, adjD:100.2, adjT:63.0, sos:2.0, threePtPct:0.357, threePtDefPct:0.347, ftPct:0.77, tovRate:14.3, orbPct:5.2, experience:2.8, drbPct:13.4, record:"21-12" },
-  "Vanderbilt"        : { seed:5, region:"South", adjEM:28.2, adjO:127.5, adjD:99.3, adjT:69.0, sos:7.3, threePtPct:0.355, threePtDefPct:0.354, ftPct:0.793, tovRate:12.6, orbPct:5.2, experience:3.3, drbPct:13.0, record:"26-8" },
-  "McNeese"           : { seed:12, region:"South", adjEM:11.0, adjO:113.2, adjD:102.2, adjT:66.1, sos:0.7, threePtPct:0.316, threePtDefPct:0.336, ftPct:0.74, tovRate:14.1, orbPct:6.0, experience:2.9, drbPct:12.3, record:"28-5" },
-  "Nebraska"          : { seed:4, region:"South", adjEM:23.7, adjO:117.2, adjD:93.5, adjT:66.8, sos:7.5, threePtPct:0.353, threePtDefPct:0.337, ftPct:0.75, tovRate:14.1, orbPct:4.7, experience:3.3, drbPct:13.7, record:"26-6" },
-  "Troy"              : { seed:13, region:"South", adjEM:1.7, adjO:110.7, adjD:109.0, adjT:65.1, sos:-6.1, threePtPct:0.332, threePtDefPct:0.325, ftPct:0.738, tovRate:15.8, orbPct:5.9, experience:2.9, drbPct:12.8, record:"22-11" },
-  "North Carolina"    : { seed:6, region:"South", adjEM:21.4, adjO:121.4, adjD:100.0, adjT:68.0, sos:4.9, threePtPct:0.345, threePtDefPct:0.362, ftPct:0.684, tovRate:14.2, orbPct:5.2, experience:2.5, drbPct:13.6, record:"24-8" },
-  "VCU"               : { seed:11, region:"South", adjEM:16.2, adjO:119.3, adjD:103.1, adjT:68.7, sos:1.7, threePtPct:0.367, threePtDefPct:0.358, ftPct:0.739, tovRate:14.7, orbPct:5.6, experience:2.7, drbPct:13.1, record:"27-7" },
-  "Illinois"          : { seed:3, region:"South", adjEM:33.7, adjO:131.9, adjD:98.2, adjT:65.7, sos:6.6, threePtPct:0.347, threePtDefPct:0.334, ftPct:0.789, tovRate:12.1, orbPct:7.0, experience:2.5, drbPct:13.6, record:"24-8" },
-  "Penn"              : { seed:14, region:"South", adjEM:1.2, adjO:106.6, adjD:105.4, adjT:69.0, sos:-6.0, threePtPct:0.387, threePtDefPct:0.342, ftPct:0.695, tovRate:14.7, orbPct:5.2, experience:2.9, drbPct:12.8, record:"18-11" },
-  "Saint Mary's"      : { seed:7, region:"South", adjEM:21.8, adjO:119.4, adjD:97.6, adjT:65.3, sos:4.0, threePtPct:0.386, threePtDefPct:0.384, ftPct:0.811, tovRate:16.3, orbPct:6.7, experience:2.3, drbPct:14.4, record:"27-5" },
-  "Texas A&M"         : { seed:10, region:"South", adjEM:18.5, adjO:119.9, adjD:101.4, adjT:71.0, sos:1.6, threePtPct:0.362, threePtDefPct:0.345, ftPct:0.737, tovRate:14.0, orbPct:5.4, experience:3.5, drbPct:12.6, record:"21-11" },
-  "Houston"           : { seed:2, region:"South", adjEM:33.0, adjO:125.4, adjD:92.4, adjT:63.3, sos:9.0, threePtPct:0.349, threePtDefPct:0.334, ftPct:0.772, tovRate:12.5, orbPct:6.1, experience:2.6, drbPct:12.7, record:"28-6" },
-  "Idaho"             : { seed:15, region:"South", adjEM:2.6, adjO:108.8, adjD:106.2, adjT:67.4, sos:-8.9, threePtPct:0.345, threePtDefPct:0.36, ftPct:0.729, tovRate:15.2, orbPct:4.5, experience:3.0, drbPct:14.0, record:"21-14" },
+  "Florida"           : { seed:1, region:"South", adjEM:33.8, adjO:126.1, adjD:92.3, adjT:70.4, sos:8.5, threePtPct:0.308, threePtDefPct:0.303, ftPct:0.71, tovRate:15.7, orbPct:7.7, experience:2.9, drbPct:14.3, last10adjEM:33.0, state:"FL", record:"26-7" },
+  "Lehigh"            : { seed:16, region:"South", adjEM:-10.2, adjO:102.6, adjD:112.8, adjT:66.9, sos:-12.0, threePtPct:0.365, threePtDefPct:0.372, ftPct:0.729, tovRate:17.9, orbPct:3.8, experience:2.4, drbPct:12.7, last10adjEM:-10.9, state:"PA", record:"18-16" },
+  "Clemson"           : { seed:8, region:"South", adjEM:19.6, adjO:116.6, adjD:97.0, adjT:64.3, sos:3.2, threePtPct:0.341, threePtDefPct:0.357, ftPct:0.726, tovRate:13.3, orbPct:4.8, experience:3.3, drbPct:14.0, last10adjEM:19.7, state:"SC", record:"24-10" },
+  "Iowa"              : { seed:9, region:"South", adjEM:21.9, adjO:122.1, adjD:100.2, adjT:63.0, sos:2.0, threePtPct:0.357, threePtDefPct:0.347, ftPct:0.77, tovRate:14.3, orbPct:5.2, experience:2.8, drbPct:13.4, last10adjEM:22.9, state:"IA", record:"21-12" },
+  "Vanderbilt"        : { seed:5, region:"South", adjEM:28.2, adjO:127.5, adjD:99.3, adjT:69.0, sos:7.3, threePtPct:0.355, threePtDefPct:0.354, ftPct:0.793, tovRate:12.6, orbPct:5.2, experience:3.3, drbPct:13.0, last10adjEM:28.7, state:"TN", record:"26-8" },
+  "McNeese"           : { seed:12, region:"South", adjEM:11.0, adjO:113.2, adjD:102.2, adjT:66.1, sos:0.7, threePtPct:0.316, threePtDefPct:0.336, ftPct:0.74, tovRate:14.1, orbPct:6.0, experience:2.9, drbPct:12.3, last10adjEM:10.9, state:"LA", record:"28-5" },
+  "Nebraska"          : { seed:4, region:"South", adjEM:23.7, adjO:117.2, adjD:93.5, adjT:66.8, sos:7.5, threePtPct:0.353, threePtDefPct:0.337, ftPct:0.75, tovRate:14.1, orbPct:4.7, experience:3.3, drbPct:13.7, last10adjEM:24.2, state:"NE", record:"26-6" },
+  "Troy"              : { seed:13, region:"South", adjEM:1.7, adjO:110.7, adjD:109.0, adjT:65.1, sos:-6.1, threePtPct:0.332, threePtDefPct:0.325, ftPct:0.738, tovRate:15.8, orbPct:5.9, experience:2.9, drbPct:12.8, last10adjEM:2.4, state:"AL", record:"22-11" },
+  "North Carolina"    : { seed:6, region:"South", adjEM:21.4, adjO:121.4, adjD:100.0, adjT:68.0, sos:4.9, threePtPct:0.345, threePtDefPct:0.362, ftPct:0.684, tovRate:14.2, orbPct:5.2, experience:2.5, drbPct:13.6, last10adjEM:21.7, state:"NC", record:"24-8" },
+  "VCU"               : { seed:11, region:"South", adjEM:16.2, adjO:119.3, adjD:103.1, adjT:68.7, sos:1.7, threePtPct:0.367, threePtDefPct:0.358, ftPct:0.739, tovRate:14.7, orbPct:5.6, experience:2.7, drbPct:13.1, last10adjEM:15.5, state:"VA", record:"27-7" },
+  "Illinois"          : { seed:3, region:"South", adjEM:33.7, adjO:131.9, adjD:98.2, adjT:65.7, sos:6.6, threePtPct:0.347, threePtDefPct:0.334, ftPct:0.789, tovRate:12.1, orbPct:7.0, experience:2.5, drbPct:13.6, last10adjEM:33.4, state:"IL", record:"24-8" },
+  "Penn"              : { seed:14, region:"South", adjEM:1.2, adjO:106.6, adjD:105.4, adjT:69.0, sos:-6.0, threePtPct:0.387, threePtDefPct:0.342, ftPct:0.695, tovRate:14.7, orbPct:5.2, experience:2.9, drbPct:12.8, last10adjEM:2.9, state:"PA", record:"18-11" },
+  "Saint Mary's"      : { seed:7, region:"South", adjEM:21.8, adjO:119.4, adjD:97.6, adjT:65.3, sos:4.0, threePtPct:0.386, threePtDefPct:0.384, ftPct:0.811, tovRate:16.3, orbPct:6.7, experience:2.3, drbPct:14.4, last10adjEM:21.4, state:"CA", record:"27-5" },
+  "Texas A&M"         : { seed:10, region:"South", adjEM:18.5, adjO:119.9, adjD:101.4, adjT:71.0, sos:1.6, threePtPct:0.362, threePtDefPct:0.345, ftPct:0.737, tovRate:14.0, orbPct:5.4, experience:3.5, drbPct:12.6, last10adjEM:18.6, state:"TX", record:"21-11" },
+  "Houston"           : { seed:2, region:"South", adjEM:33.0, adjO:125.4, adjD:92.4, adjT:63.3, sos:9.0, threePtPct:0.349, threePtDefPct:0.334, ftPct:0.772, tovRate:12.5, orbPct:6.1, experience:2.6, drbPct:12.7, last10adjEM:32.7, state:"TX", record:"28-6" },
+  "Idaho"             : { seed:15, region:"South", adjEM:2.6, adjO:108.8, adjD:106.2, adjT:67.4, sos:-8.9, threePtPct:0.345, threePtDefPct:0.36, ftPct:0.729, tovRate:15.2, orbPct:4.5, experience:3.0, drbPct:14.0, last10adjEM:2.4, state:"ID", record:"21-14" },
 };
 
-const SEED_HISTORY = {
-  "1v16": { wins: 151, losses: 2, pct: .987 },
-  "2v15": { wins: 143, losses: 10, pct: .935 },
-  "3v14": { wins: 132, losses: 21, pct: .863 },
-  "4v13": { wins: 121, losses: 32, pct: .791 },
-  "5v12": { wins: 99, losses: 54, pct: .647 },
-  "6v11": { wins: 101, losses: 52, pct: .660 },
-  "7v10": { wins: 97, losses: 56, pct: .634 },
-  "8v9":  { wins: 82, losses: 71, pct: .536 },
+const SEED_HISTORY = {  // 1985-2025
+  "1v16": { wins: 155, losses: 2, pct: .987 },
+  "2v15": { wins: 147, losses: 10, pct: .936 },
+  "3v14": { wins: 136, losses: 21, pct: .866 },
+  "4v13": { wins: 125, losses: 32, pct: .796 },
+  "5v12": { wins: 101, losses: 56, pct: .643 },
+  "6v11": { wins: 104, losses: 53, pct: .662 },
+  "7v10": { wins: 101, losses: 56, pct: .643 },
+  "8v9":  { wins: 86, losses: 71, pct: .548 },
 };
 
 const SEED_DEEP_RUN = {
   1: .78, 2: .65, 3: .55, 4: .48, 5: .38, 6: .40, 7: .35, 8: .28,
   9: .25, 10: .22, 11: .20, 12: .18, 13: .08, 14: .05, 15: .03, 16: .01
 };
+
+const VENUE_NEARBY_STATES = {
+  "Buffalo":       ["NY","PA","OH","CT","NJ","MA"],
+  "Greenville":    ["SC","NC","GA","TN","VA"],
+  "Oklahoma City": ["OK","TX","KS","AR"],
+  "Portland":      ["OR","WA","ID","CA"],
+  "Tampa":         ["FL","GA","AL"],
+  "Philadelphia":  ["PA","NJ","NY","DE","MD","CT","DC"],
+  "San Diego":     ["CA","AZ","NV"],
+  "St. Louis":     ["MO","IL","IN","KY","KS","IA"],
+  "Houston":       ["TX","LA","OK","AR"],
+  "San Jose":      ["CA","NV","OR","AZ"],
+  "Chicago":       ["IL","IN","WI","MI","IA","OH"],
+  "Washington":    ["DC","VA","MD","PA","DE","NC","WV"],
+  "Indianapolis":  ["IN","IL","OH","KY","MI"]
+};
+
+// Maps each team to their first-round venue
+const TEAM_VENUE = {
+  // Thursday - Buffalo
+  "South Florida":"Buffalo","Louisville":"Buffalo","N. Dakota State":"Buffalo","Michigan State":"Buffalo",
+  "Michigan":"Buffalo","Howard":"Buffalo","Saint Louis":"Buffalo","Georgia":"Buffalo",
+  // Thursday - Greenville
+  "TCU":"Greenville","Ohio State":"Greenville","Siena":"Greenville","Duke":"Greenville",
+  "VCU":"Greenville","North Carolina":"Greenville","Penn":"Greenville","Illinois":"Greenville",
+  // Thursday - Oklahoma City
+  "Troy":"Oklahoma City","Nebraska":"Oklahoma City","McNeese":"Oklahoma City","Vanderbilt":"Oklahoma City",
+  "Texas A&M":"Oklahoma City","Saint Mary's":"Oklahoma City","Idaho":"Oklahoma City","Houston":"Oklahoma City",
+  // Thursday - Portland
+  "High Point":"Portland","Wisconsin":"Portland","Hawaii":"Portland","Arkansas":"Portland",
+  "BYU":"Portland","Texas":"Portland","Gonzaga":"Portland","Kennesaw State":"Portland",
+  // Friday - Tampa
+  "Texas Tech":"Tampa","Akron":"Tampa","Alabama":"Tampa","Hofstra":"Tampa",
+  "Clemson":"Tampa","Iowa":"Tampa","Florida":"Tampa","Lehigh":"Tampa",
+  // Friday - Philadelphia
+  "Virginia":"Philadelphia","Wright State":"Philadelphia","Tennessee":"Philadelphia","SMU":"Philadelphia",
+  "UCLA":"Philadelphia","UCF":"Philadelphia","UConn":"Philadelphia","Furman":"Philadelphia",
+  // Friday - San Diego
+  "Arizona":"San Diego","Long Island":"San Diego","Villanova":"San Diego","Utah State":"San Diego",
+  "St. John's":"San Diego","Northern Iowa":"San Diego","Kansas":"San Diego","Cal Baptist":"San Diego",
+  // Friday - St. Louis
+  "Kentucky":"St. Louis","Santa Clara":"St. Louis","Iowa State":"St. Louis","Tennessee State":"St. Louis",
+  "Miami FL":"St. Louis","Missouri":"St. Louis","Purdue":"St. Louis","Queens":"St. Louis"
+};
+
+function proximityBoost(team, round) {
+  if (!team.state || round > 1) return 0; // only R64 and R32
+  const venue = TEAM_VENUE[team.name];
+  if (!venue || !VENUE_NEARBY_STATES[venue]) return 0;
+  return VENUE_NEARBY_STATES[venue].includes(team.state) ? .015 : 0;
+}
 
 const BRACKET_SEEDS = [
   [1, 16], [8, 9], [5, 12], [4, 13],
@@ -843,6 +894,11 @@ function calcUpsetFactors(favorite, underdog) {
   if (underdog.orbPct - favorite.orbPct > 3) { factors.push("Underdog better off. rebounding"); adjustment += .02 * wScale(w.offReb); }
   if (underdog.drbPct - favorite.drbPct > 1) { factors.push("Underdog better def. rebounding"); adjustment += .02 * wScale(w.defReb); }
   if (underdog.sos - favorite.sos > 2) { factors.push("Underdog tougher schedule"); adjustment += .015 * wScale(w.sos); }
+  if (underdog.last10adjEM && favorite.last10adjEM) {
+    const momDiff = underdog.last10adjEM - favorite.last10adjEM;
+    if (momDiff > 5) { factors.push("Underdog surging lately"); adjustment += .03 * wScale(w.momentum); }
+    else if (momDiff > 0) { factors.push("Underdog better recent form"); adjustment += .015 * wScale(w.momentum); }
+  }
 
   return { factors, adjustment };
 }
@@ -910,16 +966,30 @@ function statEdgeProb(teamA, teamB) {
     edges += w.sos * Math.max(-1, Math.min(1, diff));
     totalW += w.sos;
   }
+  // Momentum (last 10 games)
+  if (w.momentum > 0 && teamA.last10adjEM && teamB.last10adjEM) {
+    const diff = (teamA.last10adjEM - teamB.last10adjEM) / 15;
+    edges += w.momentum * Math.max(-1, Math.min(1, diff));
+    totalW += w.momentum;
+  }
 
   if (totalW === 0) return .5;
   const normalized = edges / totalW; // -1 to 1
   return .5 + normalized * .15; // maps to .35 - .65 range
 }
 
-function predictMatchup(teamA, teamB) {
+function predictMatchup(teamA, teamB, round) {
   if (!teamA || !teamB) return { prob: .5, factors: [], upsetFactors: [], upsetAdjustment: 0, effProb: .5, seedProb: .5 };
 
-  const w = customWeights;
+  const w = { ...customWeights };
+  // Round-based weight scaling: defense & experience matter more in later rounds
+  if (round !== undefined && round >= 2) {
+    const late = round >= 4; // Final Four / Championship
+    w.defense = Math.round(w.defense * (late ? 1.3 : 1.2));
+    w.experience = Math.round(w.experience * (late ? 1.3 : 1.25));
+    if (late) w.ftPct = Math.round(w.ftPct * 1.15);
+  }
+
   const kProb = efficiencyWinProb(teamA.adjEM, teamB.adjEM);
   const seedProb = getSeedHistoryProb(teamA.seed, teamB.seed);
   const statProb = statEdgeProb(teamA, teamB);
@@ -927,12 +997,17 @@ function predictMatchup(teamA, teamB) {
   const aIsFav = teamA.seed <= teamB.seed;
   const fav = aIsFav ? teamA : teamB;
   const dog = aIsFav ? teamB : teamA;
-  const { factors: upsetFactors, adjustment } = calcUpsetFactors(fav, dog);
+  const { factors: upsetFactors, adjustment: rawAdj } = calcUpsetFactors(fav, dog);
+  // Reduce upset adjustments in later rounds
+  let adjustment = rawAdj;
+  if (round !== undefined && round >= 2) {
+    adjustment *= round >= 4 ? 0.5 : 0.7;
+  }
 
   // Blend: efficiency + seed history + stat edge (weights determine proportions)
   const effW = w.efficiency;
   const seedW = w.seedHistory;
-  const statW = (w.threePt + w.defense + w.ftPct + w.tovRate + w.experience + w.tempo + w.offReb + w.defReb + w.sos) / 9;
+  const statW = (w.threePt + w.defense + w.ftPct + w.tovRate + w.experience + w.tempo + w.offReb + w.defReb + w.sos + (w.momentum || 0)) / 10;
   const totalW = effW + seedW + statW;
   const wEff = totalW > 0 ? effW / totalW : .55;
   const wSeed = totalW > 0 ? seedW / totalW : .30;
@@ -941,6 +1016,10 @@ function predictMatchup(teamA, teamB) {
   let composite = (wEff * kProb) + (wSeed * seedProb) + (wStat * statProb);
   if (aIsFav) composite -= adjustment;
   else composite += adjustment;
+  // Home-region proximity boost (early rounds only)
+  if (round !== undefined && round <= 1) {
+    composite += proximityBoost(teamA, round) - proximityBoost(teamB, round);
+  }
 
   return {
     prob: Math.max(.02, Math.min(.98, composite)),
@@ -953,13 +1032,13 @@ function predictMatchup(teamA, teamB) {
 
 function championshipViability(team) {
   let score = 0;
-  if (team.adjEM >= 25) score += 25; else if (team.adjEM >= 20) score += 18; else if (team.adjEM >= 15) score += 10; else if (team.adjEM >= 10) score += 5;
-  if (team.adjD <= 92) score += 20; else if (team.adjD <= 96) score += 14; else if (team.adjD <= 100) score += 7;
-  if (team.ftPct >= .76) score += 15; else if (team.ftPct >= .73) score += 10; else if (team.ftPct >= .70) score += 5;
-  if (team.seed <= 2) score += 15; else if (team.seed <= 4) score += 10; else if (team.seed <= 8) score += 5;
-  if (team.experience >= 3.0) score += 15; else if (team.experience >= 2.5) score += 10; else if (team.experience >= 2.0) score += 5;
-  if (team.tovRate <= 15) score += 10; else if (team.tovRate <= 17) score += 6;
-  return Math.min(100, score);
+  score += Math.min(25, Math.max(0, (team.adjEM - 5) * (25 / 30)));
+  score += Math.min(20, Math.max(0, (105 - team.adjD) * (20 / 13)));
+  score += Math.min(15, Math.max(0, (team.ftPct - .65) * (15 / .15)));
+  score += Math.min(15, Math.max(0, (9 - team.seed) * (15 / 8)));
+  score += Math.min(15, Math.max(0, (team.experience - 1.5) * (15 / 2)));
+  score += Math.min(10, Math.max(0, (20 - team.tovRate) * (10 / 7)));
+  return Math.min(100, Math.round(score));
 }
 
 function getConfClass(prob) {
@@ -980,7 +1059,7 @@ let dataSortAsc = false;
 
 // Custom stat weights (0-100 sliders, normalized at prediction time)
 const DEFAULT_WEIGHTS = {
-  efficiency: 85,   // AdjEM — foundation of every pro model
+  efficiency: 90,   // AdjEM — strongest single predictor, ~70% of outcomes
   seedHistory: 15,  // Pool strategy tool, pros use market odds instead
   threePt: 45,      // Variance/upset factor, hot shooting wins games
   defense: 75,      // Every champion top-18 AdjD, defense travels
@@ -990,7 +1069,8 @@ const DEFAULT_WEIGHTS = {
   tempo: 30,        // Matchup tool, slow games = more variance
   offReb: 25,       // Second chances, moderate importance
   defReb: 40,       // Ends possessions, key defensive metric
-  sos: 50           // Context for all stats, separates real strength
+  sos: 50,          // Context for all stats, separates real strength
+  momentum: 35      // Late-season form, teams peaking at right time
 };
 
 let customWeights = { ...DEFAULT_WEIGHTS };
@@ -1121,7 +1201,7 @@ function autoFill(withUpsets) {
       for (let i = 0; i < bracket[region].rounds[round].length; i++) {
         const m = bracket[region].rounds[round][i];
         if (m.team1 && m.team2) {
-          const pred = predictMatchup(m.team1, m.team2);
+          const pred = predictMatchup(m.team1, m.team2, round);
           let winner;
           if (withUpsets && pred.prob < .65 && pred.prob > .35) {
             const dogIsTeam2 = m.team1.seed < m.team2.seed;
@@ -1149,7 +1229,7 @@ function autoFill(withUpsets) {
   for (let i = 0; i < 2; i++) {
     const m = bracket.finalFour[i];
     if (m.team1 && m.team2) {
-      const pred = predictMatchup(m.team1, m.team2);
+      const pred = predictMatchup(m.team1, m.team2, 4);
       const winner = pred.prob >= .5 ? m.team1 : m.team2;
       m.winner = winner;
       bracket.championship[i === 0 ? 'team1' : 'team2'] = winner;
@@ -1157,7 +1237,7 @@ function autoFill(withUpsets) {
   }
   const cm = bracket.championship;
   if (cm.team1 && cm.team2) {
-    const pred = predictMatchup(cm.team1, cm.team2);
+    const pred = predictMatchup(cm.team1, cm.team2, 5);
     cm.winner = pred.prob >= .5 ? cm.team1 : cm.team2;
     bracket.champion = cm.winner;
   }
@@ -1347,7 +1427,7 @@ function renderMatchupHTML(matchup, region, round, idx, side) {
   // Win probabilities
   let pct1 = '', pct2 = '';
   if (t1 && t2) {
-    const pred = predictMatchup(t1, t2);
+    const pred = predictMatchup(t1, t2, round);
     pct1 = Math.round(pred.prob * 100) + '%';
     pct2 = Math.round((1 - pred.prob) * 100) + '%';
   }
@@ -1890,7 +1970,8 @@ const WEIGHT_LABELS = {
   tempo: 'Tempo',
   offReb: 'Off. Rebounding',
   defReb: 'Def. Rebounding',
-  sos: 'Strength of Sched.'
+  sos: 'Strength of Sched.',
+  momentum: 'Momentum (Last 10)'
 };
 
 function showWeightsModal() {
