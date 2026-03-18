@@ -1085,18 +1085,26 @@ function getConfClass(prob) {
 // ============================================================
 
 const DEFAULT_INJURIES = [
-  { team: "Texas Tech", player: "JT Toppin", impact: "5", status: "out", returnRound: null },
+  // Only penalize injuries NOT already reflected in season stats
+  // Toppin out since Feb 17 — stats partially reflect it, but his early-season dominance still inflates AdjEM
+  { team: "Texas Tech", player: "JT Toppin", impact: "3", status: "out", returnRound: null },
+  // Foster hurt in regular season finale — season AdjEM still mostly includes him
   { team: "Duke", player: "Caleb Foster", impact: "3", status: "out", returnRound: null },
+  // Ngongba missed end of season, expected back ~Sweet 16
   { team: "Duke", player: "Patrick Ngongba II", impact: "1.5", status: "out", returnRound: 2 },
+  // Holloway just suspended — stats fully include him, big penalty
   { team: "Alabama", player: "Aden Holloway", impact: "3", status: "out", returnRound: null },
-  { team: "BYU", player: "Richie Saunders", impact: "3", status: "out", returnRound: null },
-  { team: "Gonzaga", player: "Braden Huff", impact: "1.5", status: "out", returnRound: 2 },
+  // Huff out since January — stats already reflect, but expected back Sweet 16 weekend
+  { team: "Gonzaga", player: "Braden Huff", impact: "0.5", status: "out", returnRound: 2 },
+  // Welling tore ACL in ACC tournament — very recent, minimal reflection in stats
   { team: "Clemson", player: "Carter Welling", impact: "1.5", status: "out", returnRound: null },
-  { team: "Villanova", player: "Matt Hodge", impact: "1.5", status: "out", returnRound: null },
-  { team: "Louisville", player: "Mikel Brown Jr.", impact: "3", status: "out", returnRound: null },
-  { team: "Kentucky", player: "Jayden Quaintance", impact: "1.5", status: "doubtful", returnRound: null },
+  // Brown confirmed out — in and out all season so stats partially reflect, but he's their leading scorer
+  { team: "Louisville", player: "Mikel Brown Jr.", impact: "1.5", status: "out", returnRound: null },
+  // REMOVED: BYU/Saunders (out since mid-Feb, stats already reflect)
+  // REMOVED: Villanova/Hodge (out earlier this month, stats mostly reflect)
+  // REMOVED: Kentucky/Quaintance (only played 4 games all season, stats already reflect)
 ];
-const INJURY_VERSION = 2;
+const INJURY_VERSION = 3;
 let injuries = [];
 function loadInjuries() {
   try {
