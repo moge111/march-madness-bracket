@@ -830,9 +830,10 @@ function calcUpsetFactors(favorite, underdog) {
   const w = customWeights;
   const wScale = (stat) => stat / 50; // normalize: 50 = 1x, 100 = 2x, 0 = off
 
-  if (emGap < 6 && seedGap >= 4) { factors.push("Small efficiency gap"); adjustment += .06 * wScale(w.efficiency); }
-  else if (emGap < 10 && seedGap >= 6) { factors.push("Modest efficiency gap"); adjustment += .04 * wScale(w.efficiency); }
+  if (emGap < 6 && seedGap >= 4) { factors.push("Small efficiency gap"); adjustment += .04 * wScale(w.efficiency); }
+  else if (emGap < 10 && seedGap >= 6) { factors.push("Modest efficiency gap"); adjustment += .025 * wScale(w.efficiency); }
   if (underdog.threePtPct - favorite.threePtPct > .015) { factors.push("3PT shooting edge"); adjustment += .03 * wScale(w.threePt); }
+  if (underdog.threePtDefPct < favorite.threePtDefPct - .03) { factors.push("Underdog better 3PT defense"); adjustment += .02 * wScale(w.threePt); }
   if (favorite.adjT < 64) { factors.push("Slow tempo = more variance"); adjustment += .025 * wScale(w.tempo); }
   if (favorite.tovRate > 18) { factors.push("Favorite turnover-prone"); adjustment += .03 * wScale(w.tovRate); }
   if (favorite.ftPct < .70) { factors.push("Favorite weak FT shooting"); adjustment += .025 * wScale(w.ftPct); }
@@ -856,6 +857,10 @@ function statEdgeProb(teamA, teamB) {
     const diff = (teamA.threePtPct - teamB.threePtPct) / .06; // normalize ~6% range
     edges += w.threePt * Math.max(-1, Math.min(1, diff));
     totalW += w.threePt;
+    // 3PT defense (lower is better)
+    const defDiff = (teamB.threePtDefPct - teamA.threePtDefPct) / .06;
+    edges += (w.threePt * 0.5) * Math.max(-1, Math.min(1, defDiff));
+    totalW += w.threePt * 0.5;
   }
   // Defense (lower is better)
   if (w.defense > 0) {
@@ -1347,7 +1352,7 @@ function renderMatchupHTML(matchup, region, round, idx, side) {
     pct2 = Math.round((1 - pred.prob) * 100) + '%';
   }
 
-  const roundLabel = ['Round of 64', 'Round of 32', 'Sweet 16', 'Quarterfinal'][round];
+  const roundLabel = ['Round of 64', 'Round of 32', 'Sweet 16', 'Elite 8'][round];
   const analyzeLink = (t1 && t2) ? `<span class="analyze-link" data-team-a="${t1.name}" data-team-b="${t2.name}">&bull; Analyze</span>` : '';
 
   return `<div class="matchup" data-region="${region}" data-round="${round}" data-idx="${idx}">
@@ -1363,7 +1368,7 @@ function renderMatchupHTML(matchup, region, round, idx, side) {
 
 function renderCenterColumn() {
   let html = '';
-  html += renderCenterMatchup(bracket.finalFour[0], 'ff', 0, 'Semifinal');
+  html += renderCenterMatchup(bracket.finalFour[0], 'ff', 0, 'Final Four');
 
   html += renderCenterMatchup(bracket.championship, 'champ', 0, 'Championship', true);
 
@@ -1377,7 +1382,7 @@ function renderCenterColumn() {
     html += `<div class="center-title"><h2>NCAA Tournament</h2><p>March Madness 2026</p></div>`;
   }
 
-  html += renderCenterMatchup(bracket.finalFour[1], 'ff', 1, 'Semifinal');
+  html += renderCenterMatchup(bracket.finalFour[1], 'ff', 1, 'Final Four');
   return html;
 }
 
