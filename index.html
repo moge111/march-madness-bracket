@@ -596,6 +596,13 @@ header p { color: var(--text-dim); font-size: 12px; margin-top: 4px; }
         <option value="doubtful">Doubtful</option>
         <option value="questionable">Questionable</option>
       </select>
+      <select id="injury-return" style="padding:8px;background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:6px;font-size:12px;">
+        <option value="">Entire Tournament</option>
+        <option value="1">Back by R32</option>
+        <option value="2">Back by Sweet 16</option>
+        <option value="3">Back by Elite 8</option>
+        <option value="4">Back by Final Four</option>
+      </select>
       <button class="btn btn-primary" onclick="addInjury()">Add</button>
     </div>
     <div id="injuries-list"></div>
@@ -1015,7 +1022,8 @@ function predictMatchup(teamA, teamB, round) {
     if (late) w.ftPct = Math.round(w.ftPct * 1.15);
   }
 
-  const kProb = efficiencyWinProb(getEffectiveAdjEM(teamA), getEffectiveAdjEM(teamB));
+  const r = (typeof round === 'number') ? round : null;
+  const kProb = efficiencyWinProb(getEffectiveAdjEM(teamA, r), getEffectiveAdjEM(teamB, r));
   const seedProb = getSeedHistoryProb(teamA.seed, teamB.seed);
   const statProb = statEdgeProb(teamA, teamB);
 
@@ -1076,17 +1084,18 @@ function getConfClass(prob) {
 // INJURY SYSTEM
 // ============================================================
 
+const ROUND_NAMES = ["R64","R32","Sweet 16","Elite 8","Final Four","Championship"];
 const DEFAULT_INJURIES = [
-  { team: "Texas Tech", player: "JT Toppin", impact: "5", status: "out" },
-  { team: "Duke", player: "Caleb Foster", impact: "3", status: "out" },
-  { team: "Duke", player: "Patrick Ngongba II", impact: "1.5", status: "questionable" },
-  { team: "Alabama", player: "Aden Holloway", impact: "3", status: "out" },
-  { team: "BYU", player: "Richie Saunders", impact: "3", status: "out" },
-  { team: "Gonzaga", player: "Braden Huff", impact: "1.5", status: "out" },
-  { team: "Clemson", player: "Carter Welling", impact: "1.5", status: "out" },
-  { team: "Villanova", player: "Matt Hodge", impact: "1.5", status: "out" },
-  { team: "Louisville", player: "Mikel Brown Jr.", impact: "3", status: "questionable" },
-  { team: "Kentucky", player: "Jayden Quaintance", impact: "1.5", status: "doubtful" },
+  { team: "Texas Tech", player: "JT Toppin", impact: "5", status: "out", returnRound: null },
+  { team: "Duke", player: "Caleb Foster", impact: "3", status: "out", returnRound: null },
+  { team: "Duke", player: "Patrick Ngongba II", impact: "1.5", status: "out", returnRound: 2 },
+  { team: "Alabama", player: "Aden Holloway", impact: "3", status: "out", returnRound: null },
+  { team: "BYU", player: "Richie Saunders", impact: "3", status: "out", returnRound: null },
+  { team: "Gonzaga", player: "Braden Huff", impact: "1.5", status: "out", returnRound: 2 },
+  { team: "Clemson", player: "Carter Welling", impact: "1.5", status: "out", returnRound: null },
+  { team: "Villanova", player: "Matt Hodge", impact: "1.5", status: "out", returnRound: null },
+  { team: "Louisville", player: "Mikel Brown Jr.", impact: "3", status: "out", returnRound: null },
+  { team: "Kentucky", player: "Jayden Quaintance", impact: "1.5", status: "doubtful", returnRound: null },
 ];
 let injuries = [];
 function loadInjuries() {
@@ -1098,15 +1107,16 @@ function loadInjuries() {
 }
 function saveInjuries() { try { localStorage.setItem('mm_injuries', JSON.stringify(injuries)); } catch(e) {} }
 
-function getInjuryPenalty(teamName) {
+function getInjuryPenalty(teamName, round) {
   return injuries.filter(i => i.team === teamName).reduce((sum, i) => {
+    if (i.returnRound != null && round != null && round >= i.returnRound) return sum;
     const mult = i.status === 'out' ? 1.0 : i.status === 'doubtful' ? 0.75 : 0.4;
     return sum + (parseFloat(i.impact) * mult);
   }, 0);
 }
 
-function getEffectiveAdjEM(team) {
-  return team.adjEM - getInjuryPenalty(team.name);
+function getEffectiveAdjEM(team, round) {
+  return team.adjEM - getInjuryPenalty(team.name, round);
 }
 
 function addInjury() {
@@ -1114,8 +1124,10 @@ function addInjury() {
   const player = document.getElementById('injury-player').value.trim();
   const impact = document.getElementById('injury-impact').value;
   const status = document.getElementById('injury-status').value;
+  const retVal = document.getElementById('injury-return').value;
+  const returnRound = retVal === '' ? null : parseInt(retVal);
   if (!team || !player) return;
-  injuries.push({ team, player, impact, status });
+  injuries.push({ team, player, impact, status, returnRound });
   saveInjuries();
   renderInjuries();
   document.getElementById('injury-player').value = '';
@@ -1128,15 +1140,16 @@ function renderInjuries() {
   if (!el) return;
   if (injuries.length === 0) { el.innerHTML = '<p style="color:var(--text-dim);font-size:12px;">No injuries added yet.</p>'; return; }
   const statusColors = { out: '#f85149', doubtful: '#d29922', questionable: '#58a6ff' };
-  el.innerHTML = injuries.map((inj, i) => `
-    <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;margin-bottom:6px;">
+  el.innerHTML = injuries.map((inj, i) => {
+    const retLabel = inj.returnRound != null ? `<span style="color:#58a6ff;font-size:10px;margin-left:4px;">Back by ${ROUND_NAMES[inj.returnRound]}</span>` : '';
+    return `<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;margin-bottom:6px;">
       <span style="font-weight:600;color:var(--text);font-size:13px;min-width:120px;">${inj.team}</span>
-      <span style="color:var(--text-dim);font-size:12px;flex:1;">${inj.player}</span>
+      <span style="color:var(--text-dim);font-size:12px;flex:1;">${inj.player}${retLabel}</span>
       <span style="color:${statusColors[inj.status]};font-size:11px;font-weight:600;text-transform:uppercase;">${inj.status}</span>
       <span style="color:var(--text-dim);font-size:11px;">-${inj.impact} AdjEM</span>
       <button onclick="removeInjury(${i})" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:14px;">&#10005;</button>
-    </div>
-  `).join('');
+    </div>`;
+  }).join('');
 }
 
 function initInjuryDropdown() {
