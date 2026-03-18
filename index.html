@@ -1620,8 +1620,8 @@ function drawConnectorLines() {
   if (!bracketEl) return;
   const bRect = bracketEl.getBoundingClientRect();
 
-  const regions = ['South', 'East', 'West', 'Midwest'];
-  const sides = { 'South': 'left', 'East': 'left', 'West': 'right', 'Midwest': 'right' };
+  const regions = ['South', 'West', 'East', 'Midwest'];
+  const sides = { 'South': 'left', 'West': 'left', 'East': 'right', 'Midwest': 'right' };
 
   for (const region of regions) {
     const side = sides[region];
@@ -1679,8 +1679,8 @@ function drawConnectorLines() {
 
   const ffConnections = [
     { region: 'South', side: 'left', ff: ff0, slot: 'top' },
-    { region: 'East', side: 'left', ff: ff0, slot: 'bottom' },
-    { region: 'West', side: 'right', ff: ff1, slot: 'top' },
+    { region: 'East', side: 'right', ff: ff0, slot: 'bottom' },
+    { region: 'West', side: 'left', ff: ff1, slot: 'top' },
     { region: 'Midwest', side: 'right', ff: ff1, slot: 'bottom' },
   ];
 
