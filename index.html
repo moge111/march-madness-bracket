@@ -886,6 +886,10 @@ const BRACKET_SEEDS = [
 
 const ROUND_NAMES = ["R64","R32","Sweet 16","Elite 8","Final Four","Championship"];
 const REGIONS = ["South", "East", "West", "Midwest"];
+// FF pairing: South(top-left) vs West(top-right) = FF[0] (top center)
+//             East(bottom-left) vs Midwest(bottom-right) = FF[1] (bottom center)
+const FF_MAP = { South: [0,'team1'], East: [1,'team1'], West: [0,'team2'], Midwest: [1,'team2'] };
+function getFFSlot(region) { return FF_MAP[region]; }
 
 // ============================================================
 // PREDICTION ENGINE
@@ -1250,9 +1254,7 @@ function advanceWinner(region, round, matchupIdx, winnerTeam) {
     bracket[region].rounds[round + 1][nextMatchupIdx][slot] = winnerTeam;
     cascadeClear(region, round + 1, nextMatchupIdx);
   } else if (round === 3) {
-    const regionIdx = REGIONS.indexOf(region);
-    const ffIdx = Math.floor(regionIdx / 2);
-    const slot = regionIdx % 2 === 0 ? 'team1' : 'team2';
+    const [ffIdx, slot] = getFFSlot(region);
     bracket.finalFour[ffIdx][slot] = winnerTeam;
     cascadeClearFF(ffIdx);
   }
@@ -1273,9 +1275,7 @@ function cascadeClear(region, round, matchupIdx) {
         bracket[region].rounds[round + 1][nextIdx][slot] = null;
         cascadeClear(region, round + 1, nextIdx);
       } else if (round === 3) {
-        const regionIdx = REGIONS.indexOf(region);
-        const ffIdx = Math.floor(regionIdx / 2);
-        const slot = regionIdx % 2 === 0 ? 'team1' : 'team2';
+        const [ffIdx, slot] = getFFSlot(region);
         bracket.finalFour[ffIdx][slot] = null;
         cascadeClearFF(ffIdx);
       }
@@ -1339,9 +1339,7 @@ function autoFill(withUpsets) {
             const slot = i % 2 === 0 ? 'team1' : 'team2';
             bracket[region].rounds[round + 1][nextIdx][slot] = winner;
           } else {
-            const regionIdx = REGIONS.indexOf(region);
-            const ffIdx = Math.floor(regionIdx / 2);
-            const slot = regionIdx % 2 === 0 ? 'team1' : 'team2';
+            const [ffIdx, slot] = getFFSlot(region);
             bracket.finalFour[ffIdx][slot] = winner;
           }
         }
@@ -2302,9 +2300,7 @@ async function editBracket(name) {
             const slot = g % 2 === 0 ? 'team1' : 'team2';
             bracket[region].rounds[r + 1][nextIdx][slot] = m.winner;
           } else if (m.winner && r === 3) {
-            const regionIdx = REGIONS.indexOf(region);
-            const ffIdx = Math.floor(regionIdx / 2);
-            const slot = regionIdx % 2 === 0 ? 'team1' : 'team2';
+            const [ffIdx, slot] = getFFSlot(region);
             bracket.finalFour[ffIdx][slot] = m.winner;
           }
         }
@@ -2384,9 +2380,7 @@ function generateSimBrackets(count) {
               const slot = i % 2 === 0 ? 'team1' : 'team2';
               sim[region].rounds[round + 1][nextIdx][slot] = m.winner;
             } else {
-              const regionIdx = REGIONS.indexOf(region);
-              const ffIdx = Math.floor(regionIdx / 2);
-              const slot = regionIdx % 2 === 0 ? 'team1' : 'team2';
+              const [ffIdx, slot] = getFFSlot(region);
               sim.finalFour[ffIdx][slot] = m.winner;
             }
           }
