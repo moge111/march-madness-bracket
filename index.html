@@ -337,6 +337,7 @@ header p { color: var(--text-dim); font-size: 12px; margin-top: 4px; }
     <button class="tab-btn" onclick="switchTab('data')">Team Data</button>
     <button class="tab-btn" onclick="switchTab('leaderboard')">Leaderboard</button>
     <button class="tab-btn" onclick="switchTab('guide')">How It Works</button>
+    <button class="tab-btn" id="injuries-tab-btn" style="display:none;" onclick="switchTab('injuries')">Injuries</button>
   </div>
 
   <div id="bracket-tab" class="tab-content active">
@@ -574,6 +575,30 @@ header p { color: var(--text-dim); font-size: 12px; margin-top: 4px; }
       <p>All data is sourced from <strong>Barttorvik</strong> (barttorvik.com). Efficiency metrics (AdjO, AdjD, AdjT) and strength of schedule come from Barttorvik's team ratings. Shooting stats (3PT%, FT%), turnover rate, offensive rebound rate, and experience are aggregated from individual player data across every roster, weighted by minutes played. Opponent 3PT% is computed from actual game box scores across the full season. Seed matchup history covers every NCAA tournament game from 1985-2025. All stats can be fine-tuned in the Team Data tab.</p>
 
     </div>
+  </div>
+</div>
+
+<div id="injuries-tab" class="tab-content">
+  <div style="max-width:700px;margin:0 auto;padding:20px 0;">
+    <h2 style="color:var(--accent2);margin-bottom:8px;">Injury Manager</h2>
+    <p style="color:var(--text-dim);font-size:12px;margin-bottom:16px;">Add injuries to adjust team predictions. The model reduces a team's effective AdjEM based on player importance.</p>
+    <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
+      <select id="injury-team" style="flex:1;min-width:150px;padding:8px;background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:6px;font-size:12px;"></select>
+      <input id="injury-player" placeholder="Player name" style="flex:1;min-width:120px;padding:8px;background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:6px;font-size:12px;">
+      <select id="injury-impact" style="padding:8px;background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:6px;font-size:12px;">
+        <option value="5">Star Player (-5 AdjEM)</option>
+        <option value="3">Key Starter (-3 AdjEM)</option>
+        <option value="1.5">Rotation Player (-1.5 AdjEM)</option>
+        <option value="0.5">Role Player (-0.5 AdjEM)</option>
+      </select>
+      <select id="injury-status" style="padding:8px;background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:6px;font-size:12px;">
+        <option value="out">Out</option>
+        <option value="doubtful">Doubtful</option>
+        <option value="questionable">Questionable</option>
+      </select>
+      <button class="btn btn-primary" onclick="addInjury()">Add</button>
+    </div>
+    <div id="injuries-list"></div>
   </div>
 </div>
 
@@ -990,7 +1015,7 @@ function predictMatchup(teamA, teamB, round) {
     if (late) w.ftPct = Math.round(w.ftPct * 1.15);
   }
 
-  const kProb = efficiencyWinProb(teamA.adjEM, teamB.adjEM);
+  const kProb = efficiencyWinProb(getEffectiveAdjEM(teamA), getEffectiveAdjEM(teamB));
   const seedProb = getSeedHistoryProb(teamA.seed, teamB.seed);
   const statProb = statEdgeProb(teamA, teamB);
 
@@ -1045,6 +1070,80 @@ function getConfClass(prob) {
   if (prob >= .70) return 'conf-high';
   if (prob >= .55) return 'conf-med';
   return 'conf-low';
+}
+
+// ============================================================
+// INJURY SYSTEM
+// ============================================================
+
+const DEFAULT_INJURIES = [
+  { team: "Texas Tech", player: "JT Toppin", impact: "5", status: "out" },
+  { team: "Duke", player: "Caleb Foster", impact: "3", status: "out" },
+  { team: "Duke", player: "Patrick Ngongba II", impact: "1.5", status: "questionable" },
+  { team: "Alabama", player: "Aden Holloway", impact: "3", status: "out" },
+  { team: "BYU", player: "Richie Saunders", impact: "3", status: "out" },
+  { team: "Gonzaga", player: "Braden Huff", impact: "1.5", status: "out" },
+  { team: "Clemson", player: "Carter Welling", impact: "1.5", status: "out" },
+  { team: "Villanova", player: "Matt Hodge", impact: "1.5", status: "out" },
+  { team: "Louisville", player: "Mikel Brown Jr.", impact: "3", status: "questionable" },
+  { team: "Kentucky", player: "Jayden Quaintance", impact: "1.5", status: "doubtful" },
+];
+let injuries = [];
+function loadInjuries() {
+  try {
+    const saved = localStorage.getItem('mm_injuries');
+    injuries = saved ? JSON.parse(saved) : [...DEFAULT_INJURIES];
+    if (!saved) saveInjuries();
+  } catch(e) { injuries = [...DEFAULT_INJURIES]; }
+}
+function saveInjuries() { try { localStorage.setItem('mm_injuries', JSON.stringify(injuries)); } catch(e) {} }
+
+function getInjuryPenalty(teamName) {
+  return injuries.filter(i => i.team === teamName).reduce((sum, i) => {
+    const mult = i.status === 'out' ? 1.0 : i.status === 'doubtful' ? 0.75 : 0.4;
+    return sum + (parseFloat(i.impact) * mult);
+  }, 0);
+}
+
+function getEffectiveAdjEM(team) {
+  return team.adjEM - getInjuryPenalty(team.name);
+}
+
+function addInjury() {
+  const team = document.getElementById('injury-team').value;
+  const player = document.getElementById('injury-player').value.trim();
+  const impact = document.getElementById('injury-impact').value;
+  const status = document.getElementById('injury-status').value;
+  if (!team || !player) return;
+  injuries.push({ team, player, impact, status });
+  saveInjuries();
+  renderInjuries();
+  document.getElementById('injury-player').value = '';
+}
+
+function removeInjury(idx) { injuries.splice(idx, 1); saveInjuries(); renderInjuries(); }
+
+function renderInjuries() {
+  const el = document.getElementById('injuries-list');
+  if (!el) return;
+  if (injuries.length === 0) { el.innerHTML = '<p style="color:var(--text-dim);font-size:12px;">No injuries added yet.</p>'; return; }
+  const statusColors = { out: '#f85149', doubtful: '#d29922', questionable: '#58a6ff' };
+  el.innerHTML = injuries.map((inj, i) => `
+    <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;margin-bottom:6px;">
+      <span style="font-weight:600;color:var(--text);font-size:13px;min-width:120px;">${inj.team}</span>
+      <span style="color:var(--text-dim);font-size:12px;flex:1;">${inj.player}</span>
+      <span style="color:${statusColors[inj.status]};font-size:11px;font-weight:600;text-transform:uppercase;">${inj.status}</span>
+      <span style="color:var(--text-dim);font-size:11px;">-${inj.impact} AdjEM</span>
+      <button onclick="removeInjury(${i})" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:14px;">&#10005;</button>
+    </div>
+  `).join('');
+}
+
+function initInjuryDropdown() {
+  const sel = document.getElementById('injury-team');
+  if (!sel) return;
+  sel.innerHTML = '<option value="">Select team...</option>' +
+    Object.keys(TEAMS).sort().map(t => `<option value="${t}">${t}</option>`).join('');
 }
 
 // ============================================================
@@ -2719,7 +2818,12 @@ function init() {
     if (admin) admin.style.display = '';
     const editCol = document.getElementById('lb-edit-col');
     if (editCol) editCol.style.display = '';
+    const injBtn = document.getElementById('injuries-tab-btn');
+    if (injBtn) injBtn.style.display = '';
   }
+  loadInjuries();
+  initInjuryDropdown();
+  renderInjuries();
 
   let resizeTimer;
   window.addEventListener('resize', () => {
