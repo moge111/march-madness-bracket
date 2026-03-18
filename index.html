@@ -886,9 +886,9 @@ const BRACKET_SEEDS = [
 
 const ROUND_NAMES = ["R64","R32","Sweet 16","Elite 8","Final Four","Championship"];
 const REGIONS = ["South", "East", "West", "Midwest"];
-// FF pairing: South(top-left) vs West(top-right) = FF[0] (top center)
-//             East(bottom-left) vs Midwest(bottom-right) = FF[1] (bottom center)
-const FF_MAP = { South: [0,'team1'], East: [1,'team1'], West: [0,'team2'], Midwest: [1,'team2'] };
+// FF pairing: South(top-left) vs East(top-right) = FF[0] (top center)
+//             West(bottom-left) vs Midwest(bottom-right) = FF[1] (bottom center)
+const FF_MAP = { South: [0,'team1'], East: [0,'team2'], West: [1,'team1'], Midwest: [1,'team2'] };
 function getFFSlot(region) { return FF_MAP[region]; }
 
 // ============================================================
