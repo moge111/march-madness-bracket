@@ -1262,10 +1262,12 @@ function predictMatchup(teamA, teamB, round) {
   // In massive mismatches (AdjEM gap 20+), boost efficiency weight to prevent
   // stat edge noise from giving underdogs unrealistic chances
   const emGap = Math.abs(getEffectiveAdjEM(teamA, r) - getEffectiveAdjEM(teamB, r));
-  const mismatchBoost = emGap >= 25 ? 2.5 : emGap >= 15 ? 1.5 : 1.0;
+  // In massive mismatches, heavily favor efficiency and suppress stat edge noise
+  const mismatchBoost = emGap >= 25 ? 5.0 : emGap >= 15 ? 2.0 : 1.0;
+  const statDampen = emGap >= 25 ? 0.1 : emGap >= 15 ? 0.4 : 1.0;
   const effW = w.efficiency * mismatchBoost;
   const seedW = w.seedHistory;
-  const statW = (w.threePt + w.defense + w.ftPct + w.tovRate + w.experience + w.tempo + w.offReb + w.defReb + w.sos + (w.momentum || 0)) / 10;
+  const statW = ((w.threePt + w.defense + w.ftPct + w.tovRate + w.experience + w.tempo + w.offReb + w.defReb + w.sos + (w.momentum || 0)) / 10) * statDampen;
   const totalW = effW + seedW + statW;
   const wEff = totalW > 0 ? effW / totalW : .55;
   const wSeed = totalW > 0 ? seedW / totalW : .30;
