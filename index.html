@@ -484,7 +484,7 @@ header p { color: var(--text-dim); font-size: 12px; margin-top: 4px; }
     </div>
     <div style="border-radius:10px;border:1px solid var(--border);overflow-x:auto;">
       <table class="lb-table">
-        <thead><tr><th>#</th><th>Name</th><th>Score</th><th>Correct</th><th>Wrong</th><th>Pending</th><th>Perfect?</th><th>Busted In</th><th>Champion</th><th>Submitted</th><th id="lb-edit-col" style="display:none;"></th></tr></thead>
+        <thead><tr><th>#</th><th>Name</th><th>Score</th><th>Correct</th><th>Wrong</th><th>Pending</th><th>Perfect?</th><th>Busted In</th><th>Champion</th><th>Submitted</th><th></th></tr></thead>
         <tbody id="lb-body"></tbody>
       </table>
     </div>
@@ -2423,6 +2423,98 @@ async function editBracket(name) {
   window.scrollTo(0, 0);
 }
 
+async function viewBracket(name) {
+  // Save current bracket so we can restore it
+  const savedBracket = localStorage.getItem('mm_bracket');
+
+  // Reuse editBracket's loading logic but don't save
+  let sub = null;
+  if (firebaseReady) {
+    try {
+      const snap = await db.collection('submissions').where('name', '==', name).get();
+      if (!snap.empty) sub = snap.docs[0].data();
+    } catch(e) {}
+  }
+  if (!sub) {
+    const humanSubs = JSON.parse(localStorage.getItem('mm_submissions') || '[]');
+    sub = humanSubs.find(s => s.name === name);
+  }
+  if (!sub) {
+    const simSubs = await simDB.getAll();
+    sub = simSubs.find(s => s.name === name);
+  }
+  if (!sub) { alert('Bracket not found.'); return; }
+
+  // Load into bracket view
+  initBracket();
+  const picks = sub.picks;
+  for (const region of REGIONS) {
+    let idx = 0;
+    for (let r = 0; r < 4; r++) {
+      const roundSize = [8, 4, 2, 1][r];
+      for (let g = 0; g < roundSize; g++) {
+        const winnerName = picks.regions[region][idx];
+        if (winnerName) {
+          const m = bracket[region].rounds[r][g];
+          if (m.team1 && m.team1.name === winnerName) m.winner = m.team1;
+          else if (m.team2 && m.team2.name === winnerName) m.winner = m.team2;
+          if (m.winner && r < 3) {
+            const nextIdx = Math.floor(g / 2);
+            const slot = g % 2 === 0 ? 'team1' : 'team2';
+            bracket[region].rounds[r + 1][nextIdx][slot] = m.winner;
+          } else if (m.winner && r === 3) {
+            const [ffIdx, slot] = getFFSlot(region);
+            bracket.finalFour[ffIdx][slot] = m.winner;
+          }
+        }
+        idx++;
+      }
+    }
+  }
+  for (let i = 0; i < 2; i++) {
+    const winnerName = picks.ff[i];
+    if (winnerName) {
+      const m = bracket.finalFour[i];
+      if (m.team1 && m.team1.name === winnerName) m.winner = m.team1;
+      else if (m.team2 && m.team2.name === winnerName) m.winner = m.team2;
+      if (m.winner) bracket.championship[i === 0 ? 'team1' : 'team2'] = m.winner;
+    }
+  }
+  if (picks.champ) {
+    const cm = bracket.championship;
+    if (cm.team1 && cm.team1.name === picks.champ) cm.winner = cm.team1;
+    else if (cm.team2 && cm.team2.name === picks.champ) cm.winner = cm.team2;
+    if (cm.winner) bracket.champion = cm.winner;
+  }
+
+  renderAll();
+
+  // Switch to bracket tab
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+  document.getElementById('bracket-tab').classList.add('active');
+  document.querySelectorAll('.tab-btn')[0].classList.add('active');
+  window.scrollTo(0, 0);
+
+  // Show viewing banner with back button
+  const banner = document.getElementById('data-banner');
+  banner.innerHTML = `<span style="color:var(--accent2);font-weight:600;">👁 Viewing: ${name}</span> &bull; <button class="btn" style="font-size:10px;padding:3px 10px;" onclick="exitViewMode()">Back to My Bracket</button>`;
+  banner._savedBracket = savedBracket;
+}
+
+function exitViewMode() {
+  const banner = document.getElementById('data-banner');
+  const saved = banner._savedBracket;
+  if (saved) {
+    localStorage.setItem('mm_bracket', saved);
+    loadBracket();
+  } else {
+    initBracket(); saveBracket();
+  }
+  renderAll();
+  banner.innerHTML = '2026 NCAA Tournament bracket loaded with real Barttorvik efficiency data. Fine-tune stats in the <strong>Team Data</strong> tab.' + (firebaseReady ? ' &bull; <span style="color:var(--accent);">☁️ Cloud sync active</span>' : '');
+}
+
 async function clearSubmissions() {
   if (!confirm('Delete all submitted brackets (human + sims)?')) return;
   localStorage.removeItem('mm_submissions');
@@ -2872,7 +2964,8 @@ function _renderLbPage() {
     const i = start + j; // global index for rank
     const rankClass = i === 0 ? 'rank-1' : i === 1 ? 'rank-2' : i === 2 ? 'rank-3' : '';
     const ts = s.timestamp ? new Date(s.timestamp).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : '—';
-    const editBtn = window._isAdmin ? `<td style="white-space:nowrap;"><button class="btn" style="font-size:10px;padding:3px 8px;" onclick="event.stopPropagation();editBracket('${s.name.replace(/'/g, "\\'")}')">Edit</button> <button class="btn btn-danger" style="font-size:10px;padding:3px 8px;" onclick="event.stopPropagation();deleteBracket('${s.name.replace(/'/g, "\\'")}')">✕</button></td>` : '';
+    const viewBtn = `<button class="btn" style="font-size:10px;padding:3px 8px;border-color:var(--accent2);color:var(--accent2);" onclick="event.stopPropagation();viewBracket('${s.name.replace(/'/g, "\\'")}')">View</button>`;
+    const editBtn = window._isAdmin ? `<td style="white-space:nowrap;">${viewBtn} <button class="btn" style="font-size:10px;padding:3px 8px;" onclick="event.stopPropagation();editBracket('${s.name.replace(/'/g, "\\'")}')">Edit</button> <button class="btn btn-danger" style="font-size:10px;padding:3px 8px;" onclick="event.stopPropagation();deleteBracket('${s.name.replace(/'/g, "\\'")}')">✕</button></td>` : `<td>${viewBtn}</td>`;
     return `<tr class="lb-expand" onclick="toggleDetail(${i})">
       <td class="${rankClass}">${i + 1}</td>
       <td style="font-weight:600;">${s.name}</td>
