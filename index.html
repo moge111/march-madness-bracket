@@ -3097,15 +3097,11 @@ function _renderSimStatsInner(container, sims) {
     return entries.map(([team, count]) => {
       const pct = (count / total * 100).toFixed(1);
       const barW = (count / max * 100).toFixed(1);
-      const barWNum = parseFloat(barW);
-      const labelInside = barWNum > 25;
-      return `<div style="display:flex;align-items:center;gap:0;margin-bottom:3px;padding:2px 4px;border-radius:4px;cursor:default;transition:background .1s;" onmouseenter="this.style.background='rgba(255,255,255,.07)'" onmouseleave="this.style.background='transparent'">
-        <div style="flex:1;background:var(--surface);border-radius:4px;overflow:hidden;height:26px;position:relative;">
+      return `<div style="display:flex;align-items:center;gap:6px;margin-bottom:3px;padding:2px 4px;border-radius:4px;cursor:default;transition:background .1s;" onmouseenter="this.style.background='rgba(255,255,255,.07)'" onmouseleave="this.style.background='transparent'">
+        <span style="min-width:100px;font-size:12px;font-weight:600;color:var(--text);white-space:nowrap;text-align:right;">${team}</span>
+        <span style="font-size:11px;color:var(--text-dim);white-space:nowrap;min-width:75px;">${count.toLocaleString()} (${pct}%)</span>
+        <div style="flex:1;background:var(--surface);border-radius:4px;overflow:hidden;height:20px;">
           <div style="width:${barW}%;background:var(--accent);height:100%;border-radius:4px;min-width:2px;"></div>
-          <div style="position:absolute;top:0;left:0;right:0;height:100%;display:flex;align-items:center;justify-content:space-between;padding:0 8px;">
-            <span style="font-size:12px;font-weight:600;color:${labelInside ? '#0d1117' : 'var(--text)'};white-space:nowrap;z-index:1;">${team}</span>
-            <span style="font-size:11px;font-weight:500;color:var(--text-dim);white-space:nowrap;z-index:1;">${count.toLocaleString()} (${pct}%)</span>
-          </div>
         </div>
       </div>`;
     }).join('');
