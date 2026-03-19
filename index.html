@@ -3097,12 +3097,16 @@ function _renderSimStatsInner(container, sims) {
     return entries.map(([team, count]) => {
       const pct = (count / total * 100).toFixed(1);
       const barW = (count / max * 100).toFixed(1);
-      return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;padding:3px 4px;border-radius:4px;cursor:default;transition:background .1s;" onmouseenter="this.style.background='rgba(255,255,255,.07)'" onmouseleave="this.style.background='transparent'">
-        <span style="min-width:120px;font-size:12px;text-align:right;color:var(--text);white-space:nowrap;">${team}</span>
-        <div style="flex:1;background:var(--surface);border-radius:3px;overflow:hidden;height:20px;position:relative;">
-          <div style="width:${barW}%;background:var(--accent);height:100%;border-radius:3px;min-width:2px;"></div>
+      const barWNum = parseFloat(barW);
+      const labelInside = barWNum > 25;
+      return `<div style="display:flex;align-items:center;gap:0;margin-bottom:3px;padding:2px 4px;border-radius:4px;cursor:default;transition:background .1s;" onmouseenter="this.style.background='rgba(255,255,255,.07)'" onmouseleave="this.style.background='transparent'">
+        <div style="flex:1;background:var(--surface);border-radius:4px;overflow:hidden;height:26px;position:relative;">
+          <div style="width:${barW}%;background:var(--accent);height:100%;border-radius:4px;min-width:2px;"></div>
+          <div style="position:absolute;top:0;left:0;right:0;height:100%;display:flex;align-items:center;justify-content:space-between;padding:0 8px;">
+            <span style="font-size:12px;font-weight:600;color:${labelInside ? '#0d1117' : 'var(--text)'};white-space:nowrap;z-index:1;">${team}</span>
+            <span style="font-size:11px;font-weight:500;color:var(--text-dim);white-space:nowrap;z-index:1;">${count.toLocaleString()} (${pct}%)</span>
+          </div>
         </div>
-        <span style="min-width:80px;font-size:11px;color:var(--text-dim);white-space:nowrap;">${count.toLocaleString()} (${pct}%)</span>
       </div>`;
     }).join('');
   }
