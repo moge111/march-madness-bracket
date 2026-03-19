@@ -508,110 +508,166 @@ header p { color: var(--text-dim); font-size: 12px; margin-top: 4px; }
     <div class="guide">
 
       <h2>Overview</h2>
-      <p>This tool helps you fill out your March Madness bracket using a data-driven prediction model. Every matchup probability is calculated by blending three factors: team efficiency metrics, historical seed performance, and upset indicators. All data is sourced from <strong>Barttorvik</strong> (barttorvik.com), one of the most respected advanced stats sites in college basketball.</p>
+      <p>A data-driven March Madness bracket predictor that blends efficiency metrics, historical seed performance, momentum, injury adjustments, and home-court proximity into a single win probability for every matchup. Generate thousands of simulated brackets, track them on a live leaderboard, and watch which ones survive as real results come in. All data syncs across devices via Firebase.</p>
 
       <h2>The Prediction Model</h2>
-      <p>Each matchup win probability is a weighted blend of three components:</p>
-
-      <div class="weight-bar">
-        <div class="weight-segment" style="flex:55;background:#3fb950;">Efficiency 55%</div>
-        <div class="weight-segment" style="flex:30;background:#d29922;">Seed History 30%</div>
-        <div class="weight-segment" style="flex:15;background:#58a6ff;">Upset Adj. 15%</div>
-      </div>
+      <p>Each matchup probability is a weighted blend of three core components, plus several modifiers. All weights are fully customizable via <strong>Customize Model</strong>.</p>
 
       <div class="card">
-        <div class="card-title">1. Efficiency Win Probability (55% weight)</div>
-        <p>Uses a logistic function on the difference between two teams' Adjusted Efficiency Margin (AdjEM). This is the single best predictor of game outcomes in college basketball.</p>
+        <div class="card-title">1. Efficiency Win Probability</div>
+        <p>The backbone of the model. Uses a logistic function on the difference between two teams' injury-adjusted AdjEM. Research shows efficiency margin alone predicts ~70% of tournament outcomes.</p>
         <div class="formula">P(win) = 1 / (1 + 10<sup>(-AdjEM_diff / 10.25)</sup>)</div>
-        <p>A team with a 10-point AdjEM advantage wins roughly 71% of the time. A 20-point gap pushes it to ~90%.</p>
+        <p>A 10-point AdjEM advantage = ~71% win rate. A 20-point gap = ~90%. Default weight: 90/100.</p>
       </div>
 
       <div class="card">
-        <div class="card-title">2. Historical Seed Performance (30% weight)</div>
-        <p>Uses actual win rates from every NCAA tournament game since 1985 for each seed matchup:</p>
+        <div class="card-title">2. Historical Seed Performance</div>
+        <p>Win rates from every NCAA tournament game, 1985-2025 (41 years of data):</p>
         <ul>
-          <li><strong>1 vs 16:</strong> 98.7% (151-2 all time)</li>
-          <li><strong>2 vs 15:</strong> 93.5% (143-10)</li>
-          <li><strong>3 vs 14:</strong> 86.3% (132-21)</li>
-          <li><strong>4 vs 13:</strong> 79.1% (121-32)</li>
-          <li><strong>5 vs 12:</strong> 64.7% (99-54) &mdash; the classic upset spot</li>
-          <li><strong>6 vs 11:</strong> 66.0% (101-52)</li>
-          <li><strong>7 vs 10:</strong> 63.4% (97-56)</li>
-          <li><strong>8 vs 9:</strong> 53.6% (82-71) &mdash; essentially a coin flip</li>
+          <li><strong>1 vs 16:</strong> 98.7% (155-2)</li>
+          <li><strong>2 vs 15:</strong> 93.6% (147-10)</li>
+          <li><strong>3 vs 14:</strong> 86.6% (136-21)</li>
+          <li><strong>4 vs 13:</strong> 79.6% (125-32)</li>
+          <li><strong>5 vs 12:</strong> 64.3% (101-56) &mdash; the classic upset spot</li>
+          <li><strong>6 vs 11:</strong> 66.2% (104-53)</li>
+          <li><strong>7 vs 10:</strong> 64.3% (101-56)</li>
+          <li><strong>8 vs 9:</strong> 54.8% (86-71) &mdash; near coin flip</li>
         </ul>
-        <p>For later-round matchups without historical data, a seed ratio formula is used as a fallback.</p>
+        <p>Default weight: 15/100. Useful for pool strategy but less predictive than efficiency data.</p>
       </div>
 
       <div class="card">
-        <div class="card-title">3. Upset Adjustment (15% weight)</div>
-        <p>Scans for specific red flags that historically correlate with tournament upsets. Each factor that fires adds a small probability boost to the underdog:</p>
+        <div class="card-title">3. Stat Edge Composite</div>
+        <p>A blend of 11 individual stat comparisons, each with its own customizable weight:</p>
         <ul>
-          <li><strong>Small efficiency gap</strong> (+6%) &mdash; When the AdjEM gap is under 6 points despite a 4+ seed gap, the lower seed is better than their seeding suggests</li>
-          <li><strong>3PT shooting edge</strong> (+3%) &mdash; Underdog shoots 3s better than the favorite; high-variance shot can swing games</li>
-          <li><strong>Slow tempo</strong> (+2.5%) &mdash; Fewer possessions = fewer chances for the better team to assert dominance</li>
-          <li><strong>Turnover-prone favorite</strong> (+3%) &mdash; Favorites with high turnover rates give underdogs extra possessions</li>
-          <li><strong>Weak FT shooting</strong> (+2.5%) &mdash; Close tournament games are won at the line; favorites below 70% FT are vulnerable</li>
-          <li><strong>Underdog more experienced</strong> (+2.5%) &mdash; Older rosters with upperclassmen handle tournament pressure better</li>
-          <li><strong>Favorite weak defense</strong> (+2%) &mdash; AdjD above 100 means the favorite can't stop opponents efficiently</li>
-          <li><strong>Underdog strong defense</strong> (+2%) &mdash; AdjD below 96 means the underdog can lock down and make it ugly</li>
+          <li><strong>Defense (75)</strong> &mdash; AdjD comparison. Defense travels in March.</li>
+          <li><strong>Turnover Rate (60)</strong> &mdash; Low-TO teams handle pressure.</li>
+          <li><strong>Free Throw % (55)</strong> &mdash; Close games decided at the line.</li>
+          <li><strong>Strength of Schedule (50)</strong> &mdash; Context for all other stats.</li>
+          <li><strong>3PT Shooting (45)</strong> &mdash; High variance, hot shooting wins games.</li>
+          <li><strong>Defensive Rebounding (40)</strong> &mdash; Ends opponent possessions.</li>
+          <li><strong>Momentum (35)</strong> &mdash; Last-10-game AdjEM trend. Hot teams outperform.</li>
+          <li><strong>Tempo (30)</strong> &mdash; Slow games = more variance = more upsets.</li>
+          <li><strong>Experience (25)</strong> &mdash; Veteran rosters handle tournament pressure.</li>
+          <li><strong>Offensive Rebounding (25)</strong> &mdash; Second-chance points.</li>
         </ul>
       </div>
 
-      <h2>Key Stats Explained</h2>
+      <h2>Model Modifiers</h2>
+
+      <div class="card">
+        <div class="card-title">Upset Adjustment</div>
+        <p>Scans for red flags that historically correlate with upsets and nudges the underdog's probability up: small efficiency gap despite large seed gap, 3PT shooting edge, slow tempo, turnover-prone favorite, weak FT shooting, experienced underdog, weak favorite defense, strong underdog defense, and underdog momentum surge.</p>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Round-by-Round Scaling</div>
+        <p>The model adjusts weights by tournament round because different factors matter at different stages:</p>
+        <ul>
+          <li><strong>R64 &amp; R32:</strong> Default weights. Upsets most common here.</li>
+          <li><strong>Sweet 16 &amp; Elite 8:</strong> Defense +20%, Experience +25%, upset adjustment reduced 30%.</li>
+          <li><strong>Final Four &amp; Championship:</strong> Defense +30%, Experience +30%, FT% +15%, upset adjustment reduced 50%.</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Injury Adjustments</div>
+        <p>Key player injuries reduce a team's effective AdjEM in predictions. Each injury has an impact level (Star -5, Key Starter -3, Rotation -1.5, Role Player -0.5) and a status modifier (Out = full penalty, Doubtful = 75%, Questionable = 40%). Injuries can have an expected return round &mdash; for example, a player out for the first weekend but expected back for the Sweet 16 will only penalize the team in early rounds. Only injuries not already reflected in the team's season stats are penalized.</p>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Home-Region Proximity</div>
+        <p>Teams playing near their home state get a small probability boost (~1.5%) in the first two rounds only. Based on venue-to-state mappings for all 8 first/second round sites.</p>
+      </div>
+
+      <h2>Key Stats</h2>
 
       <div class="card">
         <div class="card-title">AdjEM &mdash; Adjusted Efficiency Margin</div>
-        <p>The difference between a team's offensive and defensive efficiency, adjusted for opponent strength. <strong>This is the single most important number.</strong> It tells you how many points per 100 possessions a team outscores its opponents by. Elite teams are 25+, average tournament teams are 12-18, and top contenders are 30+.</p>
+        <p>Points per 100 possessions a team outscores opponents by, adjusted for opponent strength. <strong>The single most important number.</strong> Elite: 25+, contenders: 30+, average tourney team: 12-18.</p>
       </div>
 
       <div class="card">
-        <div class="card-title">AdjO &mdash; Adjusted Offensive Efficiency</div>
-        <p>Points scored per 100 possessions, adjusted for opponent defense quality. Higher is better. Elite offenses score 120+.</p>
+        <div class="card-title">AdjO / AdjD &mdash; Offensive &amp; Defensive Efficiency</div>
+        <p>Points scored (AdjO) and allowed (AdjD) per 100 possessions, adjusted for opponents. Higher AdjO = better offense, lower AdjD = better defense. Champions almost always have a top-25 defense (AdjD under 96).</p>
       </div>
 
       <div class="card">
-        <div class="card-title">AdjD &mdash; Adjusted Defensive Efficiency</div>
-        <p>Points allowed per 100 possessions, adjusted for opponent offense quality. <strong>Lower is better.</strong> Champions almost always have a top-25 defense (under 96). This is the most important stat after AdjEM for predicting deep runs.</p>
+        <div class="card-title">Last 10 AdjEM &mdash; Momentum</div>
+        <p>Adjusted efficiency margin over the team's last 10 games. Captures whether a team is peaking or slumping heading into the tournament. A team with a Last 10 AdjEM much higher than their season AdjEM is surging.</p>
       </div>
 
       <div class="card">
-        <div class="card-title">AdjT &mdash; Adjusted Tempo</div>
-        <p>Possessions per 40 minutes, adjusted for opponent pace. Affects game variance &mdash; slower games have fewer possessions, giving underdogs a better chance since there are fewer opportunities for the better team to pull away.</p>
+        <div class="card-title">Championship Title Score</div>
+        <p>A 0-100 composite measuring how well a team matches the profile of past champions. Factors in AdjEM (25 pts), defense (20 pts), FT% (15 pts), seed (15 pts), experience (15 pts), and turnover rate (10 pts). Continuous scoring with no cliff effects. 70+ = legit contender, 45-69 = Final Four potential, below 45 = deep run unlikely.</p>
+      </div>
+
+      <h2>Bracket Features</h2>
+
+      <div class="card">
+        <div class="card-title">Vegas Spreads &amp; Game Times</div>
+        <p>Every Round of 64 matchup shows the Vegas point spread and the game date, tip time (MST), and TV channel directly on the bracket card.</p>
       </div>
 
       <div class="card">
-        <div class="card-title">Win %</div>
-        <p>The number shown next to each team name in the bracket. This is that team's calculated probability of winning that specific matchup, based on the blended model described above.</p>
+        <div class="card-title">Auto-Fill</div>
+        <p><strong>Auto-Fill Favorites</strong> picks the higher-probability team in every game. <strong>Auto-Fill w/ Upsets</strong> uses weighted coin flips so some underdogs win, creating a more realistic bracket. Both respect all model weights, injuries, and round adjustments.</p>
       </div>
 
-      <h2>Championship Title Score</h2>
-      <p>A 0-100 score measuring how well a team matches the profile of past champions. It's calculated from:</p>
-      <ul>
-        <li><strong>AdjEM</strong> (up to 25 pts) &mdash; Champions typically have 25+ AdjEM</li>
-        <li><strong>Defense</strong> (up to 20 pts) &mdash; Elite defense under 92 AdjD</li>
-        <li><strong>Free throw %</strong> (up to 15 pts) &mdash; 76%+ FT shooting for close games</li>
-        <li><strong>Seed</strong> (up to 15 pts) &mdash; Seeds 1-2 have the best paths</li>
-        <li><strong>Experience</strong> (up to 15 pts) &mdash; Veteran rosters with tournament experience</li>
-        <li><strong>Turnover rate</strong> (up to 10 pts) &mdash; Low-turnover teams are more consistent</li>
-      </ul>
-      <p>A score of 70+ indicates a legitimate title contender. 45-69 is a potential Final Four team. Below 45 means a deep run is unlikely but not impossible.</p>
+      <div class="card">
+        <div class="card-title">Customize Model</div>
+        <p>Adjust any of the 12 stat weights from 0-100 using sliders. Changes immediately affect all predictions, auto-fill results, and newly generated sim brackets. Reset to defaults anytime.</p>
+      </div>
+
+      <h2>Leaderboard &amp; Sim Brackets</h2>
+
+      <div class="card">
+        <div class="card-title">Sim Brackets</div>
+        <p>Generate thousands of simulated brackets using probability-weighted coin flips from the model. Each sim is unique. Use them to see which teams the model likes most (championship win rates, Final Four rates, Elite 8 rates), and to compete against on the leaderboard. Sims are stored locally on your device.</p>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Scoring</div>
+        <p>ESPN standard scoring: R64 = 1 pt, R32 = 2, Sweet 16 = 4, Elite 8 = 8, Final Four = 16, Championship = 32. Max possible = 192. Scoring only runs once game results are entered.</p>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Perfect Bracket Tracking</div>
+        <p>Two columns track bracket survival: <strong>Perfect?</strong> (Yes/No) and <strong>Busted In</strong> (the round of the first wrong pick). Watch how many of your sims stay alive as results come in.</p>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Search &amp; Filter</div>
+        <p>Search brackets by name, champion, or any team in the picks. Use the champion dropdown to filter to brackets where a specific team wins it all. Click <strong>View</strong> on any bracket to load it into the bracket tab without losing your own picks.</p>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Sim Stats</div>
+        <p>Automatically calculated from all your sims: championship win rates, Final Four appearance rates, Elite 8 rates, unique bracket count, unique Final Four combinations, and number of different champions. Bar charts with hover highlights.</p>
+      </div>
+
+      <h2>Cloud Sync</h2>
+      <p>Human-submitted brackets and game results sync across all devices via Firebase. Submit a bracket on your phone, see it on your desktop. Enter game results on any device, scores update everywhere in real-time. Sim brackets stay local to each device. Look for <strong>"Cloud sync active"</strong> on the bracket tab to confirm the connection.</p>
 
       <h2>Using the Tabs</h2>
 
       <h3>Bracket</h3>
-      <p>Click on a team to pick them as the winner. They'll advance to the next round automatically. If you change an earlier pick, later rounds that depended on it will clear. Use <strong>Auto-Fill Favorites</strong> to let the model pick every game, or <strong>Auto-Fill w/ Upsets</strong> to simulate a realistic bracket with some upsets sprinkled in. Use <strong>Customize Model</strong> to adjust stat weights — crank up 3PT% or defense if you think those matter more, dial down seed history if you want a pure analytics pick. Your picks are saved automatically in your browser.</p>
+      <p>Click a team to pick them. They advance automatically. Change an earlier pick and later rounds clear. Shows Vegas spreads, game times (MST), and TV channels for Round of 64. Your picks save automatically.</p>
 
       <h3>Matchup Analyzer</h3>
-      <p>Pick any two teams to see a detailed head-to-head comparison. Shows the predicted winner, win probability, side-by-side stat bars, which factors favor which team, and an upset alert if multiple red flags are firing. Click <strong>Analyze</strong> under any bracket matchup to jump straight here with those teams loaded.</p>
+      <p>Head-to-head comparison of any two teams. Shows predicted winner, win probability, stat-by-stat bars, upset factors, and championship viability scores. Click <strong>Analyze</strong> under any bracket matchup to jump here.</p>
 
       <h3>Upset Alerts</h3>
-      <p>A ranked list of every matchup sorted by upset likelihood. Shows the upset probability, seed gap, efficiency gap, and which specific indicators are triggering. Filter by round. Great for identifying the 5-vs-12 and 7-vs-10 games where upsets are most likely.</p>
+      <p>Every matchup ranked by upset likelihood with probability, seed gap, efficiency gap, and specific triggering indicators. Filter by round.</p>
 
       <h3>Team Data</h3>
-      <p>A sortable, searchable table of all 64 tournament teams with every stat. Click column headers to sort. Use the search bar to filter by name, or the dropdown to filter by region. You can edit any team's stats individually, or paste in bulk data (CSV/tab-separated) to update everything at once. Hit <strong>Export Picks</strong> to copy your full bracket to clipboard.</p>
+      <p>Sortable, searchable table of all 68 teams with every stat including Last 10 AdjEM, state, and record. Edit individual stats or paste bulk data. Export picks to clipboard.</p>
+
+      <h3>Leaderboard</h3>
+      <p>Merged view of human submissions (synced via Firebase) and local sim brackets. Search, filter by champion, paginate through results. Enter game results (admin) to trigger scoring. View any bracket without losing your own.</p>
 
       <h2>Data Source</h2>
-      <p>All data is sourced from <strong>Barttorvik</strong> (barttorvik.com). Efficiency metrics (AdjO, AdjD, AdjT) and strength of schedule come from Barttorvik's team ratings. Shooting stats (3PT%, FT%), turnover rate, offensive rebound rate, and experience are aggregated from individual player data across every roster, weighted by minutes played. Opponent 3PT% is computed from actual game box scores across the full season. Seed matchup history covers every NCAA tournament game from 1985-2025. All stats can be fine-tuned in the Team Data tab.</p>
+      <p>All team data sourced from <strong>Barttorvik</strong> (barttorvik.com) &mdash; one of the most respected advanced stats sites in college basketball. Efficiency metrics, shooting stats, turnover rates, rebounding, experience, and Last 10 trends are all from Barttorvik's 2025-26 ratings. Seed history covers 1985-2025 (41 tournaments). Vegas spreads from ESPN/DraftKings. Game times from NCAA.com.</p>
 
     </div>
   </div>
