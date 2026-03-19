@@ -960,6 +960,46 @@ const VEGAS_SPREADS = {
   "Houston vs Idaho": -23.5,
 };
 
+// Game times: key = "Team1 vs Team2", value = { date, time (MST), ch }
+const GAME_TIMES = {
+  "Duke vs Siena": { date: "Thu 3/19", time: "12:50p", ch: "CBS" },
+  "Ohio State vs TCU": { date: "Thu 3/19", time: "10:15a", ch: "CBS" },
+  "St. John's vs Northern Iowa": { date: "Fri 3/20", time: "5:10p", ch: "CBS" },
+  "Kansas vs Cal Baptist": { date: "Fri 3/20", time: "7:45p", ch: "CBS" },
+  "Louisville vs South Florida": { date: "Thu 3/19", time: "11:30a", ch: "TNT" },
+  "Michigan State vs N. Dakota State": { date: "Thu 3/19", time: "2:05p", ch: "TNT" },
+  "UCLA vs UCF": { date: "Fri 3/20", time: "5:25p", ch: "TBS" },
+  "UConn vs Furman": { date: "Fri 3/20", time: "8:00p", ch: "TBS" },
+  "Arizona vs Long Island": { date: "Fri 3/20", time: "11:35a", ch: "TNT" },
+  "Villanova vs Utah State": { date: "Fri 3/20", time: "2:10p", ch: "TNT" },
+  "Wisconsin vs High Point": { date: "Thu 3/19", time: "11:50a", ch: "TBS" },
+  "Arkansas vs Hawaii": { date: "Thu 3/19", time: "2:25p", ch: "TBS" },
+  "BYU vs Texas": { date: "Thu 3/19", time: "5:25p", ch: "TBS" },
+  "Gonzaga vs Kennesaw State": { date: "Thu 3/19", time: "8:00p", ch: "TNT" },
+  "Miami FL vs Missouri": { date: "Fri 3/20", time: "8:10p", ch: "truTV" },
+  "Purdue vs Queens": { date: "Fri 3/20", time: "5:35p", ch: "truTV" },
+  "Michigan vs Howard": { date: "Thu 3/19", time: "5:10p", ch: "CBS" },
+  "Georgia vs Saint Louis": { date: "Thu 3/19", time: "7:45p", ch: "CBS" },
+  "Texas Tech vs Akron": { date: "Fri 3/20", time: "10:40a", ch: "truTV" },
+  "Alabama vs Hofstra": { date: "Fri 3/20", time: "1:15p", ch: "truTV" },
+  "Tennessee vs Miami OH": { date: "Fri 3/20", time: "2:25p", ch: "TBS" },
+  "Virginia vs Wright State": { date: "Fri 3/20", time: "11:50a", ch: "TBS" },
+  "Kentucky vs Santa Clara": { date: "Fri 3/20", time: "10:15a", ch: "CBS" },
+  "Iowa State vs Tennessee State": { date: "Fri 3/20", time: "12:50p", ch: "CBS" },
+  "Florida vs Prairie View A&M": { date: "Fri 3/20", time: "7:25p", ch: "TNT" },
+  "Clemson vs Iowa": { date: "Fri 3/20", time: "4:50p", ch: "TNT" },
+  "Vanderbilt vs McNeese": { date: "Thu 3/19", time: "1:15p", ch: "truTV" },
+  "Nebraska vs Troy": { date: "Thu 3/19", time: "10:40a", ch: "truTV" },
+  "North Carolina vs VCU": { date: "Thu 3/19", time: "4:50p", ch: "TNT" },
+  "Illinois vs Penn": { date: "Thu 3/19", time: "7:25p", ch: "TNT" },
+  "Saint Mary's vs Texas A&M": { date: "Thu 3/19", time: "5:35p", ch: "truTV" },
+  "Houston vs Idaho": { date: "Thu 3/19", time: "8:10p", ch: "truTV" },
+};
+
+function getGameTime(t1, t2) {
+  return GAME_TIMES[`${t1} vs ${t2}`] || GAME_TIMES[`${t2} vs ${t1}`] || null;
+}
+
 function getSpread(team1Name, team2Name) {
   const key1 = `${team1Name} vs ${team2Name}`;
   const key2 = `${team2Name} vs ${team1Name}`;
@@ -1648,7 +1688,12 @@ function renderMatchupHTML(matchup, region, round, idx, side) {
     pct2 = Math.round((1 - pred.prob) * 100) + '%';
   }
 
-  const roundLabel = ['Round of 64', 'Round of 32', 'Sweet 16', 'Elite 8'][round];
+  let roundLabel = ['Round of 64', 'Round of 32', 'Sweet 16', 'Elite 8'][round];
+  // Replace R64 label with game time
+  if (round === 0 && t1 && t2) {
+    const gt = getGameTime(t1.name, t2.name);
+    if (gt) roundLabel = `${gt.date} ${gt.time} MST &bull; ${gt.ch}`;
+  }
   const analyzeLink = (t1 && t2) ? `<span class="analyze-link" data-team-a="${t1.name}" data-team-b="${t2.name}">&bull; Analyze</span>` : '';
   let spreadLabel = '';
   if (round === 0 && t1 && t2) {
