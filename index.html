@@ -117,6 +117,12 @@ header p { color: var(--text-dim); font-size: 12px; margin-top: 4px; }
 .team-slot:hover { background: rgba(255,255,255,.03); }
 .team-slot.picked { background: var(--green-dim); }
 .team-slot.picked .team-name { color: var(--green); font-weight: 600; }
+.team-slot.pick-correct { background: rgba(63,185,80,.12); }
+.team-slot.pick-correct .team-name { color: #3fb950; font-weight: 600; }
+.team-slot.pick-correct .pick-check { background: #3fb950; border-color: #3fb950; color: #fff; }
+.team-slot.pick-wrong { background: rgba(248,81,73,.08); }
+.team-slot.pick-wrong .team-name { color: #f85149; text-decoration: line-through; font-weight: 600; }
+.team-slot.pick-wrong .pick-check { background: #f85149; border-color: #f85149; color: #fff; }
 .team-slot .seed { color: var(--text-dim); font-weight: 700; font-size: 11px; min-width: 16px; }
 .team-slot .team-name { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 12px; font-weight: 500; }
 .team-slot .win-pct { font-size: 11px; color: var(--text-dim); font-weight: 600; min-width: 28px; text-align: right; }
@@ -1750,6 +1756,13 @@ function renderMatchupHTML(matchup, region, round, idx, side) {
   const s1Picked = matchup.winner && t1 && matchup.winner.name === t1.name;
   const s2Picked = matchup.winner && t2 && matchup.winner.name === t2.name;
 
+  // Check actual results for this game
+  const gameKey = `${region}_R${round}_G${idx}`;
+  const actual = actualWinners[gameKey];
+  let s1Result = '', s2Result = '', s1Icon = '', s2Icon = '';
+  if (actual && s1Picked) { s1Result = (t1.name === actual) ? ' pick-correct' : ' pick-wrong'; s1Icon = (t1.name === actual) ? '&#10003;' : '&#10007;'; }
+  if (actual && s2Picked) { s2Result = (t2.name === actual) ? ' pick-correct' : ' pick-wrong'; s2Icon = (t2.name === actual) ? '&#10003;' : '&#10007;'; }
+
   // Win probabilities
   let pct1 = '', pct2 = '';
   if (t1 && t2) {
@@ -1775,11 +1788,11 @@ function renderMatchupHTML(matchup, region, round, idx, side) {
   }
 
   return `<div class="matchup" data-region="${region}" data-round="${round}" data-idx="${idx}">
-    <div class="team-slot${s1Picked ? ' picked' : ''}${!t1 ? ' empty' : ''} bracket-team" data-region="${region}" data-round="${round}" data-idx="${idx}" data-slot="1">
-      ${t1 ? `<span class="seed">${t1.seed}</span><span class="team-name">${t1.name}</span><span class="win-pct">${pct1}</span><div class="pick-check">${s1Picked ? '&#10003;' : ''}</div>` : '<span style="color:var(--text-muted);font-size:10px;">TBD</span>'}
+    <div class="team-slot${s1Picked ? ' picked' : ''}${s1Result}${!t1 ? ' empty' : ''} bracket-team" data-region="${region}" data-round="${round}" data-idx="${idx}" data-slot="1">
+      ${t1 ? `<span class="seed">${t1.seed}</span><span class="team-name">${t1.name}</span><span class="win-pct">${pct1}</span><div class="pick-check">${s1Icon || (s1Picked ? '&#10003;' : '')}</div>` : '<span style="color:var(--text-muted);font-size:10px;">TBD</span>'}
     </div>
-    <div class="team-slot${s2Picked ? ' picked' : ''}${!t2 ? ' empty' : ''} bracket-team" data-region="${region}" data-round="${round}" data-idx="${idx}" data-slot="2">
-      ${t2 ? `<span class="seed">${t2.seed}</span><span class="team-name">${t2.name}</span><span class="win-pct">${pct2}</span><div class="pick-check">${s2Picked ? '&#10003;' : ''}</div>` : '<span style="color:var(--text-muted);font-size:10px;">TBD</span>'}
+    <div class="team-slot${s2Picked ? ' picked' : ''}${s2Result}${!t2 ? ' empty' : ''} bracket-team" data-region="${region}" data-round="${round}" data-idx="${idx}" data-slot="2">
+      ${t2 ? `<span class="seed">${t2.seed}</span><span class="team-name">${t2.name}</span><span class="win-pct">${pct2}</span><div class="pick-check">${s2Icon || (s2Picked ? '&#10003;' : '')}</div>` : '<span style="color:var(--text-muted);font-size:10px;">TBD</span>'}
     </div>
     <div class="matchup-footer"><span class="matchup-round-label">${roundLabel}</span>${spreadLabel}${analyzeLink}</div>
   </div>`;
@@ -1809,6 +1822,13 @@ function renderCenterMatchup(m, type, idx, title, isChamp) {
   const t1Picked = m.winner && m.team1 && m.winner.name === m.team1.name;
   const t2Picked = m.winner && m.team2 && m.winner.name === m.team2.name;
 
+  // Check actual results
+  const gameKey = type === 'ff' ? `FF_${idx}` : 'Championship';
+  const actual = actualWinners[gameKey];
+  let t1Result = '', t2Result = '', t1Icon = '', t2Icon = '';
+  if (actual && t1Picked) { t1Result = (m.team1.name === actual) ? ' pick-correct' : ' pick-wrong'; t1Icon = (m.team1.name === actual) ? '&#10003;' : '&#10007;'; }
+  if (actual && t2Picked) { t2Result = (m.team2.name === actual) ? ' pick-correct' : ' pick-wrong'; t2Icon = (m.team2.name === actual) ? '&#10003;' : '&#10007;'; }
+
   let pct1 = '', pct2 = '';
   if (m.team1 && m.team2) {
     const pred = predictMatchup(m.team1, m.team2);
@@ -1817,11 +1837,11 @@ function renderCenterMatchup(m, type, idx, title, isChamp) {
   }
 
   return `<div class="center-matchup${isChamp ? ' championship-matchup' : ''}" data-center-type="${type}" data-center-idx="${idx}">
-    <div class="team-slot${t1Picked ? ' picked' : ''} center-team" data-type="${type}" data-idx="${idx}" data-slot="1">
-      ${m.team1 ? `<span class="seed">${m.team1.seed}</span><span class="team-name">${m.team1.name}</span><span class="win-pct">${pct1}</span><div class="pick-check">${t1Picked ? '&#10003;' : ''}</div>` : '<span style="color:var(--text-muted);font-size:10px;">TBD</span>'}
+    <div class="team-slot${t1Picked ? ' picked' : ''}${t1Result} center-team" data-type="${type}" data-idx="${idx}" data-slot="1">
+      ${m.team1 ? `<span class="seed">${m.team1.seed}</span><span class="team-name">${m.team1.name}</span><span class="win-pct">${pct1}</span><div class="pick-check">${t1Icon || (t1Picked ? '&#10003;' : '')}</div>` : '<span style="color:var(--text-muted);font-size:10px;">TBD</span>'}
     </div>
-    <div class="team-slot${t2Picked ? ' picked' : ''} center-team" data-type="${type}" data-idx="${idx}" data-slot="2">
-      ${m.team2 ? `<span class="seed">${m.team2.seed}</span><span class="team-name">${m.team2.name}</span><span class="win-pct">${pct2}</span><div class="pick-check">${t2Picked ? '&#10003;' : ''}</div>` : '<span style="color:var(--text-muted);font-size:10px;">TBD</span>'}
+    <div class="team-slot${t2Picked ? ' picked' : ''}${t2Result} center-team" data-type="${type}" data-idx="${idx}" data-slot="2">
+      ${m.team2 ? `<span class="seed">${m.team2.seed}</span><span class="team-name">${m.team2.name}</span><span class="win-pct">${pct2}</span><div class="pick-check">${t2Icon || (t2Picked ? '&#10003;' : '')}</div>` : '<span style="color:var(--text-muted);font-size:10px;">TBD</span>'}
     </div>
     <div class="matchup-label">${title}</div>
   </div>`;
