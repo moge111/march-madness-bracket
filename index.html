@@ -923,6 +923,51 @@ const TEAM_VENUE = {
   "Miami FL":"St. Louis","Missouri":"St. Louis","Purdue":"St. Louis","Queens":"St. Louis"
 };
 
+// Vegas spreads for R64 (positive = underdog, negative = favorite)
+// Key format: "FavoriteName" → spread value (always negative for favorite)
+const VEGAS_SPREADS = {
+  "Duke vs Siena": -28.5,
+  "Ohio State vs TCU": -2.5,
+  "St. John's vs Northern Iowa": -10.5,
+  "Kansas vs Cal Baptist": -14.5,
+  "Louisville vs South Florida": -4.5,
+  "Michigan State vs N. Dakota State": -16.5,
+  "UCLA vs UCF": -5.5,
+  "UConn vs Furman": -20.5,
+  "Arizona vs Long Island": -30.5,
+  "Villanova vs Utah State": 1.5,
+  "Wisconsin vs High Point": -10.5,
+  "Arkansas vs Hawaii": -15.5,
+  "BYU vs Texas": -1.5,
+  "Gonzaga vs Kennesaw State": -20.5,
+  "Miami FL vs Missouri": -1.5,
+  "Purdue vs Queens": -25.5,
+  "Michigan vs Howard": -31.5,
+  "Georgia vs Saint Louis": -1.5,
+  "Texas Tech vs Akron": -7.5,
+  "Alabama vs Hofstra": -11.5,
+  "Tennessee vs Miami OH": -12.5,
+  "Virginia vs Wright State": -18.5,
+  "Kentucky vs Santa Clara": -3.5,
+  "Iowa State vs Tennessee State": -24.5,
+  "Florida vs Prairie View A&M": -27.5,
+  "Clemson vs Iowa": 2.5,
+  "Vanderbilt vs McNeese": -11.5,
+  "Nebraska vs Troy": -12.5,
+  "North Carolina vs VCU": -2.5,
+  "Illinois vs Penn": -24.5,
+  "Saint Mary's vs Texas A&M": -3.5,
+  "Houston vs Idaho": -23.5,
+};
+
+function getSpread(team1Name, team2Name) {
+  const key1 = `${team1Name} vs ${team2Name}`;
+  const key2 = `${team2Name} vs ${team1Name}`;
+  if (VEGAS_SPREADS[key1] !== undefined) return { fav: team1Name, spread: VEGAS_SPREADS[key1] };
+  if (VEGAS_SPREADS[key2] !== undefined) return { fav: team2Name, spread: VEGAS_SPREADS[key2] };
+  return null;
+}
+
 function proximityBoost(team, round) {
   if (!team.state || round > 1) return 0; // only R64 and R32
   const venue = TEAM_VENUE[team.name];
@@ -1605,6 +1650,14 @@ function renderMatchupHTML(matchup, region, round, idx, side) {
 
   const roundLabel = ['Round of 64', 'Round of 32', 'Sweet 16', 'Elite 8'][round];
   const analyzeLink = (t1 && t2) ? `<span class="analyze-link" data-team-a="${t1.name}" data-team-b="${t2.name}">&bull; Analyze</span>` : '';
+  let spreadLabel = '';
+  if (round === 0 && t1 && t2) {
+    const sp = getSpread(t1.name, t2.name);
+    if (sp) {
+      const spreadStr = sp.spread > 0 ? `${sp.fav} +${sp.spread}` : `${sp.fav} ${sp.spread}`;
+      spreadLabel = `<span style="font-size:8px;color:var(--accent2);letter-spacing:.3px;font-weight:500;">${spreadStr}</span>`;
+    }
+  }
 
   return `<div class="matchup" data-region="${region}" data-round="${round}" data-idx="${idx}">
     <div class="team-slot${s1Picked ? ' picked' : ''}${!t1 ? ' empty' : ''} bracket-team" data-region="${region}" data-round="${round}" data-idx="${idx}" data-slot="1">
@@ -1613,7 +1666,7 @@ function renderMatchupHTML(matchup, region, round, idx, side) {
     <div class="team-slot${s2Picked ? ' picked' : ''}${!t2 ? ' empty' : ''} bracket-team" data-region="${region}" data-round="${round}" data-idx="${idx}" data-slot="2">
       ${t2 ? `<span class="seed">${t2.seed}</span><span class="team-name">${t2.name}</span><span class="win-pct">${pct2}</span><div class="pick-check">${s2Picked ? '&#10003;' : ''}</div>` : '<span style="color:var(--text-muted);font-size:10px;">TBD</span>'}
     </div>
-    <div class="matchup-footer"><span class="matchup-round-label">${roundLabel}</span>${analyzeLink}</div>
+    <div class="matchup-footer"><span class="matchup-round-label">${roundLabel}</span>${spreadLabel}${analyzeLink}</div>
   </div>`;
 }
 
