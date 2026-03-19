@@ -3167,6 +3167,50 @@ function filterLeaderboard() {
   _renderLbPage();
 }
 
+function updatePerfectSummary() {
+  const el = document.getElementById('lb-perfect-summary');
+  if (!el || !_lbScored.length) return;
+  const hasResults = _lbScored.some(s => s.correct > 0 || s.wrong > 0);
+  if (!hasResults) { el.innerHTML = ''; return; }
+  const perfect = _lbScored.filter(s => s.wrong === 0 && s.correct > 0).length;
+  const total = _lbScored.length;
+  const pct = (perfect / total * 100).toFixed(2);
+  const bustedR64 = _lbScored.filter(s => s.firstWrongRound === 0).length;
+  const bustedR32 = _lbScored.filter(s => s.firstWrongRound === 1).length;
+  const bustedS16 = _lbScored.filter(s => s.firstWrongRound === 2).length;
+  const bustedE8 = _lbScored.filter(s => s.firstWrongRound === 3).length;
+  el.innerHTML = `<div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:12px;">
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 16px;text-align:center;">
+      <div style="font-size:20px;font-weight:700;color:var(--green);">${perfect.toLocaleString()}</div>
+      <div style="font-size:10px;color:var(--text-dim);">Still Perfect</div>
+    </div>
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 16px;text-align:center;">
+      <div style="font-size:20px;font-weight:700;color:var(--text);">${pct}%</div>
+      <div style="font-size:10px;color:var(--text-dim);">of ${total.toLocaleString()}</div>
+    </div>
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 16px;text-align:center;">
+      <div style="font-size:20px;font-weight:700;color:var(--red);">${(total - perfect).toLocaleString()}</div>
+      <div style="font-size:10px;color:var(--text-dim);">Busted</div>
+    </div>
+    ${bustedR64 ? `<div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 16px;text-align:center;">
+      <div style="font-size:16px;font-weight:600;color:var(--text-dim);">${bustedR64.toLocaleString()}</div>
+      <div style="font-size:10px;color:var(--text-dim);">Busted R64</div>
+    </div>` : ''}
+    ${bustedR32 ? `<div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 16px;text-align:center;">
+      <div style="font-size:16px;font-weight:600;color:var(--text-dim);">${bustedR32.toLocaleString()}</div>
+      <div style="font-size:10px;color:var(--text-dim);">Busted R32</div>
+    </div>` : ''}
+    ${bustedS16 ? `<div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 16px;text-align:center;">
+      <div style="font-size:16px;font-weight:600;color:var(--accent2);">${bustedS16.toLocaleString()}</div>
+      <div style="font-size:10px;color:var(--text-dim);">Busted S16</div>
+    </div>` : ''}
+    ${bustedE8 ? `<div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 16px;text-align:center;">
+      <div style="font-size:16px;font-weight:600;color:var(--accent2);">${bustedE8.toLocaleString()}</div>
+      <div style="font-size:10px;color:var(--text-dim);">Busted E8</div>
+    </div>` : ''}
+  </div>`;
+}
+
 function populateChampFilter() {
   const sel = document.getElementById('lb-champ-filter');
   if (!sel || !_lbScored.length) return;
@@ -3272,7 +3316,7 @@ async function renderLeaderboard() {
     const totalActual = Object.keys(actualWinners).length;
     const summaryEl = document.getElementById('lb-results-summary');
     if (totalActual > 0) {
-      summaryEl.innerHTML = `<div style="text-align:center;margin-bottom:12px;font-size:12px;color:var(--text-dim);">${totalActual} game results entered &bull; ESPN scoring: R64=1, R32=2, S16=4, E8=8, FF=16, Champ=32</div>`;
+      summaryEl.innerHTML = `<div style="text-align:center;margin-bottom:12px;font-size:12px;color:var(--text-dim);">${totalActual} game results entered &bull; ESPN scoring: R64=1, R32=2, S16=4, E8=8, FF=16, Champ=32</div><div id="lb-perfect-summary"></div>`;
     } else {
       summaryEl.innerHTML = `<div style="text-align:center;margin-bottom:12px;font-size:12px;color:var(--text-dim);">No results yet. Enter results manually to start scoring. &bull; ESPN scoring: R64=1, R32=2, S16=4, E8=8, FF=16, Champ=32</div>`;
     }
@@ -3284,6 +3328,7 @@ async function renderLeaderboard() {
       _lbFiltered = null;
       loadingEl.style.display = 'none';
       populateChampFilter();
+      updatePerfectSummary();
       _renderLbPage();
       return;
     }
@@ -3296,6 +3341,7 @@ async function renderLeaderboard() {
       _lbFiltered = null;
       loadingEl.style.display = 'none';
       populateChampFilter();
+      updatePerfectSummary();
       _renderLbPage();
       return;
     }
