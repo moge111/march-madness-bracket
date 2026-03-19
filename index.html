@@ -3044,6 +3044,15 @@ async function renderLeaderboard() {
       summaryEl.innerHTML = `<div style="text-align:center;margin-bottom:12px;font-size:12px;color:var(--text-dim);">No results yet. Enter results manually to start scoring. &bull; ESPN scoring: R64=1, R32=2, S16=4, E8=8, FF=16, Champ=32</div>`;
     }
 
+    // Skip scoring entirely if no results entered yet
+    if (totalActual === 0) {
+      _lbScored = submissions.map(s => ({ ...s, score: 0, correct: 0, wrong: 0, pending: 63, details: [], champion: s.picks?.champion || '—', firstWrongRound: -1, perfectThru: '—' }));
+      _lbPage = 0;
+      loadingEl.style.display = 'none';
+      _renderLbPage();
+      return;
+    }
+
     // For small sets, score synchronously
     if (submissions.length <= 500) {
       _lbScored = submissions.map(s => ({ ...s, ...scoreBracket(s) }));
