@@ -3147,7 +3147,29 @@ function _renderSimStatsInner(container, sims) {
 let _lbPage = 0;
 let _lbScored = [];
 let _lbFiltered = null; // null = no filter active
+let _lbScoreCache = null;
 const LB_PAGE_SIZE = 100;
+
+// Score cache: saves scores so we don't re-score 500K brackets on every refresh
+function _saveLbScoreCache(hash) {
+  try {
+    _lbScoreCache = _lbScored.map(s => ({ score: s.score, correct: s.correct, wrong: s.wrong, pending: s.pending, firstWrongRound: s.firstWrongRound, perfectThru: s.perfectThru, champion: s.champion }));
+    localStorage.setItem('mm_score_cache_hash', hash);
+    // Store in IndexedDB since localStorage has size limits
+    const tx = simDB.db.transaction('sims', 'readwrite');
+    tx.objectStore('sims').put({ name: '__score_cache__', data: _lbScoreCache });
+  } catch(e) { console.warn('Score cache save failed', e); }
+}
+function _loadLbScoreCache() {
+  return new Promise(resolve => {
+    try {
+      const tx = simDB.db.transaction('sims', 'readonly');
+      const req = tx.objectStore('sims').get('__score_cache__');
+      req.onsuccess = () => { _lbScoreCache = req.result?.data || null; resolve(); };
+      req.onerror = () => { _lbScoreCache = null; resolve(); };
+    } catch(e) { _lbScoreCache = null; resolve(); }
+  });
+}
 
 function filterLeaderboard() {
   const query = (document.getElementById('lb-search')?.value || '').toLowerCase().trim();
@@ -3324,6 +3346,9 @@ async function renderLeaderboard() {
   const loadingEl = document.getElementById('lb-loading');
   const progressEl = document.getElementById('lb-loading-progress');
 
+  // Load score cache from IndexedDB
+  if (!_lbScoreCache) await _loadLbScoreCache();
+
   // Load human brackets from Firebase (preferred) or localStorage fallback
   let humanSubs = [];
   if (firebaseReady) {
@@ -3372,6 +3397,22 @@ async function renderLeaderboard() {
       return;
     }
 
+    // Score cache: skip re-scoring if results haven't changed
+    const resultsHash = JSON.stringify(actualWinners);
+    const cachedHash = localStorage.getItem('mm_score_cache_hash');
+    if (cachedHash === resultsHash && _lbScoreCache && _lbScoreCache.length === submissions.length) {
+      // Re-attach cached scores to submissions
+      _lbScored = submissions.map((s, i) => ({ ...s, ..._lbScoreCache[i] }));
+      _lbScored.sort((a, b) => b.score - a.score);
+      _lbPage = 0;
+      _lbFiltered = null;
+      loadingEl.style.display = 'none';
+      populateChampFilter();
+      updatePerfectSummary();
+      _renderLbPage();
+      return;
+    }
+
     // For small sets, score synchronously
     if (submissions.length <= 500) {
       _lbScored = submissions.map(s => ({ ...s, ...scoreBracket(s) }));
@@ -3381,6 +3422,7 @@ async function renderLeaderboard() {
       loadingEl.style.display = 'none';
       populateChampFilter();
       updatePerfectSummary();
+      _saveLbScoreCache(resultsHash);
       _renderLbPage();
       return;
     }
@@ -3412,6 +3454,8 @@ async function renderLeaderboard() {
         _lbFiltered = null;
         loadingEl.style.display = 'none';
         populateChampFilter();
+        updatePerfectSummary();
+        _saveLbScoreCache(resultsHash);
         _renderLbPage();
       }
     }
