@@ -3220,6 +3220,33 @@ function updatePerfectSummary() {
       <div style="font-size:10px;color:var(--text-dim);">Busted E8</div>
     </div>` : ''}
   </div>`;
+
+  // Perfect bracket champions bar chart
+  if (perfect > 0) {
+    const perfectChamps = {};
+    _lbScored.filter(s => s.wrong === 0 && s.correct > 0).forEach(s => {
+      if (s.champion) perfectChamps[s.champion] = (perfectChamps[s.champion] || 0) + 1;
+    });
+    const sorted = Object.entries(perfectChamps).sort((a, b) => b[1] - a[1]);
+    const maxC = sorted.length ? sorted[0][1] : 1;
+    function miniBar(entries, mx, tot) {
+      return entries.map(([team, count]) => {
+        const pct = (count / tot * 100).toFixed(1);
+        const barW = (count / mx * 100).toFixed(1);
+        return `<div style="display:flex;align-items:center;gap:6px;margin-bottom:3px;padding:2px 4px;border-radius:4px;cursor:default;transition:background .1s;" onmouseenter="this.style.background='rgba(255,255,255,.07)'" onmouseleave="this.style.background='transparent'">
+          <span style="min-width:100px;font-size:12px;font-weight:600;color:var(--text);white-space:nowrap;text-align:right;">${team}</span>
+          <span style="font-size:11px;color:var(--text-dim);white-space:nowrap;min-width:75px;">${count.toLocaleString()} (${pct}%)</span>
+          <div style="flex:1;background:var(--surface);border-radius:4px;overflow:hidden;height:20px;">
+            <div style="width:${barW}%;background:var(--green);height:100%;border-radius:4px;min-width:2px;"></div>
+          </div>
+        </div>`;
+      }).join('');
+    }
+    el.innerHTML += `<div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:16px;margin-top:12px;">
+      <h4 style="font-size:12px;color:var(--green);margin:0 0 8px;">✅ Champions of Still-Perfect Brackets</h4>
+      ${miniBar(sorted, maxC, perfect)}
+    </div>`;
+  }
 }
 
 function populateChampFilter() {
