@@ -2713,7 +2713,8 @@ function scoreBracket(submission) {
 
   // perfectThru: label for how far the bracket stayed perfect
   const perfectLabels = ['None', 'R32', 'S16', 'E8', 'FF', 'Champ', 'Perfect'];
-  const perfectThru = firstWrongRound < 0 ? (pending > 0 ? 'So far...' : 'Perfect!') : (firstWrongRound === 0 ? 'None' : perfectLabels[firstWrongRound]);
+  const hasResults = correct > 0 || wrong > 0;
+  const perfectThru = !hasResults ? '—' : firstWrongRound < 0 ? (pending > 0 ? 'Perfect ✓' : 'Perfect!') : (firstWrongRound === 0 ? 'R64' : perfectLabels[firstWrongRound]);
 
   return { score, correct, wrong, pending, details, champion: picks.champion, firstWrongRound, perfectThru };
 }
