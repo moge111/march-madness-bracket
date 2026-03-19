@@ -745,6 +745,13 @@ header p { color: var(--text-dim); font-size: 12px; margin-top: 4px; }
 
 <script>
 // ============================================================
+// BRACKET LOCK DEADLINE
+// ============================================================
+// March 19, 2026 10:00 AM MST = March 19, 2026 17:00 UTC
+const LOCK_DEADLINE = new Date('2026-03-19T17:00:00Z');
+function isBracketLocked() { return Date.now() >= LOCK_DEADLINE.getTime(); }
+
+// ============================================================
 // FIREBASE — cross-device sync
 // ============================================================
 let db = null;
@@ -2434,6 +2441,7 @@ function countPicks() {
 }
 
 async function submitBracket() {
+  if (isBracketLocked()) { alert('Brackets are locked! The submission deadline was March 19 at 10:00 AM MST.'); return; }
   const nameInput = document.getElementById('submit-name');
   const name = nameInput.value.trim();
   if (!name) { alert('Please enter your name.'); nameInput.focus(); return; }
@@ -2807,6 +2815,7 @@ function generateSimBrackets(count) {
 }
 
 function promptSimBrackets() {
+  if (isBracketLocked()) { alert('Brackets are locked! No new brackets can be generated after March 19 at 10:00 AM MST.'); return; }
   const input = prompt('How many simulated brackets to generate?', '1000');
   if (!input) return;
   const count = parseInt(input);
@@ -3333,6 +3342,18 @@ function init() {
   loadInjuries();
   initInjuryDropdown();
   renderInjuries();
+
+  // Lock brackets after deadline
+  if (isBracketLocked()) {
+    const submitBtn = document.querySelector('[onclick="submitBracket()"]');
+    if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Locked'; submitBtn.style.opacity = '.5'; }
+    const nameInput = document.getElementById('submit-name');
+    if (nameInput) { nameInput.disabled = true; nameInput.placeholder = 'Brackets locked — deadline passed'; }
+    // Disable all sim bracket buttons
+    document.querySelectorAll('[onclick="promptSimBrackets()"]').forEach(btn => {
+      btn.disabled = true; btn.textContent = 'Locked'; btn.style.opacity = '.5';
+    });
+  }
 
   // Firebase real-time listeners
   if (firebaseReady) {
