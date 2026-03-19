@@ -349,6 +349,8 @@ header p { color: var(--text-dim); font-size: 12px; margin-top: 4px; }
   .lb-controls { flex-wrap: wrap; gap: 4px; }
 }
 </style>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 </head>
 <body>
 <div id="app">
@@ -676,6 +678,25 @@ header p { color: var(--text-dim); font-size: 12px; margin-top: 4px; }
 </div>
 
 <script>
+// ============================================================
+// FIREBASE — cross-device sync
+// ============================================================
+let db = null;
+let firebaseReady = false;
+try {
+  firebase.initializeApp({
+    apiKey: "AIzaSyAe2nbNYK2XWAkC0w0l5Jy7hJX168e5zmA",
+    authDomain: "march-madness-bracket-fa4b8.firebaseapp.com",
+    projectId: "march-madness-bracket-fa4b8",
+    storageBucket: "march-madness-bracket-fa4b8.firebasestorage.app",
+    messagingSenderId: "578197514657",
+    appId: "1:578197514657:web:f2eda73d334e0c8fdb03e0",
+    measurementId: "G-GJTBHC88MV"
+  });
+  db = firebase.firestore();
+  firebaseReady = true;
+} catch(e) { console.warn('Firebase init failed, using local-only mode', e); }
+
 // ============================================================
 // INDEXEDDB — sim bracket storage (unlimited size)
 // ============================================================
@@ -2248,31 +2269,53 @@ function countPicks() {
   return count;
 }
 
-function submitBracket() {
+async function submitBracket() {
   const nameInput = document.getElementById('submit-name');
   const name = nameInput.value.trim();
   if (!name) { alert('Please enter your name.'); nameInput.focus(); return; }
   if (countPicks() < 63) { alert(`You have ${countPicks()} of 63 picks. Complete your bracket before submitting.`); return; }
 
+  const entry = { name, picks: serializePicks(), timestamp: Date.now() };
+
+  if (firebaseReady) {
+    try {
+      // Check for existing submission with same name
+      const snap = await db.collection('submissions').where('name', '==', name).get();
+      if (!snap.empty) {
+        if (!confirm(`"${name}" already submitted. Replace their bracket?`)) return;
+        snap.docs[0].ref.update({ picks: entry.picks, timestamp: entry.timestamp });
+      } else {
+        await db.collection('submissions').add(entry);
+      }
+      nameInput.value = '';
+      alert(`Bracket submitted for ${name}! ☁️ Synced across devices.`);
+      return;
+    } catch(e) { console.warn('Firebase submit failed, falling back to local', e); }
+  }
+  // Fallback: localStorage
   const submissions = JSON.parse(localStorage.getItem('mm_submissions') || '[]');
   const existing = submissions.findIndex(s => s.name.toLowerCase() === name.toLowerCase());
-
   if (existing >= 0) {
     if (!confirm(`"${submissions[existing].name}" already submitted. Replace their bracket?`)) return;
-    submissions[existing] = { name: submissions[existing].name, picks: serializePicks(), timestamp: Date.now() };
+    submissions[existing] = entry;
   } else {
-    submissions.push({ name, picks: serializePicks(), timestamp: Date.now() });
+    submissions.push(entry);
   }
-
   localStorage.setItem('mm_submissions', JSON.stringify(submissions));
   nameInput.value = '';
   alert(`Bracket submitted for ${name}!`);
 }
 
-function deleteBracket(name) {
+async function deleteBracket(name) {
   if (!confirm(`Delete bracket "${name}"?`)) return;
   if (name.match(/^Sim-\d+$/)) {
     simDB.remove(name).then(() => renderLeaderboard());
+  } else if (firebaseReady) {
+    try {
+      const snap = await db.collection('submissions').where('name', '==', name).get();
+      for (const doc of snap.docs) await doc.ref.delete();
+      renderLeaderboard();
+    } catch(e) { console.warn('Firebase delete failed', e); }
   } else {
     let submissions = JSON.parse(localStorage.getItem('mm_submissions') || '[]');
     submissions = submissions.filter(s => s.name !== name);
@@ -2300,8 +2343,20 @@ function bulkDeleteSims() {
 }
 
 async function editBracket(name) {
-  const humanSubs = JSON.parse(localStorage.getItem('mm_submissions') || '[]');
-  let sub = humanSubs.find(s => s.name === name);
+  let sub = null;
+  // Try Firebase first
+  if (firebaseReady) {
+    try {
+      const snap = await db.collection('submissions').where('name', '==', name).get();
+      if (!snap.empty) sub = snap.docs[0].data();
+    } catch(e) {}
+  }
+  // Fallback to localStorage
+  if (!sub) {
+    const humanSubs = JSON.parse(localStorage.getItem('mm_submissions') || '[]');
+    sub = humanSubs.find(s => s.name === name);
+  }
+  // Try sims
   if (!sub) {
     const simSubs = await simDB.getAll();
     sub = simSubs.find(s => s.name === name);
@@ -2365,9 +2420,17 @@ async function editBracket(name) {
   window.scrollTo(0, 0);
 }
 
-function clearSubmissions() {
+async function clearSubmissions() {
   if (!confirm('Delete all submitted brackets (human + sims)?')) return;
   localStorage.removeItem('mm_submissions');
+  if (firebaseReady) {
+    try {
+      const snap = await db.collection('submissions').get();
+      const batch = db.batch();
+      snap.docs.forEach(doc => batch.delete(doc.ref));
+      await batch.commit();
+    } catch(e) { console.warn('Firebase clear failed', e); }
+  }
   simDB.clear().then(() => renderLeaderboard());
 }
 
@@ -2503,6 +2566,9 @@ let actualWinners = JSON.parse(localStorage.getItem('mm_actual_winners') || '{}'
 
 function saveActualWinners() {
   localStorage.setItem('mm_actual_winners', JSON.stringify(actualWinners));
+  if (firebaseReady) {
+    db.collection('config').doc('results').set({ winners: actualWinners }).catch(e => console.warn('Firebase results save failed', e));
+  }
 }
 
 function toggleResultsEntry() {
@@ -2516,7 +2582,8 @@ function toggleResultsEntry() {
 function clearResults() {
   if (!confirm('Clear all entered results?')) return;
   actualWinners = {};
-  saveActualWinners();
+  localStorage.setItem('mm_actual_winners', JSON.stringify(actualWinners));
+  if (firebaseReady) { db.collection('config').doc('results').delete().catch(e => {}); }
   renderResultsEntry();
   renderLeaderboard();
 }
@@ -2768,15 +2835,25 @@ function _renderLbPage() {
   }
 }
 
-function renderLeaderboard() {
-  const humanSubs = JSON.parse(localStorage.getItem('mm_submissions') || '[]');
+async function renderLeaderboard() {
   const body = document.getElementById('lb-body');
   const detailArea = document.getElementById('lb-detail-area');
   const colSpan = window._isAdmin ? 9 : 8;
   const loadingEl = document.getElementById('lb-loading');
   const progressEl = document.getElementById('lb-loading-progress');
 
-  // Merge human brackets (localStorage) + sim brackets (IndexedDB)
+  // Load human brackets from Firebase (preferred) or localStorage fallback
+  let humanSubs = [];
+  if (firebaseReady) {
+    try {
+      const snap = await db.collection('submissions').get();
+      humanSubs = snap.docs.map(d => d.data());
+    } catch(e) { humanSubs = JSON.parse(localStorage.getItem('mm_submissions') || '[]'); }
+  } else {
+    humanSubs = JSON.parse(localStorage.getItem('mm_submissions') || '[]');
+  }
+
+  // Merge human brackets + sim brackets (IndexedDB)
   simDB.getAll().then(simSubs => {
     const submissions = [...humanSubs, ...simSubs];
 
@@ -2868,6 +2945,32 @@ function init() {
   loadInjuries();
   initInjuryDropdown();
   renderInjuries();
+
+  // Firebase real-time listeners
+  if (firebaseReady) {
+    // Sync game results from Firebase on load + real-time
+    db.collection('config').doc('results').onSnapshot(snap => {
+      if (snap.exists) {
+        const remote = snap.data().winners || {};
+        const local = JSON.parse(localStorage.getItem('mm_actual_winners') || '{}');
+        // Merge: remote wins (it's the source of truth for results)
+        if (JSON.stringify(remote) !== JSON.stringify(local)) {
+          actualWinners = remote;
+          localStorage.setItem('mm_actual_winners', JSON.stringify(actualWinners));
+          renderLeaderboard();
+        }
+      }
+    }, e => console.warn('Results listener error', e));
+
+    // Auto-refresh leaderboard when submissions change
+    db.collection('submissions').onSnapshot(() => {
+      renderLeaderboard();
+    }, e => console.warn('Submissions listener error', e));
+
+    // Show sync indicator
+    const banner = document.getElementById('data-banner');
+    if (banner) banner.innerHTML += ' &bull; <span style="color:var(--accent);">☁️ Cloud sync active</span>';
+  }
 
   let resizeTimer;
   window.addEventListener('resize', () => {
