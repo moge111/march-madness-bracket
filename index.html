@@ -2846,7 +2846,7 @@ function generateSimBrackets(count) {
 }
 
 function promptSimBrackets() {
-  if (isBracketLocked()) { alert('Brackets are locked! No new brackets can be generated after March 19 at 10:00 AM MST.'); return; }
+  // Sims are always allowed — lock only applies to human submissions
   const input = prompt('How many simulated brackets to generate?', '1000');
   if (!input) return;
   const count = parseInt(input);
