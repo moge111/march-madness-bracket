@@ -2747,11 +2747,54 @@ function _renderSimStatsInner(container, sims) {
     }
   });
 
+  // Count unique Final Four combos and full bracket hashes
+  const ffCombos = new Set();
+  const bracketHashes = new Set();
+  const e8Counts = {};
+  const s16Counts = {};
+  sims.forEach(s => {
+    const regions = s.picks?.regions || {};
+    // Final Four combo = 4 region winners sorted
+    const ffTeams = [];
+    for (const region of REGIONS) {
+      const picks = regions[region];
+      if (picks && picks.length) ffTeams.push(picks[picks.length - 1]);
+    }
+    ffCombos.add(ffTeams.sort().join('|'));
+    // Simple bracket hash = all picks joined
+    const allPicks = [];
+    for (const region of REGIONS) { if (regions[region]) allPicks.push(...regions[region]); }
+    if (s.picks?.ff) allPicks.push(...s.picks.ff);
+    if (s.picks?.champ) allPicks.push(s.picks.champ);
+    bracketHashes.add(allPicks.join('|'));
+    // Elite 8 teams
+    for (const region of REGIONS) {
+      const picks = regions[region];
+      if (picks && picks.length) {
+        const e8Winner = picks[picks.length - 1]; // last = region winner
+        const e8Loser = picks.length >= 2 ? picks[picks.length - 2] : null; // E8 runner-up
+        if (e8Winner) e8Counts[e8Winner] = (e8Counts[e8Winner] || 0) + 1;
+        // Sweet 16 = teams that won round 2 (indices 8-11 in the 15-pick region array)
+      }
+    }
+    // Sweet 16 winners (picks index 8,9,10,11 in each region's 15-pick array)
+    for (const region of REGIONS) {
+      const picks = regions[region];
+      if (picks && picks.length >= 12) {
+        for (let i = 8; i < 12; i++) {
+          if (picks[i]) s16Counts[picks[i]] = (s16Counts[picks[i]] || 0) + 1;
+        }
+      }
+    }
+  });
+
   const total = sims.length;
   const champSorted = Object.entries(champCounts).sort((a, b) => b[1] - a[1]);
   const ffSorted = Object.entries(ffCounts).sort((a, b) => b[1] - a[1]);
+  const e8Sorted = Object.entries(e8Counts).sort((a, b) => b[1] - a[1]).slice(0, 16);
   const maxChamp = champSorted.length ? champSorted[0][1] : 1;
   const maxFF = ffSorted.length ? ffSorted[0][1] : 1;
+  const maxE8 = e8Sorted.length ? e8Sorted[0][1] : 1;
 
   function barChart(entries, max, total) {
     return entries.map(([team, count]) => {
@@ -2774,13 +2817,31 @@ function _renderSimStatsInner(container, sims) {
         <h3 style="color:var(--accent2);font-size:14px;margin:0;">Simulation Stats <span style="font-weight:400;color:var(--text-dim);font-size:12px;">(${total} brackets)</span></h3>
         <button class="btn" style="font-size:10px;padding:3px 8px;" onclick="this.closest('#sim-stats').style.display='none'">Hide</button>
       </div>
+      <div style="display:flex;gap:16px;margin-bottom:16px;flex-wrap:wrap;">
+        <div style="flex:1;min-width:150px;background:var(--surface);border-radius:8px;padding:12px;text-align:center;">
+          <div style="font-size:22px;font-weight:700;color:var(--accent);">${bracketHashes.size.toLocaleString()}</div>
+          <div style="font-size:10px;color:var(--text-dim);">Unique Brackets</div>
+        </div>
+        <div style="flex:1;min-width:150px;background:var(--surface);border-radius:8px;padding:12px;text-align:center;">
+          <div style="font-size:22px;font-weight:700;color:var(--accent2);">${ffCombos.size.toLocaleString()}</div>
+          <div style="font-size:10px;color:var(--text-dim);">Unique Final Fours</div>
+        </div>
+        <div style="flex:1;min-width:150px;background:var(--surface);border-radius:8px;padding:12px;text-align:center;">
+          <div style="font-size:22px;font-weight:700;color:var(--green);">${champSorted.length}</div>
+          <div style="font-size:10px;color:var(--text-dim);">Different Champions</div>
+        </div>
+      </div>
       <div style="margin-bottom:16px;">
         <h4 style="font-size:12px;color:var(--accent);margin:0 0 8px;">🏆 Championship Wins</h4>
         ${barChart(champSorted, maxChamp, total)}
       </div>
-      <div>
+      <div style="margin-bottom:16px;">
         <h4 style="font-size:12px;color:var(--accent);margin:0 0 8px;">🏀 Final Four Appearances</h4>
         ${barChart(ffSorted, maxFF, total)}
+      </div>
+      <div>
+        <h4 style="font-size:12px;color:var(--accent);margin:0 0 8px;">💪 Elite 8 Appearances</h4>
+        ${barChart(e8Sorted, maxE8, total)}
       </div>
     </div>`;
 }
