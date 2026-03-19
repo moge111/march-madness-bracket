@@ -481,7 +481,7 @@ header p { color: var(--text-dim); font-size: 12px; margin-top: 4px; }
     </div>
     <div style="border-radius:10px;border:1px solid var(--border);overflow-x:auto;">
       <table class="lb-table">
-        <thead><tr><th>#</th><th>Name</th><th>Score</th><th>Correct</th><th>Wrong</th><th>Pending</th><th>Perfect Thru</th><th>Champion</th><th>Submitted</th><th id="lb-edit-col" style="display:none;"></th></tr></thead>
+        <thead><tr><th>#</th><th>Name</th><th>Score</th><th>Correct</th><th>Wrong</th><th>Pending</th><th>Perfect?</th><th>Busted In</th><th>Champion</th><th>Submitted</th><th id="lb-edit-col" style="display:none;"></th></tr></thead>
         <tbody id="lb-body"></tbody>
       </table>
     </div>
@@ -2860,7 +2860,7 @@ function lbPageChange(delta) {
 
 function _renderLbPage() {
   const body = document.getElementById('lb-body');
-  const colSpan = window._isAdmin ? 10 : 9;
+  const colSpan = window._isAdmin ? 11 : 10;
   const start = _lbPage * LB_PAGE_SIZE;
   const pageItems = _lbScored.slice(start, start + LB_PAGE_SIZE);
   const totalPages = Math.ceil(_lbScored.length / LB_PAGE_SIZE);
@@ -2877,7 +2877,8 @@ function _renderLbPage() {
       <td class="lb-correct">${s.correct}</td>
       <td class="lb-wrong">${s.wrong}</td>
       <td class="lb-pending">${s.pending}</td>
-      <td style="color:${s.firstWrongRound < 0 ? 'var(--green)' : s.firstWrongRound >= 2 ? 'var(--accent2)' : 'var(--text-dim)'};font-weight:${s.firstWrongRound < 0 ? '600' : '400'};">${s.perfectThru || '—'}</td>
+      <td style="color:${s.wrong === 0 && s.correct > 0 ? 'var(--green)' : s.wrong > 0 ? 'var(--red)' : 'var(--text-dim)'};font-weight:600;">${s.correct === 0 && s.wrong === 0 ? '—' : s.wrong === 0 ? 'Yes' : 'No'}</td>
+      <td style="color:${s.firstWrongRound >= 2 ? 'var(--accent2)' : 'var(--text-dim)'};">${s.firstWrongRound < 0 ? '—' : ['R64','R32','Sweet 16','Elite 8','Final Four','Championship'][s.firstWrongRound]}</td>
       <td>${s.champion || '—'}</td>
       <td style="font-size:11px;color:var(--text-dim);">${ts}</td>
       ${editBtn}
@@ -2907,7 +2908,7 @@ function _renderLbPage() {
 async function renderLeaderboard() {
   const body = document.getElementById('lb-body');
   const detailArea = document.getElementById('lb-detail-area');
-  const colSpan = window._isAdmin ? 10 : 9;
+  const colSpan = window._isAdmin ? 11 : 10;
   const loadingEl = document.getElementById('lb-loading');
   const progressEl = document.getElementById('lb-loading-progress');
 
