@@ -3230,6 +3230,7 @@ function lbPageChange(delta) {
 }
 
 function _renderLbPage() {
+  updatePerfectSummary();
   const body = document.getElementById('lb-body');
   const colSpan = window._isAdmin ? 11 : 10;
   const data = _lbFiltered || _lbScored;
