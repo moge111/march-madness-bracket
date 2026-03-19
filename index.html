@@ -484,6 +484,13 @@ header p { color: var(--text-dim); font-size: 12px; margin-top: 4px; }
     </div>
     <div style="border-radius:10px;border:1px solid var(--border);overflow-x:auto;">
       <table class="lb-table">
+        <div style="padding:8px 12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+          <input id="lb-search" type="text" placeholder="Search by champion, name, or team..." style="flex:1;min-width:200px;padding:7px 12px;background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:6px;font-size:12px;" oninput="filterLeaderboard()">
+          <select id="lb-champ-filter" style="padding:7px 10px;background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:6px;font-size:11px;" onchange="filterLeaderboard()">
+            <option value="">All Champions</option>
+          </select>
+          <span id="lb-filter-count" style="font-size:11px;color:var(--text-dim);"></span>
+        </div>
         <thead><tr><th>#</th><th>Name</th><th>Score</th><th>Correct</th><th>Wrong</th><th>Pending</th><th>Perfect?</th><th>Busted In</th><th>Champion</th><th>Submitted</th><th></th></tr></thead>
         <tbody id="lb-body"></tbody>
       </table>
@@ -3043,10 +3050,52 @@ function _renderSimStatsInner(container, sims) {
 // Pagination state
 let _lbPage = 0;
 let _lbScored = [];
+let _lbFiltered = null; // null = no filter active
 const LB_PAGE_SIZE = 100;
 
+function filterLeaderboard() {
+  const query = (document.getElementById('lb-search')?.value || '').toLowerCase().trim();
+  const champFilter = document.getElementById('lb-champ-filter')?.value || '';
+
+  if (!query && !champFilter) {
+    _lbFiltered = null;
+  } else {
+    _lbFiltered = _lbScored.filter(s => {
+      if (champFilter && s.champion !== champFilter) return false;
+      if (query) {
+        // Search champion, name, and all picks
+        const haystack = [s.name, s.champion || ''].join(' ').toLowerCase();
+        const picksStr = s.picks ? JSON.stringify(s.picks).toLowerCase() : '';
+        if (!haystack.includes(query) && !picksStr.includes(query)) return false;
+      }
+      return true;
+    });
+  }
+
+  const countEl = document.getElementById('lb-filter-count');
+  if (countEl) {
+    const filtered = _lbFiltered || _lbScored;
+    countEl.textContent = _lbFiltered ? `${filtered.length.toLocaleString()} of ${_lbScored.length.toLocaleString()}` : '';
+  }
+
+  _lbPage = 0;
+  _renderLbPage();
+}
+
+function populateChampFilter() {
+  const sel = document.getElementById('lb-champ-filter');
+  if (!sel || !_lbScored.length) return;
+  const champs = {};
+  _lbScored.forEach(s => { if (s.champion) champs[s.champion] = (champs[s.champion] || 0) + 1; });
+  const sorted = Object.entries(champs).sort((a, b) => b[1] - a[1]);
+  sel.innerHTML = '<option value="">All Champions</option>' + sorted.map(([team, count]) =>
+    `<option value="${team}">${team} (${count.toLocaleString()})</option>`
+  ).join('');
+}
+
 function lbPageChange(delta) {
-  const maxPage = Math.max(0, Math.ceil(_lbScored.length / LB_PAGE_SIZE) - 1);
+  const data = _lbFiltered || _lbScored;
+  const maxPage = Math.max(0, Math.ceil(data.length / LB_PAGE_SIZE) - 1);
   _lbPage = Math.max(0, Math.min(maxPage, _lbPage + delta));
   _renderLbPage();
 }
@@ -3054,9 +3103,10 @@ function lbPageChange(delta) {
 function _renderLbPage() {
   const body = document.getElementById('lb-body');
   const colSpan = window._isAdmin ? 11 : 10;
+  const data = _lbFiltered || _lbScored;
   const start = _lbPage * LB_PAGE_SIZE;
-  const pageItems = _lbScored.slice(start, start + LB_PAGE_SIZE);
-  const totalPages = Math.ceil(_lbScored.length / LB_PAGE_SIZE);
+  const pageItems = data.slice(start, start + LB_PAGE_SIZE);
+  const totalPages = Math.ceil(data.length / LB_PAGE_SIZE);
 
   body.innerHTML = pageItems.map((s, j) => {
     const i = start + j; // global index for rank
@@ -3091,7 +3141,7 @@ function _renderLbPage() {
   const pag = document.getElementById('lb-pagination');
   if (totalPages > 1) {
     pag.style.display = 'flex';
-    document.getElementById('lb-page-info').textContent = `Page ${_lbPage + 1} of ${totalPages} (${_lbScored.length} brackets)`;
+    document.getElementById('lb-page-info').textContent = `Page ${_lbPage + 1} of ${totalPages} (${data.length.toLocaleString()} brackets)`;
     document.getElementById('lb-prev').disabled = _lbPage === 0;
     document.getElementById('lb-next').disabled = _lbPage >= totalPages - 1;
   } else {
@@ -3146,7 +3196,9 @@ async function renderLeaderboard() {
     if (totalActual === 0) {
       _lbScored = submissions.map(s => ({ ...s, score: 0, correct: 0, wrong: 0, pending: 63, details: [], champion: s.picks?.champion || '—', firstWrongRound: -1, perfectThru: '—' }));
       _lbPage = 0;
+      _lbFiltered = null;
       loadingEl.style.display = 'none';
+      populateChampFilter();
       _renderLbPage();
       return;
     }
@@ -3156,7 +3208,9 @@ async function renderLeaderboard() {
       _lbScored = submissions.map(s => ({ ...s, ...scoreBracket(s) }));
       _lbScored.sort((a, b) => b.score - a.score);
       _lbPage = 0;
+      _lbFiltered = null;
       loadingEl.style.display = 'none';
+      populateChampFilter();
       _renderLbPage();
       return;
     }
@@ -3185,7 +3239,9 @@ async function renderLeaderboard() {
         scored.sort((a, b) => b.score - a.score);
         _lbScored = scored;
         _lbPage = 0;
+        _lbFiltered = null;
         loadingEl.style.display = 'none';
+        populateChampFilter();
         _renderLbPage();
       }
     }
