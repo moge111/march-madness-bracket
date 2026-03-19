@@ -481,7 +481,7 @@ header p { color: var(--text-dim); font-size: 12px; margin-top: 4px; }
     </div>
     <div style="border-radius:10px;border:1px solid var(--border);overflow-x:auto;">
       <table class="lb-table">
-        <thead><tr><th>#</th><th>Name</th><th>Score</th><th>Correct</th><th>Wrong</th><th>Pending</th><th>Champion</th><th>Submitted</th><th id="lb-edit-col" style="display:none;"></th></tr></thead>
+        <thead><tr><th>#</th><th>Name</th><th>Score</th><th>Correct</th><th>Wrong</th><th>Pending</th><th>Perfect Thru</th><th>Champion</th><th>Submitted</th><th id="lb-edit-col" style="display:none;"></th></tr></thead>
         <tbody id="lb-body"></tbody>
       </table>
     </div>
@@ -2521,7 +2521,7 @@ function generateSimBrackets(count) {
     const totalAfter = maxExisting + count;
     const padLen = String(totalAfter).length;
     const newSims = [];
-    const GEN_CHUNK = 500;
+    const GEN_CHUNK = 1000;
     let idx = 0;
 
     function genChunk() {
@@ -2665,6 +2665,7 @@ const ROUND_POINTS = [1, 2, 4, 8, 16, 32]; // R64, R32, S16, E8, FF, Championshi
 function scoreBracket(submission) {
   const picks = submission.picks;
   let score = 0, correct = 0, wrong = 0, pending = 0;
+  let firstWrongRound = -1; // -1 = still perfect, 0-5 = round of first miss
   const details = [];
   let pickIdx = 0;
 
@@ -2685,6 +2686,7 @@ function scoreBracket(submission) {
           details.push({ pick, actual, round: r, status: 'correct', region, pts });
         } else {
           wrong++;
+          if (firstWrongRound < 0) firstWrongRound = r;
           details.push({ pick, actual, round: r, status: 'wrong', region, pts: 0 });
         }
         pickIdx++;
@@ -2699,7 +2701,7 @@ function scoreBracket(submission) {
     const actual = actualWinners[`FF_${i}`];
     if (!pick || !actual) { pending++; details.push({ pick, actual, round: 4, status: 'pending', region: 'FF', pts: 0 }); }
     else if (pick === actual) { score += 16; correct++; details.push({ pick, actual, round: 4, status: 'correct', region: 'FF', pts: 16 }); }
-    else { wrong++; details.push({ pick, actual, round: 4, status: 'wrong', region: 'FF', pts: 0 }); }
+    else { wrong++; if (firstWrongRound < 0) firstWrongRound = 4; details.push({ pick, actual, round: 4, status: 'wrong', region: 'FF', pts: 0 }); }
   }
 
   // Championship
@@ -2707,9 +2709,13 @@ function scoreBracket(submission) {
   const champActual = actualWinners['Championship'];
   if (!champPick || !champActual) { pending++; details.push({ pick: champPick, actual: champActual, round: 5, status: 'pending', region: 'Champ', pts: 0 }); }
   else if (champPick === champActual) { score += 32; correct++; details.push({ pick: champPick, actual: champActual, round: 5, status: 'correct', region: 'Champ', pts: 32 }); }
-  else { wrong++; details.push({ pick: champPick, actual: champActual, round: 5, status: 'wrong', region: 'Champ', pts: 0 }); }
+  else { wrong++; if (firstWrongRound < 0) firstWrongRound = 5; details.push({ pick: champPick, actual: champActual, round: 5, status: 'wrong', region: 'Champ', pts: 0 }); }
 
-  return { score, correct, wrong, pending, details, champion: picks.champion };
+  // perfectThru: label for how far the bracket stayed perfect
+  const perfectLabels = ['None', 'R32', 'S16', 'E8', 'FF', 'Champ', 'Perfect'];
+  const perfectThru = firstWrongRound < 0 ? (pending > 0 ? 'So far...' : 'Perfect!') : (firstWrongRound === 0 ? 'None' : perfectLabels[firstWrongRound]);
+
+  return { score, correct, wrong, pending, details, champion: picks.champion, firstWrongRound, perfectThru };
 }
 
 function renderSimStats(sims) {
@@ -2792,7 +2798,7 @@ function lbPageChange(delta) {
 
 function _renderLbPage() {
   const body = document.getElementById('lb-body');
-  const colSpan = window._isAdmin ? 9 : 8;
+  const colSpan = window._isAdmin ? 10 : 9;
   const start = _lbPage * LB_PAGE_SIZE;
   const pageItems = _lbScored.slice(start, start + LB_PAGE_SIZE);
   const totalPages = Math.ceil(_lbScored.length / LB_PAGE_SIZE);
@@ -2809,6 +2815,7 @@ function _renderLbPage() {
       <td class="lb-correct">${s.correct}</td>
       <td class="lb-wrong">${s.wrong}</td>
       <td class="lb-pending">${s.pending}</td>
+      <td style="color:${s.firstWrongRound < 0 ? 'var(--green)' : s.firstWrongRound >= 2 ? 'var(--accent2)' : 'var(--text-dim)'};font-weight:${s.firstWrongRound < 0 ? '600' : '400'};">${s.perfectThru || '—'}</td>
       <td>${s.champion || '—'}</td>
       <td style="font-size:11px;color:var(--text-dim);">${ts}</td>
       ${editBtn}
@@ -2838,7 +2845,7 @@ function _renderLbPage() {
 async function renderLeaderboard() {
   const body = document.getElementById('lb-body');
   const detailArea = document.getElementById('lb-detail-area');
-  const colSpan = window._isAdmin ? 9 : 8;
+  const colSpan = window._isAdmin ? 10 : 9;
   const loadingEl = document.getElementById('lb-loading');
   const progressEl = document.getElementById('lb-loading-progress');
 
@@ -2892,13 +2899,16 @@ async function renderLeaderboard() {
     loadingEl.style.display = '';
     body.innerHTML = '';
     const scored = [];
-    const CHUNK = 500;
+    const CHUNK = 2000;
     let idx = 0;
+    const skipDetails = submissions.length > 5000; // Save memory for huge sets
 
     function scoreChunk() {
       const end = Math.min(idx + CHUNK, submissions.length);
       for (let i = idx; i < end; i++) {
-        scored.push({ ...submissions[i], ...scoreBracket(submissions[i]) });
+        const result = scoreBracket(submissions[i]);
+        if (skipDetails) result.details = [];
+        scored.push({ ...submissions[i], ...result });
       }
       idx = end;
       progressEl.textContent = `${idx.toLocaleString()} / ${submissions.length.toLocaleString()} scored...`;
