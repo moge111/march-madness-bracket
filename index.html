@@ -1148,6 +1148,11 @@ function calcUpsetFactors(favorite, underdog) {
     else if (momDiff > 0) { factors.push("Underdog better recent form"); adjustment += .015 * wScale(w.momentum); }
   }
 
+  // Dampen upset adjustment for massive mismatches
+  // AdjEM gap 25+ = reduce by 70%, gap 15+ = reduce by 40%
+  if (emGap >= 25) adjustment *= 0.3;
+  else if (emGap >= 15) adjustment *= 0.6;
+
   return { factors, adjustment };
 }
 
@@ -1254,7 +1259,11 @@ function predictMatchup(teamA, teamB, round) {
   }
 
   // Blend: efficiency + seed history + stat edge (weights determine proportions)
-  const effW = w.efficiency;
+  // In massive mismatches (AdjEM gap 20+), boost efficiency weight to prevent
+  // stat edge noise from giving underdogs unrealistic chances
+  const emGap = Math.abs(getEffectiveAdjEM(teamA, r) - getEffectiveAdjEM(teamB, r));
+  const mismatchBoost = emGap >= 25 ? 2.5 : emGap >= 15 ? 1.5 : 1.0;
+  const effW = w.efficiency * mismatchBoost;
   const seedW = w.seedHistory;
   const statW = (w.threePt + w.defense + w.ftPct + w.tovRate + w.experience + w.tempo + w.offReb + w.defReb + w.sos + (w.momentum || 0)) / 10;
   const totalW = effW + seedW + statW;
