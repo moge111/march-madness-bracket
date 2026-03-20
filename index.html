@@ -481,6 +481,9 @@ header p { color: var(--text-dim); font-size: 12px; margin-top: 4px; }
         </div>
         <p style="font-size:11px;color:var(--text-dim);margin-bottom:12px;">Click the winning team for each game.</p>
         <div id="results-games" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:8px;"></div>
+        <div style="text-align:center;margin-top:12px;">
+          <button id="score-now-btn" class="btn btn-primary" style="display:none;font-size:13px;padding:8px 24px;" onclick="this.style.display='none';renderLeaderboard();">Score All Brackets</button>
+        </div>
       </div>
     </div>
     <div id="sim-stats" style="display:none;margin-bottom:20px;"></div>
@@ -2921,7 +2924,10 @@ function setResult(gameKey, teamName) {
   }
   saveActualWinners();
   renderResultsEntry();
-  renderLeaderboard();
+  // Invalidate score cache — don't re-score 500K brackets on every click
+  localStorage.removeItem('mm_score_cache_hash');
+  const scoreBtn = document.getElementById('score-now-btn');
+  if (scoreBtn) scoreBtn.style.display = '';
 }
 
 function renderResultsEntry() {
