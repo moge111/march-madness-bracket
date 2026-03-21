@@ -3157,22 +3157,50 @@ let _lbScoreCache = null;
 const LB_PAGE_SIZE = 100;
 
 // Score cache: saves scores so we don't re-score 500K brackets on every refresh
+// Stores as a Map keyed by bracket name for order-independent matching
 function _saveLbScoreCache(hash) {
   try {
-    _lbScoreCache = _lbScored.map(s => ({ score: s.score, correct: s.correct, wrong: s.wrong, pending: s.pending, firstWrongRound: s.firstWrongRound, perfectThru: s.perfectThru, champion: s.champion }));
+    const cacheMap = {};
+    for (const s of _lbScored) {
+      cacheMap[s.name] = { score: s.score, correct: s.correct, wrong: s.wrong, pending: s.pending, firstWrongRound: s.firstWrongRound, perfectThru: s.perfectThru, champion: s.champion };
+    }
+    _lbScoreCache = cacheMap;
     localStorage.setItem('mm_score_cache_hash', hash);
-    // Store in IndexedDB since localStorage has size limits
+    localStorage.setItem('mm_score_cache_count', String(_lbScored.length));
+    // Store in IndexedDB in chunks to avoid single-doc size limits
+    const CHUNK_SIZE = 50000;
+    const entries = Object.entries(cacheMap);
+    const numChunks = Math.ceil(entries.length / CHUNK_SIZE);
     const tx = simDB.db.transaction('sims', 'readwrite');
-    tx.objectStore('sims').put({ name: '__score_cache__', data: _lbScoreCache });
+    const store = tx.objectStore('sims');
+    // Clear old cache chunks
+    store.delete('__score_cache__');
+    for (let c = 0; c < 20; c++) store.delete('__score_cache_' + c);
+    for (let c = 0; c < numChunks; c++) {
+      const chunk = Object.fromEntries(entries.slice(c * CHUNK_SIZE, (c + 1) * CHUNK_SIZE));
+      store.put({ name: '__score_cache_' + c, data: chunk });
+    }
+    localStorage.setItem('mm_score_cache_chunks', String(numChunks));
   } catch(e) { console.warn('Score cache save failed', e); }
 }
 function _loadLbScoreCache() {
   return new Promise(resolve => {
     try {
+      const numChunks = parseInt(localStorage.getItem('mm_score_cache_chunks') || '0');
+      if (numChunks === 0) { _lbScoreCache = null; return resolve(); }
       const tx = simDB.db.transaction('sims', 'readonly');
-      const req = tx.objectStore('sims').get('__score_cache__');
-      req.onsuccess = () => { _lbScoreCache = req.result?.data || null; resolve(); };
-      req.onerror = () => { _lbScoreCache = null; resolve(); };
+      const store = tx.objectStore('sims');
+      const merged = {};
+      let loaded = 0;
+      for (let c = 0; c < numChunks; c++) {
+        const req = store.get('__score_cache_' + c);
+        req.onsuccess = () => {
+          if (req.result?.data) Object.assign(merged, req.result.data);
+          loaded++;
+          if (loaded === numChunks) { _lbScoreCache = merged; resolve(); }
+        };
+        req.onerror = () => { loaded++; if (loaded === numChunks) { _lbScoreCache = Object.keys(merged).length > 0 ? merged : null; resolve(); } };
+      }
     } catch(e) { _lbScoreCache = null; resolve(); }
   });
 }
@@ -3406,9 +3434,10 @@ async function renderLeaderboard() {
     // Score cache: skip re-scoring if results haven't changed
     const resultsHash = JSON.stringify(actualWinners);
     const cachedHash = localStorage.getItem('mm_score_cache_hash');
-    if (cachedHash === resultsHash && _lbScoreCache && _lbScoreCache.length === submissions.length) {
-      // Re-attach cached scores to submissions
-      _lbScored = submissions.map((s, i) => ({ ...s, ..._lbScoreCache[i] }));
+    const cachedCount = parseInt(localStorage.getItem('mm_score_cache_count') || '0');
+    if (cachedHash === resultsHash && _lbScoreCache && cachedCount === submissions.length) {
+      // Re-attach cached scores by bracket name
+      _lbScored = submissions.map(s => ({ ...s, ...(_lbScoreCache[s.name] || { score: 0, correct: 0, wrong: 0, pending: 63, firstWrongRound: -1, perfectThru: '—', champion: s.picks?.champion || '—' }) }));
       _lbScored.sort((a, b) => b.score - a.score);
       _lbPage = 0;
       _lbFiltered = null;
