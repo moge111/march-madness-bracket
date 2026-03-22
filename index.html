@@ -2889,29 +2889,59 @@ function clearResults() {
 
 function getGameTeams(round) {
   const games = [];
-  if (round < 4) {
+  if (round === 0) {
+    // R64: use the bracket's initial matchups
     for (const region of REGIONS) {
-      const roundSize = [8, 4, 2, 1][round];
-      for (let g = 0; g < roundSize; g++) {
-        const m = bracket[region].rounds[round][g];
-        const gameKey = `${region}_R${round}_G${g}`;
+      for (let g = 0; g < 8; g++) {
+        const m = bracket[region].rounds[0][g];
+        const gameKey = `${region}_R0_G${g}`;
         if (m.team1 && m.team2) {
           games.push({ key: gameKey, team1: m.team1, team2: m.team2, region });
         }
       }
     }
-  } else if (round === 4) {
-    for (let i = 0; i < 2; i++) {
-      const m = bracket.finalFour[i];
-      if (m.team1 && m.team2) {
-        games.push({ key: `FF_${i}`, team1: m.team1, team2: m.team2, region: 'Final Four' });
+  } else if (round >= 1 && round < 4) {
+    // R32, S16, E8: build matchups from previous round's actual winners
+    for (const region of REGIONS) {
+      const prevRoundSize = [8, 4, 2, 1][round - 1];
+      const thisRoundSize = [8, 4, 2, 1][round];
+      for (let g = 0; g < thisRoundSize; g++) {
+        const prevKey1 = `${region}_R${round-1}_G${g*2}`;
+        const prevKey2 = `${region}_R${round-1}_G${g*2+1}`;
+        const winner1 = actualWinners[prevKey1];
+        const winner2 = actualWinners[prevKey2];
+        const gameKey = `${region}_R${round}_G${g}`;
+        if (winner1 && winner2) {
+          const t1 = TEAMS[winner1] ? { name: winner1, seed: TEAMS[winner1].seed } : { name: winner1, seed: '?' };
+          const t2 = TEAMS[winner2] ? { name: winner2, seed: TEAMS[winner2].seed } : { name: winner2, seed: '?' };
+          games.push({ key: gameKey, team1: t1, team2: t2, region });
+        } else {
+          // Show TBD if previous round not complete
+          const t1 = winner1 ? { name: winner1, seed: TEAMS[winner1]?.seed || '?' } : { name: 'TBD', seed: '' };
+          const t2 = winner2 ? { name: winner2, seed: TEAMS[winner2]?.seed || '?' } : { name: 'TBD', seed: '' };
+          games.push({ key: gameKey, team1: t1, team2: t2, region });
+        }
       }
     }
-  } else if (round === 5) {
-    const m = bracket.championship;
-    if (m.team1 && m.team2) {
-      games.push({ key: 'Championship', team1: m.team1, team2: m.team2, region: 'Championship' });
+  } else if (round === 4) {
+    // Final Four: winners of each region's Elite 8
+    const ffRegionPairs = [['South', 'East'], ['West', 'Midwest']];
+    for (let i = 0; i < 2; i++) {
+      const r1 = ffRegionPairs[i][0];
+      const r2 = ffRegionPairs[i][1];
+      const w1 = actualWinners[`${r1}_R3_G0`];
+      const w2 = actualWinners[`${r2}_R3_G0`];
+      const t1 = w1 ? { name: w1, seed: TEAMS[w1]?.seed || '?' } : { name: 'TBD', seed: '' };
+      const t2 = w2 ? { name: w2, seed: TEAMS[w2]?.seed || '?' } : { name: 'TBD', seed: '' };
+      games.push({ key: `FF_${i}`, team1: t1, team2: t2, region: 'Final Four' });
     }
+  } else if (round === 5) {
+    // Championship: winners of Final Four
+    const w1 = actualWinners['FF_0'];
+    const w2 = actualWinners['FF_1'];
+    const t1 = w1 ? { name: w1, seed: TEAMS[w1]?.seed || '?' } : { name: 'TBD', seed: '' };
+    const t2 = w2 ? { name: w2, seed: TEAMS[w2]?.seed || '?' } : { name: 'TBD', seed: '' };
+    games.push({ key: 'Championship', team1: t1, team2: t2, region: 'Championship' });
   }
   return games;
 }
